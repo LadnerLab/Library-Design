@@ -91,7 +91,10 @@ def add_program_options( option_parser ):
                               help = "Time for given to each slurm script to run. Format is in days-hours:minutes:seconds, as specified by slurm. [1:00:00]"
                             )  
     option_parser.add_option( '--slurm', action = "append", 
-                              help = "slurm arguments to be written to the script"
+                              help = ( 'slurm arguments to be written to the script, each should be entered as a separate ' 
+                                       'argument such as: --slurm "mem 20G" --slurm "time 20:00" to specify a run with '
+                                       '20 GB of memory that has 20 minutes '
+                                     )  
                             )
 
 
@@ -171,6 +174,10 @@ class SBatchScript():
     def run( self ):
         output = subprocess.Popen( "sbatch " + self.output, shell = True ) 
         output.wait()
+
+    def add_program_arg( self, flag, arg ):
+        self.program_program_args[ flag ] = arg
+        
         
             
 
