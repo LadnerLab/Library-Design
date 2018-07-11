@@ -17,7 +17,7 @@ def main():
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
     cluster_options = { "-q": options.query, "-l": options.lineage, "-n": options.number, "-s": options.start,
-                        "-o": "tax_out", "-c": options.cluster_method, "--id": options.id 
+                        "-o": options.cluster_dir, "-c": options.cluster_method, "--id": options.id 
                       } 
 
     cluster_script = SBatchScript( "clustering.py", "slurm_script", cluster_options,
@@ -25,6 +25,8 @@ def main():
                                  )  
 
     cluster_script.write_script()
+
+    
     cluster_script.run()
         
 
@@ -87,14 +89,20 @@ def add_program_options( option_parser ):
     option_parser.add_option( '-c', '--min_xmer_coverage',
                               help = "Option to set the floating point minimum amount of coverage necessary for the program to cease execution. [1.0]"
                             )  
+
     option_parser.add_option( '--time', type = str,
                               help = "Time for given to each slurm script to run. Format is in days-hours:minutes:seconds, as specified by slurm. [1:00:00]"
                             )  
+
     option_parser.add_option( '--slurm', action = "append", 
                               help = ( 'slurm arguments to be written to the script, each should be entered as a separate ' 
                                        'argument such as: --slurm "mem 20G" --slurm "time 20:00" to specify a run with '
                                        '20 GB of memory that has 20 minutes '
                                      )  
+                            )
+
+    option_parser.add_option( '--cluster_dir', default = "tax_out",
+                              help = "Name of directory to write clusters to. Note: this directory is created if it does not already exist. [tax_out]"
                             )
 
 
