@@ -109,10 +109,12 @@ def run_command_from_options( command_name, options_dict ):
     script_found = script_exists( command_name )
     if script_found == "local":
         command = "./" + command
+    elif script_found = False:
+        return True
     
     command = subprocess.Popen( "./" + command, shell = True )
     command.wait()
-    return 1
+    return False
         
     
 def script_exists( command_name ):
