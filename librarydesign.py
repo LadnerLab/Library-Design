@@ -109,12 +109,13 @@ def run_command_from_options( command_name, options_dict ):
     script_found = script_exists( command_name )
     if script_found == "local":
         command = "./" + command
-    elif script_found = False:
-        return True
+    elif not script_found:
+        return False
     
     command = subprocess.Popen( "./" + command, shell = True )
     command.wait()
-    return False
+
+    return True
         
     
 def script_exists( command_name ):
@@ -131,7 +132,25 @@ def script_exists( command_name ):
  
      return file_found
 
-   
+class SBatchScript():
+    sbatch = "#SBATCH "
+    shebang = "#!/bin/sh "
+
+    def __init__( self, command, *args ):
+        self.args = [ item for item in args ]
+
+    def write_script( self, command ):
+        file = open( self.output[ 0 ], 'w' )
+
+        file.write( shebang )
+
+        for item in self.args:
+            file.write( sbatch + "--" + item[ 0 ] + "=" + item[ 1 ] )
+        file.write( "srun " + command )
+        file.close()
+            
+
+  
 if __name__ == '__main__':
     main()
 
