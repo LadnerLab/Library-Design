@@ -21,7 +21,7 @@ def main():
                       } 
 
     cluster_script = SBatchScript( "clustering.py", "slurm_script", cluster_options,
-                                   ( "time", "20:00" ), ( "mem", "20G" ), ( "output", "oligo" )
+                                   options.slurm
                                  )  
 
     cluster_script.write_script()
@@ -87,6 +87,12 @@ def add_program_options( option_parser ):
     option_parser.add_option( '-c', '--min_xmer_coverage',
                               help = "Option to set the floating point minimum amount of coverage necessary for the program to cease execution. [1.0]"
                             )  
+    option_parser.add_option( '--time', type = str,
+                              help = "Time for given to each slurm script to run. Format is in days-hours:minutes:seconds, as specified by slurm. [1:00:00]"
+                            )  
+    option_parser.add_option( '--slurm', action = "append", 
+                              help = "slurm arguments to be written to the script"
+                            )
 
 
 
@@ -137,9 +143,9 @@ def script_exists( command_name ):
 
 class SBatchScript():
     
-    def __init__( self, command, output, program_args, *slurm_args ):
+    def __init__( self, command, output, program_args, slurm_args ):
         self.command = command 
-        self.slurm_args = [ item for item in slurm_args ]
+        self.slurm_args = [ item.split() for item in slurm_args ]
         self.output = output
         self.program_args = program_args
 
