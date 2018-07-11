@@ -106,9 +106,12 @@ def run_command_from_options( command_name, options_dict ):
         command += " "
 
     # Check that the script is in our path, or in the local directory
-    if script_exists( command_name ):
-        command = subprocess.Popen( command, shell = True )
-        command.wait()
+    script_found = script_exists( command_name )
+    if script_found == "local":
+        command = "./" + command
+    
+    command = subprocess.Popen( "./" + command, shell = True )
+    command.wait()
     return 1
         
     
@@ -116,9 +119,11 @@ def script_exists( command_name ):
      file_found = True
      try:
          in_path = subprocess.check_output( [ command_name ] )
+         file_found = "path"
      except FileNotFoundError:
          try:
              in_path = subprocess.check_output( [ "./" + command_name ] )
+             file_found = "local"
          except FileNotFoundError:
              file_found = False
  
