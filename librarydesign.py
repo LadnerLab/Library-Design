@@ -2,6 +2,7 @@
 import optparse
 import sys
 import subprocess
+import os
 
 def main():
     usage = "usage %prog [options]"
@@ -12,22 +13,36 @@ def main():
 
     options, arguments = option_parser.parse_args()
 
-    check_required_option( options.query, "Fasta query file must be provided" )
+    check_required_option( options.query, "Fasta query file must be provided", True )
     if 'tax' in options.cluster_method:
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
     cluster_options = { "-q": options.query, "-l": options.lineage, "-n": options.number, "-s": options.start,
                         "-o": options.cluster_dir, "-c": options.cluster_method, "--id": options.id 
                       } 
+    kmer_options = { '-i': options.iterations, '-x': options.xmer_window_size, '-y': options.ymer_window_size,
+                     '-r': options.redundancy, '-t': options.threads, '-c': options.min_xmer_coverage
+                   }
+    if options.functional_groups:
+        kmer_options[ '-p' ] = ''
 
     cluster_script = SBatchScript( "clustering.py", "slurm_script", cluster_options,
                                    options.slurm
                                  )  
 
     cluster_script.write_script()
-
-    
     cluster_script.run()
+
+    cluster_files = os.listdir( options.cluster_dir )
+
+    for current_file in cluster_files:
+        kmer_options[ '-q' ] = current_file
+        kmer_options[ '-o' ] = current_file + " out"
+
+        kmer_script = SBatchScript( "kmer_oligo", "kmer_script", kmer_options, options.slurm )
+        kmer_script.write_script()
+
+
         
 
 def add_program_options( option_parser ):
@@ -47,7 +62,7 @@ def add_program_options( option_parser ):
 
                                      )
                             )
-    option_parser.add_option( '-o', '--output', default = 'tax_out',
+    option_parser.add_option( '-o', '--output', default = 'library.fasta',
                               help = "Name of oligo library file that will contain the final library design"
                             )
     option_parser.add_option( '-m', '--cluster_method', default = 'kmer',
