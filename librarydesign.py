@@ -15,11 +15,16 @@ def main():
     if 'tax' in options.cluster_method:
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
+    cluster_options = { "-q": options.query, "-l": options.lineage, "-n": options.number, "-s": options.start,
+                        "-o": "tax_out", "-c": options.cluster_method, "-id": options.id 
+                      } 
 
 
 def add_program_options( option_parser ):
     option_parser.add_option( '-q', '--query', help = "Fasta query file to read sequences from and do ordering of. [None, Required]" )
+
     option_parser.add_option( '-l', '--lineage', help = "Taxonomic lineage file such as the one from ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/" )
+
     option_parser.add_option( '-n', '--number', type = int, default = 10000,
                               help = "Threshold value for determining cutoff of number of sequences that can be included in each output. [10,000]"
                             )
