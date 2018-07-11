@@ -20,9 +20,12 @@ def main():
                         "-o": "tax_out", "-c": options.cluster_method, "--id": options.id 
                       } 
 
-    if not run_command_from_options( "clustering.py", cluster_options ):
-        print( "clustering.py is either not in the local directory or in your path, exiting..." )
-        sys.exit( 1 )
+    cluster_script = SBatchScript( "clustering.py", "slurm_script", cluster_options,
+                                   ( "time", "20:00" ), ( "mem", "20G" ), ( "output", "oligo" )
+                                 )  
+
+    cluster_script.write_script()
+    cluster_script.run()
         
 
 def add_program_options( option_parser ):
@@ -134,26 +137,35 @@ def script_exists( command_name ):
 
 class SBatchScript():
     
-    def __init__( self, command, output, *args ):
+    def __init__( self, command, output, program_args, *slurm_args ):
         self.command = command 
-        self.args = [ item for item in args ]
+        self.slurm_args = [ item for item in slurm_args ]
         self.output = output
+        self.program_args = program_args
 
         self.sbatch = "#SBATCH "
         self.shebang = "#!/bin/sh "
 
     def write_script( self ):
-        file = open( self.output[ 0 ], 'w' )
+        file = open( self.output, 'w' )
 
         file.write( self.shebang )
         file.write( "\n" )
 
-        for item in self.args:
+        for item in self.slurm_args:
             file.write( self.sbatch + "--" + item[ 0 ] + "=" + item[ 1 ] )
             file.write( "\n" )
 
-        file.write( self.command )
+        file.write( "srun " + self.command )
+
+        for flag, argument in self.program_args.items():
+            file.write( flag + " " + str( argument ) + " " )
         file.close()
+
+    def run( self ):
+        output = subprocess.Popen( "sbatch " + self.output, shell = True ) 
+        output.wait()
+        
             
 
   
