@@ -11,7 +11,9 @@ def main():
 
     options, arguments = option_parser.parse_args()
 
-    check_required_option( options.query, "Fasta query file must be provided, exiting..." )
+    check_required_option( options.query, "Fasta query file must be provided" )
+    if 'tax' in options.cluster_method:
+        check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
 
 
@@ -31,7 +33,7 @@ def add_program_options( option_parser ):
                                      )
                             )
     option_parser.add_option( '-o', '--output', default = 'tax_out',
-                              help = "Directory to write grouped fasta files to, each file contains one rank-level grouping"
+                              help = "Name of oligo library file that will contain the final library design"
                             )
     option_parser.add_option( '-m', '--cluster_method', default = 'kmer',
                               help = ( "Method to use for clustering. Can be taxonomic or kmer-based. If taxonomic is selected, "
@@ -65,23 +67,25 @@ def add_program_options( option_parser ):
                               help = "Number of threads to use when performing opterations [1]"
                             )
 
-    option_parser.add_option( '-f', '--functional_groups', action = "store_true", dest = functional_groups, default = False,
+    option_parser.add_option( '-f', '--functional_groups', action = "store_true", dest = "functional_groups", default = False,
                               help = "Option to enable functional grouping of proteins"
                             )
 
     option_parser.add_option( '-c', '--min_xmer_coverage',
-                              help = "Option to set the floating point minimum amount of coverage necessary for the program to cease execution. [1]"
+                              help = "Option to set the floating point minimum amount of coverage necessary for the program to cease execution. [1.0]"
                             )  
 
 
 
-def check_required_option( option, string ):
+def check_required_option( option, string, exit_on_failure = False ):
     """
         Checks to see if a required option exists, prints out string and exits if that is not the case
     """
     if option is None:
         print( string )
-        sys.exit( 0 )
+        if exit_on_failure:
+            print( "Exiting program due to above failures" )
+            sys.exit( 0 )
 
 
 
