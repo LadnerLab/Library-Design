@@ -133,20 +133,26 @@ def script_exists( command_name ):
      return file_found
 
 class SBatchScript():
-    sbatch = "#SBATCH "
-    shebang = "#!/bin/sh "
-
-    def __init__( self, command, *args ):
+    
+    def __init__( self, command, output, *args ):
+        self.command = command 
         self.args = [ item for item in args ]
+        self.output = output
 
-    def write_script( self, command ):
+        self.sbatch = "#SBATCH "
+        self.shebang = "#!/bin/sh "
+
+    def write_script( self ):
         file = open( self.output[ 0 ], 'w' )
 
-        file.write( shebang )
+        file.write( self.shebang )
+        file.write( "\n" )
 
         for item in self.args:
-            file.write( sbatch + "--" + item[ 0 ] + "=" + item[ 1 ] )
-        file.write( "srun " + command )
+            file.write( self.sbatch + "--" + item[ 0 ] + "=" + item[ 1 ] )
+            file.write( "\n" )
+
+        file.write( self.command )
         file.close()
             
 
