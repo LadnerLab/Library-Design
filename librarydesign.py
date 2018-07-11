@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import optparse
 import sys
+import subprocess
 
 def main():
     usage = "usage %prog [options]"
@@ -16,9 +17,13 @@ def main():
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
     cluster_options = { "-q": options.query, "-l": options.lineage, "-n": options.number, "-s": options.start,
-                        "-o": "tax_out", "-c": options.cluster_method, "-id": options.id 
+                        "-o": "tax_out", "-c": options.cluster_method, "--id": options.id 
                       } 
 
+    if not run_command_from_options( "clustering.py", cluster_options ):
+        print( "clustering.py is either not in the local directory or in your path, exiting..." )
+        sys.exit( 1 )
+        
 
 def add_program_options( option_parser ):
     option_parser.add_option( '-q', '--query', help = "Fasta query file to read sequences from and do ordering of. [None, Required]" )
@@ -28,7 +33,7 @@ def add_program_options( option_parser ):
     option_parser.add_option( '-n', '--number', type = int, default = 10000,
                               help = "Threshold value for determining cutoff of number of sequences that can be included in each output. [10,000]"
                             )
-    option_parser.add_option( '-s', '--start', action = "append", 
+    option_parser.add_option( '-s', '--start', action = "append", default = 'family',
                               help = ( "Level of the taxonomic hierarchy at which to begin "
                                        "clustering. If this option is given multiple times, "
                                        "e.g. -s family -s phylum, "
@@ -92,8 +97,34 @@ def check_required_option( option, string, exit_on_failure = False ):
             print( "Exiting program due to above failures" )
             sys.exit( 0 )
 
+def run_command_from_options( command_name, options_dict ):
+    command = command_name + " "
+    for flag, value in options_dict.items():
+        command += str( flag )
+        command += " "
+        command += str( value )
+        command += " "
 
+    # Check that the script is in our path, or in the local directory
+    if script_exists( command_name ):
+        command = subprocess.Popen( command, shell = True )
+        command.wait()
+    return 1
+        
+    
+def script_exists( command_name ):
+     file_found = True
+     try:
+         in_path = subprocess.check_output( [ command_name ] )
+     except FileNotFoundError:
+         try:
+             in_path = subprocess.check_output( [ "./" + command_name ] )
+         except FileNotFoundError:
+             file_found = False
+ 
+     return file_found
 
+   
 if __name__ == '__main__':
     main()
 
