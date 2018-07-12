@@ -47,6 +47,7 @@ def main():
         time.sleep( 1 )
     
     os.chdir( options.cluster_dir )
+    job_ids = list()
 
     for current_file in cluster_files:
         kmer_options[ '-q' ] = current_file
@@ -54,10 +55,13 @@ def main():
 
         kmer_script = SBatchScript( "kmer_oligo", "kmer_script", kmer_options, options.slurm )
         kmer_script.write_script()
-        kmer_script.run()
+        output = str(kmer_script.run() ).split()
+        job_ids.append( output[ 3 ] )
 
+    job_ids = [ item.split( '\\n' )[ 0 ] for item in job_ids ]
+    print( job_ids )
     outputs_created = 0
-    while( SBatchScript.completed_scripts < num_files ):
+    while( 2 < 1 ):
         print( "completed: %d" % SBatchScript.completed_scripts )
         time.sleep( 3 )
     print( "Completed" )
@@ -188,7 +192,6 @@ def script_exists( command_name ):
      return file_found
 
 class SBatchScript():
-    completed_scripts = 0 
     def __init__( self, command, output, program_args, slurm_args ):
         self.command = command 
         self.slurm_args = [ item.split() for item in slurm_args ]
@@ -217,9 +220,11 @@ class SBatchScript():
 
     def run( self ):
         os.chmod( self.output, 0o755 )
-        output = subprocess.Popen( "sbatch " + self.output, shell = True ) 
+        output = subprocess.Popen( "sbatch " + self.output, shell = True, stdout = subprocess.PIPE ) 
         output.wait()
-        SBatchScript.completed_scripts += 1
+        output, error = output.communicate()
+
+        return output
 
     def add_program_arg( self, flag, arg ):
         self.program_program_args[ flag ] = arg
