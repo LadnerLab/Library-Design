@@ -21,10 +21,12 @@ def main():
                         "-o": options.cluster_dir, "-c": options.cluster_method, "--id": options.id 
                       } 
     kmer_options = { '-i': options.iterations, '-x': options.xmer_window_size, '-y': options.ymer_window_size,
-                     '-r': options.redundancy, '-t': options.threads, '-c': options.min_xmer_coverage
+                     '-r': options.redundancy, '-t': options.threads
                    }
     if options.functional_groups:
         kmer_options[ '-p' ] = ''
+    if options.min_xmer_coverage:
+        kmer_options[ '-c' ] = options.min_xmer_coverage
 
     cluster_script = SBatchScript( "clustering.py", "slurm_script", cluster_options,
                                    options.slurm
@@ -34,6 +36,7 @@ def main():
     cluster_script.run()
 
     cluster_files = os.listdir( options.cluster_dir )
+    os.chdir( options.cluster_dir )
 
     for current_file in cluster_files:
         kmer_options[ '-q' ] = current_file
@@ -41,6 +44,7 @@ def main():
 
         kmer_script = SBatchScript( "kmer_oligo", "kmer_script", kmer_options, options.slurm )
         kmer_script.write_script()
+        kmer_script.run()
 
 
         
@@ -188,14 +192,15 @@ class SBatchScript():
             file.write( self.sbatch + "--" + item[ 0 ] + "=" + item[ 1 ] )
             file.write( "\n" )
 
-        file.write( "srun " + self.command )
+        file.write( "sbatch " + self.command + " " )
 
         for flag, argument in self.program_args.items():
             file.write( flag + " " + str( argument ) + " " )
         file.close()
 
     def run( self ):
-        output = subprocess.Popen( "sbatch " + self.output, shell = True ) 
+        os.chmod( self.output, 0o755 )
+        output = subprocess.Popen( "./" + self.output, shell = True ) 
         output.wait()
 
     def add_program_arg( self, flag, arg ):
