@@ -45,6 +45,7 @@ def main():
 
     while num_files < 1:
         time.sleep( 1 )
+        num_files = len( os.listdir( options.cluster_dir ) )
     
     os.chdir( options.cluster_dir )
     job_ids = list()
@@ -59,12 +60,12 @@ def main():
         job_ids.append( output[ 3 ] )
 
     job_ids = [ item.split( '\\n' )[ 0 ] for item in job_ids ]
-    print( job_ids )
-    outputs_created = 0
-    while( 2 < 1 ):
-        print( "completed: %d" % SBatchScript.completed_scripts )
-        time.sleep( 3 )
-    print( "Completed" )
+
+    ids_combined = ",".join( job_ids )
+
+    combination_script = SBatchScript( "cat ", "combine_script", { "_R_1 > ":"combined.fasta" } , [ "dependency  afterok:" + ids_combined ]  )
+    combination_script.write_script()
+    combination_script.run()
 
 
         
