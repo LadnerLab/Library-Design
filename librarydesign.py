@@ -63,7 +63,7 @@ def main():
 
     ids_combined = ",".join( job_ids )
 
-    combination_script = SBatchScript( "cat ", "combine_script", { "_R_1 > ":"combined.fasta" } , [ "dependency  afterok:" + ids_combined ]  )
+    combination_script = SBatchScript( "cat ", "combine_script", { "*_R_1 > ":"combined.fasta" } , [ "dependency  afterany:" + ids_combined ]  )
     combination_script.write_script()
     combination_script.run()
 
