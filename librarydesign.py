@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import optparse
 import sys
+import time
 import subprocess
 import os
 
@@ -14,6 +15,7 @@ def main():
     options, arguments = option_parser.parse_args()
 
     check_required_option( options.query, "Fasta query file must be provided", True )
+
     if 'tax' in options.cluster_method:
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
@@ -34,6 +36,9 @@ def main():
 
     cluster_script.write_script()
     cluster_script.run()
+
+    while not os.path.exists( options.cluster_dir ):
+        time.sleep( 1 )
 
     cluster_files = os.listdir( options.cluster_dir )
     os.chdir( options.cluster_dir )
