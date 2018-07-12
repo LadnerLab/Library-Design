@@ -192,7 +192,8 @@ class SBatchScript():
             file.write( self.sbatch + "--" + item[ 0 ] + "=" + item[ 1 ] )
             file.write( "\n" )
 
-        file.write( "sbatch " + self.command + " " )
+        file.write( "module load python/3.latest\n" )
+        file.write( "srun " + self.command + " " )
 
         for flag, argument in self.program_args.items():
             file.write( flag + " " + str( argument ) + " " )
@@ -200,7 +201,7 @@ class SBatchScript():
 
     def run( self ):
         os.chmod( self.output, 0o755 )
-        output = subprocess.Popen( "./" + self.output, shell = True ) 
+        output = subprocess.Popen( "sbatch " + self.output, shell = True ) 
         output.wait()
 
     def add_program_arg( self, flag, arg ):
