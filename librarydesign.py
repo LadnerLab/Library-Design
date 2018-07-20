@@ -63,11 +63,11 @@ def main():
 
     ids_combined = ",".join( job_ids )
 
-    combination_script = SBatchScript( "cat ", "combine_script", { "*_R_1 > ":"combined.fasta" } , [ "dependency  afterany:" + ids_combined ]  )
+    combination_script_command = { "*_R_1 > " "combined.fasta; mv combined.fasta ../combined.fasta"  }
+    combination_script = SBatchScript( "cat ", "combine_script", combination_script_command, [ "dependency  afterany:" + ids_combined ]  )
     combination_script.write_script()
     combination_script.run()
 
-    shutil.move( "combined.fasta", "../combined.fasta" )
 
 
         
