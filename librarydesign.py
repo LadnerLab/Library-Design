@@ -67,6 +67,8 @@ def main():
     combination_script.write_script()
     combination_script.run()
 
+    shutil.move( "combined.fasta", "../combined.fasta" )
+
 
         
 
