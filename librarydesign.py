@@ -20,7 +20,7 @@ def main():
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
     cluster_options = { "-q": options.query, "-l": options.lineage, "-n": options.number, "-s": options.start,
-                        "-o": options.cluster_dir, "-c": options.cluster_method, "--id": options.id 
+                        "-o": options.cluster_dir, "-c": options.cluster_method, "--id": options.id , "-k": options.xmer_window_size
                       } 
     kmer_options = { '-i': options.iterations, '-x': options.xmer_window_size, '-y': options.ymer_window_size,
                      '-r': options.redundancy, '-t': options.threads
