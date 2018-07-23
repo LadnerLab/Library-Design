@@ -64,8 +64,13 @@ def main():
         current_job_id = kmer_script.run()
         job_ids.append( current_job_id )
 
-    combination_script = SBatchScript( "cat *_R_1 > combined.fasta", "combine_script", options.slurm, dependency_mode = "afterok" )
-    combination_script.add_command( "mv combined.fasta ../combined.fasta" )
+    out_file = options.output
+    combination_script = SBatchScript( "cat $(pwd)/*_R_" + str( options.redundancy ) + " > combined.fasta",
+                                       "combine_script",
+                                        options.slurm,
+                                        dependency_mode = "afterok"
+                                     )
+    combination_script.add_command( "mv combined.fasta ../" + out_file + ".fasta" )
     combination_script.add_dependencies( job_ids )
     combination_script.write_script()
     combination_script.run()
@@ -148,7 +153,6 @@ def add_program_options( option_parser ):
     option_parser.add_option( '--cluster_dir', default = "tax_out",
                               help = "Name of directory to write clusters to. Note: this directory is created if it does not already exist. [tax_out]"
                             )
-
 
 
 def check_required_option( option, string, exit_on_failure = False ):
