@@ -318,7 +318,7 @@ class SBatchScript:
                             obect's write method, in the format '--key value', or 
                             of the form '-c 1'
         """
-        self.slurm_args.append( [ new_arg.split() ] )
+        self.slurm_args.append( new_arg.split() )
 
     def add_dependencies( self, job_num_list ):
         """
