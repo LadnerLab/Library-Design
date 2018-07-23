@@ -34,7 +34,6 @@ def main():
     if options.min_xmer_coverage:
         kmer_options += '-c ' + str( options.min_xmer_coverage )
 
-    cluster_options += " -q combined.fasta "
     cluster_script = SBatchScript( "clustering.py " + cluster_options, "slurm_script",
                                    options.slurm
                                  )  
@@ -243,7 +242,7 @@ class SBatchScript:
         def add_arg( self, to_add ):
             self.command += to_add
 
-    def write_script_name( self ):
+    def write_script( self ):
         """
             Writes the script, the name of the executable created is 
             determined by the class-member variable script_name
@@ -256,7 +255,7 @@ class SBatchScript:
         file.write( "\n" )
 
         for item in self.slurm_args:
-            file.write( self.sbatch + "--" + item[ 0 ] + "=" + item[ 1 ] )
+            file.write( self.sbatch + item[ 0 ] + "=" + item[ 1 ] )
             file.write( "\n" )
 
         if len( self.dependencies ) > 0:
@@ -319,7 +318,7 @@ class SBatchScript:
                             obect's write method, in the format '--key value', or 
                             of the form '-c 1'
         """
-        self.slurm_args.append( [ item.split() ] )
+        self.slurm_args.append( [ new_arg.split() ] )
 
     def add_dependencies( self, job_num_list ):
         """
