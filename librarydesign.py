@@ -19,21 +19,27 @@ def main():
     if 'tax' in options.cluster_method:
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
-    cluster_options = { "-q": options.query, "-l": options.lineage, "-n": options.number, "-s": options.start,
-                        "-o": options.cluster_dir, "-c": options.cluster_method, "--id": options.id , "-k": options.xmer_window_size
-                      } 
-    kmer_options = { '-i': options.iterations, '-x': options.xmer_window_size, '-y': options.ymer_window_size,
-                     '-r': options.redundancy, '-t': options.threads
-                   }
+    cluster_options = ( "-q %s -l %s -n %d -s %s -o %s -c %s --id %d -k %d"
+                        % ( options.query, options.lineage, options.number, options.start, options.cluster_dir, options.cluster_method,
+                            options.id, options.xmer_window_size
+                          )  
+                      ) 
+    kmer_options = ( '-i %d  -x %d  -y %d -r %d -t %d' 
+                     % ( options.iterations, options.xmer_window_size,
+                         options.ymer_window_size, options.redundancy, options.threads
+                       )
+                   )
     if options.functional_groups:
-        kmer_options[ '-p' ] = ''
+        kmer_options += ' -p '
     if options.min_xmer_coverage:
-        kmer_options[ '-c' ] = options.min_xmer_coverage
+        kmer_options += '-c ' + str( options.min_xmer_coverage )
 
-    cluster_script = SBatchScript( "clustering.py", "slurm_script", cluster_options,
+    cluster_options += " -q combined.fasta "
+    cluster_script = SBatchScript( "clustering.py " + cluster_options, "slurm_script",
                                    options.slurm
                                  )  
 
+    cluster_script.add_module( "python/3.latest" )
     cluster_script.write_script()
     cluster_script.run()
 
@@ -54,17 +60,17 @@ def main():
         kmer_options[ '-q' ] = current_file
         kmer_options[ '-o' ] = current_file + " out"
 
-        kmer_script = SBatchScript( "kmer_oligo", "kmer_script", kmer_options, options.slurm )
+        kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
         kmer_script.write_script()
         output = str(kmer_script.run() ).split()
-        job_ids.append( output[ 3 ] )
+        job_ids.append( output[ -1 ] )
 
     job_ids = [ item.split( '\\n' )[ 0 ] for item in job_ids ]
 
     ids_combined = ",".join( job_ids )
 
-    combination_script_command = { "*_R_1 > " "combined.fasta; mv combined.fasta ../combined.fasta"  }
-    combination_script = SBatchScript( "cat ", "combine_script", combination_script_command, [ "dependency  afterany:" + ids_combined ]  )
+    # combination_script_command = { "*_R_1 > " "combined.fasta; mv combined.fasta ../combined.fasta"  }
+    # combination_script = SBatchScript( "cat ", "combine_script", combination_script_command, [ "dependency  afterany:" + ids_combined ]  )
     combination_script.write_script()
     combination_script.run()
 
@@ -194,18 +200,31 @@ def script_exists( command_name ):
  
      return file_found
 
-class SBatchScript():
-    def __init__( self, command, output, program_args, slurm_args ):
-        self.command = command 
+class SBatchScript:
+    def __init__( self, command, script, slurm_args, dependency_mode = "afterany" ):
+        self.commands = [ SBatchScript.Command( command ) ]
         self.slurm_args = [ item.split() for item in slurm_args ]
-        self.output = output
-        self.program_args = program_args
+        self.script = script
+
+        self.dependencies = list()
+        self.dependency_mode = dependency_mode
+
+        self.modules = list()
+        self.job_num = 0
 
         self.sbatch = "#SBATCH "
         self.shebang = "#!/bin/sh "
 
+    class Command:
+        def __init__( self, string_command ):
+            self.command = string_command
+        def __str__( self ):
+            return self.command
+        def add_arg( self, to_add ):
+            self.command += to_add
+
     def write_script( self ):
-        file = open( self.output, 'w' )
+        file = open( self.script, 'w' )
 
         file.write( self.shebang )
         file.write( "\n" )
@@ -214,24 +233,50 @@ class SBatchScript():
             file.write( self.sbatch + "--" + item[ 0 ] + "=" + item[ 1 ] )
             file.write( "\n" )
 
-        file.write( "module load python/3.latest\n" )
-        file.write( "srun " + self.command + " " )
+        if len( self.dependencies ) > 0:
+            file.write( self.sbatch + "--dependency=" + self.dependency_mode + ','.join( self.dependencies ) )
 
-        for flag, argument in self.program_args.items():
-            file.write( flag + " " + str( argument ) + " " )
+        for current_module in self.modules:
+            file.write( "module load " + current_module )
+            file.write( "\n" )
+
+        for current_command in self.commands:
+            file.write( "srun " + str( current_command ) )
+            file.write( "\n" )
+
         file.close()
 
     def run( self ):
-        os.chmod( self.output, 0o755 )
-        output = subprocess.Popen( "sbatch " + self.output, shell = True, stdout = subprocess.PIPE ) 
-        output.wait()
-        output, error = output.communicate()
+        os.chmod( self.script, 0o755 )
+        script = subprocess.getoutput( "sbatch " + self.script ) 
 
-        return output
+        # Get and return the jobnumber
+        script = script.split()[ 3 ]
+        self.job_num = script
 
-    def add_program_arg( self, flag, arg ):
-        self.program_program_args[ flag ] = arg
+        return script
+
+    def add_command( self, in_command ):
+        self.commands.append( SBatchScript.command( in_command ) )
+
+    def add_slurm_arg( self, new_args ):
+        for item in new_args:
+            self.slurm_args.append( [ item.split() ] )
+
+    def add_dependencies( self, job_num_list ):
+        for current_job in nob_num_list:
+            self.dependencies.append( current_job )
+
+    def set_dependency_mode( self, new_mode ):
+        self.dependency_mode = new_mode
+
+    def add_modules( self, modules_list ):
+        for item in modules_list:
+            self.modules.append( item )
         
+    def add_module( self, to_add ):
+        self.modules.append( to_add )
+       
         
             
 
