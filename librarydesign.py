@@ -57,20 +57,17 @@ def main():
     job_ids = list()
 
     for current_file in cluster_files:
-        kmer_options[ '-q' ] = current_file
-        kmer_options[ '-o' ] = current_file + " out"
+        kmer_options += '-q ' + str( current_file )
+        kmer_options += '-o ' + str( current_file ) + " out"
 
         kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
         kmer_script.write_script()
-        output = str(kmer_script.run() ).split()
-        job_ids.append( output[ -1 ] )
+        current_job_id = kmer_script.run()
+        job_ids.append( current_job_id )
 
-    job_ids = [ item.split( '\\n' )[ 0 ] for item in job_ids ]
-
-    ids_combined = ",".join( job_ids )
-
-    # combination_script_command = { "*_R_1 > " "combined.fasta; mv combined.fasta ../combined.fasta"  }
-    # combination_script = SBatchScript( "cat ", "combine_script", combination_script_command, [ "dependency  afterany:" + ids_combined ]  )
+    combination_script = SBatchScript( "cat *_R_1 > combined.fasta", "combine_script", options.slurm, dependency_mode = "afterok" )
+    combination_script.add_command( "mv combined.fasta ../combined.fasta" )
+    combination_script.add_dependencies( job_ids )
     combination_script.write_script()
     combination_script.run()
 
@@ -234,7 +231,9 @@ class SBatchScript:
             file.write( "\n" )
 
         if len( self.dependencies ) > 0:
-            file.write( self.sbatch + "--dependency=" + self.dependency_mode + ','.join( self.dependencies ) )
+            file.write( self.sbatch + "--dependency=" + self.dependency_mode + ':' + ','.join( self.dependencies ) )
+            file.write( "\n" )
+
 
         for current_module in self.modules:
             file.write( "module load " + current_module )
@@ -257,14 +256,14 @@ class SBatchScript:
         return script
 
     def add_command( self, in_command ):
-        self.commands.append( SBatchScript.command( in_command ) )
+        self.commands.append( SBatchScript.Command( in_command ) )
 
     def add_slurm_arg( self, new_args ):
         for item in new_args:
             self.slurm_args.append( [ item.split() ] )
 
     def add_dependencies( self, job_num_list ):
-        for current_job in nob_num_list:
+        for current_job in job_num_list:
             self.dependencies.append( current_job )
 
     def set_dependency_mode( self, new_mode ):
