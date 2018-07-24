@@ -71,10 +71,22 @@ def main():
                                         dependency_mode = "afterok"
                                      )
     combination_script.add_command( "mv combined.fasta ../" + out_file + ".fasta" )
+    combination_script.add_command( "pwd")
     combination_script.add_dependencies( job_ids )
     combination_script.write_script()
     combination_script.run()
 
+
+    while not os.path.isfile( out_file ):
+        time.sleep( 1 )
+
+    os.chdir( ".." )
+    out_kmers = open( out_file )
+
+    names, sequences = oligo.read_fasta_lists( out_file )
+    names, sequences = oligo.sort_sequences_by_length( names_list, sequence_list )
+
+    oligo.write_fastas( names, sequences, out_file )
 
 
         
@@ -153,6 +165,7 @@ def add_program_options( option_parser ):
     option_parser.add_option( '--cluster_dir', default = "tax_out",
                               help = "Name of directory to write clusters to. Note: this directory is created if it does not already exist. [tax_out]"
                             )
+
 
 
 def check_required_option( option, string, exit_on_failure = False ):
@@ -291,6 +304,11 @@ class SBatchScript:
         self.job_num = script
 
         return script
+
+    def is_finished( self ):
+        output = subprocess.getoutput( "squeue -h -j " + self.job_num )
+        print( output )
+        return not output
 
     def set_shebang( self, new_shebang ):
         """
