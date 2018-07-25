@@ -63,13 +63,14 @@ def main():
     job_ids = list()
 
     for current_file in cluster_files:
-        kmer_options += ' -q ' + str( current_file )
-        kmer_options += ' -o ' + str( current_file ) + "_out "
+        if os.path.isfile( current_file ):
+            kmer_options += ' -q ' + str( current_file )
+            kmer_options += ' -o ' + str( current_file ) + "_out "
 
-        kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
-        kmer_script.write_script()
-        current_job_id = kmer_script.run()
-        job_ids.append( current_job_id )
+            kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
+            kmer_script.write_script()
+            current_job_id = kmer_script.run()
+            job_ids.append( current_job_id )
 
     out_file = options.output + ".fasta"
     combination_script = SBatchScript( "cat $(pwd)/*_R_" + str( options.redundancy ) + " > combined.fasta",
