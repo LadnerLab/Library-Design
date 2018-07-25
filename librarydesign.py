@@ -16,12 +16,16 @@ def main():
 
     options, arguments = option_parser.parse_args()
 
-    check_required_option( options.query, "Fasta query file must be provided", True )
+    need_to_cluster = check_to_cluster( options.cluster_dir )
 
-    if 'tax' in options.cluster_method:
+    if need_to_cluster:
+        check_required_option( options.query, "Fasta query file must be provided", True )
+
+    if 'tax' in options.cluster_method and need_to_cluster:
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
-    cluster_options = ( "-q %s -l %s -n %d -s %s -o %s -c %s --id %d -k %d"
+    if need_to_cluster:
+        cluster_options = ( "-q %s -l %s -n %d -s %s -o %s -c %s --id %d -k %d"
                         % ( options.query, options.lineage, options.number, options.start, options.cluster_dir, options.cluster_method,
                             options.id, options.xmer_window_size
                           )  
@@ -36,13 +40,14 @@ def main():
     if options.min_xmer_coverage:
         kmer_options += '-c ' + str( options.min_xmer_coverage )
 
-    cluster_script = SBatchScript( "clustering.py " + cluster_options, "slurm_script",
-                                   options.slurm
-                                 )  
+    if need_to_cluster:
+        cluster_script = SBatchScript( "clustering.py " + cluster_options, "slurm_script",
+                                       options.slurm
+           )  
 
-    cluster_script.add_module( "python/3.latest" )
-    cluster_script.write_script()
-    cluster_script.run()
+        cluster_script.add_module( "python/3.latest" )
+        cluster_script.write_script()
+        cluster_script.run()
 
     while not os.path.exists( options.cluster_dir ): 
         time.sleep( 1 )
@@ -165,7 +170,11 @@ def add_program_options( option_parser ):
                             )
 
     option_parser.add_option( '--cluster_dir', default = "tax_out",
-                              help = "Name of directory to write clusters to. Note: this directory is created if it does not already exist. [tax_out]"
+                              help = (
+                                        "Name of directory to write clusters to. Note: if this directory already exists, "
+                                        "it will be assumed that all of the files inside are clusters, and the clustering step "
+                                        "will be skipped. [tax_out]"
+                                     )
                             )
 
 
@@ -386,7 +395,10 @@ class SBatchScript:
         """
         self.modules.append( to_add )
        
-        
+def check_to_cluster( cluster_dir ):
+    if os.path.exists( cluster_dir ):
+        return not os.listdir( cluster_dir )
+    return True
             
 
   
