@@ -66,13 +66,13 @@ def main():
         current_job_id = kmer_script.run()
         job_ids.append( current_job_id )
 
-    out_file = options.output
+    out_file = options.output + ".fasta"
     combination_script = SBatchScript( "cat $(pwd)/*_R_" + str( options.redundancy ) + " > combined.fasta",
                                        "combine_script",
                                         options.slurm,
                                         dependency_mode = "afterany"
                                      )
-    combination_script.add_command( "mv combined.fasta ../" + out_file + ".fasta" )
+    combination_script.add_command( "mv combined.fasta ../" + out_file )
     combination_script.add_command( "pwd")
     combination_script.add_dependencies( job_ids )
     combination_script.write_script()
@@ -84,11 +84,11 @@ def main():
         time.sleep( 1 )
 
 
-    names, sequences = oligo.read_fasta_lists( out_file + ".fasta" )
+    names, sequences = oligo.read_fasta_lists( out_file )
     names, sequences = oligo.get_unique_sequences( names, sequences )
 
-    os.remove( out_file + ".fasta" )
-    oligo.write_fastas( names, sequences, out_file + ".fasta"  )
+    os.remove( out_file )
+    oligo.write_fastas( names, sequences, out_file )
 
 
         
