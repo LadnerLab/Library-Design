@@ -5,6 +5,8 @@ import time
 import subprocess
 import os
 
+import protein_oligo_library as oligo
+
 def main():
     usage = "usage %prog [options]"
 
@@ -68,7 +70,7 @@ def main():
     combination_script = SBatchScript( "cat $(pwd)/*_R_" + str( options.redundancy ) + " > combined.fasta",
                                        "combine_script",
                                         options.slurm,
-                                        dependency_mode = "afterok"
+                                        dependency_mode = "afterany"
                                      )
     combination_script.add_command( "mv combined.fasta ../" + out_file + ".fasta" )
     combination_script.add_command( "pwd")
@@ -77,16 +79,16 @@ def main():
     combination_script.run()
 
 
-    while not os.path.isfile( out_file ):
+    os.chdir( ".." )
+    while not combination_script.is_finished():
         time.sleep( 1 )
 
-    os.chdir( ".." )
-    out_kmers = open( out_file )
 
-    names, sequences = oligo.read_fasta_lists( out_file )
-    names, sequences = oligo.sort_sequences_by_length( names_list, sequence_list )
+    names, sequences = oligo.read_fasta_lists( out_file + ".fasta" )
+    names, sequences = oligo.get_unique_sequences( names, sequences )
 
-    oligo.write_fastas( names, sequences, out_file )
+    os.remove( out_file + ".fasta" )
+    oligo.write_fastas( names, sequences, out_file + ".fasta"  )
 
 
         
