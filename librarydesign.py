@@ -25,7 +25,7 @@ def main():
         check_required_option( options.lineage, "Lineage file must be provided when using taxonomic clustering", True )
 
     if need_to_cluster:
-        cluster_options = ( "-q %s -l %s -n %d -s %s -o %s -c %s --id %d -k %d"
+        cluster_options = ( "-q %s -l %s -n %d -s %s -o %s -c %s --id %s -k %d"
                         % ( options.query, options.lineage, options.number, options.start, options.cluster_dir, options.cluster_method,
                             options.id, options.xmer_window_size
                           )  
