@@ -48,6 +48,15 @@ def main():
         cluster_script.add_module( "python/3.latest" )
         cluster_script.write_script()
         cluster_script.run()
+    else:
+        if not os.listdir( options.cluster_dir ):
+           print( ( "ERROR: directory for clustering is empty, "
+                    "please provide the script with a fasta query "
+                    "file to cluster, or populate the directory with "
+                    "clusters from which to create a library design."
+                  )
+                )
+           sys.exit( 1 )
 
     while not os.path.exists( options.cluster_dir ): 
         time.sleep( 1 )
@@ -125,12 +134,16 @@ def add_program_options( option_parser ):
                                        "clustering method. [kmer]"
                                      )
                             )
-    option_parser.add_option( '--id', default = 0.8, type = float,
-                              help = ( "Percentage of its kmers a sequence must share with a "
-                                       "cluster in order for it to become a member of that cluster"
-                                       "only used for kmer-based clustering [0.8]"
+    option_parser.add_option( '--id', default = 0.8, type = str,
+                              help = ( "Comma-separated list of identity thresholds to use for clustering. "
+                                       "A sequence must share at least this proportion of its kmers with "
+                                       "a cluster in order to join it. If a cluster is larger than the threshold "
+                                       "specified by the --number flag, the next-biggest id will be used to break up "
+                                       " the clusters larger than this number."
+                                       " [0.8]"
                                      )
                             )
+
     option_parser.add_option( '-x', '--xmer_window_size', type = 'int',
                               default = 10,
                               help = "Amount of characters from each Xmer alignment sequence to look at. [19]"
