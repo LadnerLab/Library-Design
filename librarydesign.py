@@ -77,6 +77,7 @@ def main():
             kmer_options += ' -o ' + str( current_file ) + "_out "
 
             kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
+            kmer_script.add_slurm_arg( "--job-name " + current_file )
             kmer_script.write_script()
             current_job_id = kmer_script.run()
             job_ids.append( current_job_id )
