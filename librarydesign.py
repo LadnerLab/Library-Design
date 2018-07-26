@@ -332,8 +332,14 @@ class SBatchScript:
         return script
 
     def is_finished( self ):
+        """
+            Determines whether or not this job has been completed,
+            where completion is determined by an empty output from
+            squeue -h -j $job_num, this method does not determine the
+            success/failure of any given job number, only whether or not
+            it is currently running.
+        """
         output = subprocess.getoutput( "squeue -h -j " + self.job_num )
-        print( output )
         return not output
 
     def set_shebang( self, new_shebang ):
