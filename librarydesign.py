@@ -89,7 +89,6 @@ def main():
                                         dependency_mode = "afterany"
                                      )
     combination_script.add_command( "mv combined.fasta ../" + out_file )
-    combination_script.add_command( "pwd")
     combination_script.add_dependencies( job_ids )
     combination_script.write_script()
     combination_script.run()
