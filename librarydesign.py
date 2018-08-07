@@ -4,6 +4,7 @@ import sys
 import time
 import subprocess
 import os
+import shutil
 
 import protein_oligo_library as oligo
 
@@ -104,6 +105,15 @@ def main():
 
     os.remove( out_file )
     oligo.write_fastas( names, sequences, out_file )
+
+    if not options.keep_out:
+        os.remove( options.cluster_dir + '/' + kmer_script.script_name )
+        os.remove( options.cluster_dir + '/' + combination_script.script_name )
+        os.remove( cluster_script.script_name )
+    if not options.keep_out and need_to_cluster:
+        shutil.rmtree( options.cluster_dir )
+    
+        
 
 
         
