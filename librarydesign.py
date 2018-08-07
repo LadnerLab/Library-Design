@@ -190,6 +190,15 @@ def add_program_options( option_parser ):
                                         "will be skipped. [tax_out]"
                                      )
                             )
+    option_parser.add_option( '--keep_out', default = 'false', action = 'store_true', dest = 'keep_out', 
+                              help = (
+                                        "Include this option if you do not want the directory containing the clusters "
+                                        "created by this script, as well as the slurm scripts created by this script "
+                                        "to be deleted. Note: If you invoke this program with clusters that have already "
+                                        "been created, only the slurm scripts will be deleted, and NOT the directory and the "
+                                        "clusters within."
+                                     )
+                            )
 
 
 
