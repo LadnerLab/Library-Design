@@ -209,6 +209,12 @@ def add_program_options( option_parser ):
                                         "clusters within."
                                      )
                             )
+    option_parser.add_option( '--mem_ratio', default = 2, type = int,
+                              help = (
+                                  "Number of gigabytes per 1000 kmers to allocate for each job"
+                                  "[2]"
+                                     )
+                            )
 
 
 
