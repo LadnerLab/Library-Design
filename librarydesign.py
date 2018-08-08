@@ -5,6 +5,7 @@ import time
 import subprocess
 import os
 import shutil
+import math
 
 import protein_oligo_library as oligo
 
@@ -73,6 +74,7 @@ def main():
     job_ids = list()
 
     kmer_size_dict = get_kmer_sizes_for_clusters( 'cluster_sizes.txt' )
+    kmer_memory_dict = get_mem_required_per_cluster( kmer_size_dict, options.mem_ratio )
 
     for current_file in cluster_files:
         if os.path.isfile( current_file ) and '.fasta' in current_file:
@@ -462,6 +464,15 @@ def get_kmer_sizes_for_clusters( file_name ):
     cluster_size_file.close()
     
     return cluster_size_dict
+
+def get_mem_required_per_cluster( cluster_size_dict, mem_per_thousand_kmers ):
+    memory_dict = {}
+    
+    for file_name, num_kmers in cluster_size_dict.items():
+        current_size = float( num_kmers )
+        memory_dict[ file_name ] = int( math.ceil( mem_per_thousand_kmers / current_size ) )
+
+    return memory_dict
   
 if __name__ == '__main__':
     main()
