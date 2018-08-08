@@ -19,6 +19,7 @@ def main():
     options, arguments = option_parser.parse_args()
 
     need_to_cluster = check_to_cluster( options.cluster_dir )
+    SLEEP_INTERVAL = 3
 
     if need_to_cluster:
         check_required_option( options.query, "Fasta query file must be provided", True )
@@ -81,8 +82,11 @@ def main():
             kmer_options += ' -q ' + str( current_file )
             kmer_options += ' -o ' + str( current_file ) + "_out "
 
+            mem_required = kmer_memory_dict[ current_file ]
+
             kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
             kmer_script.add_slurm_arg( "--job-name " + current_file )
+            kmer_script.add_slurm_arg( "--mem " + str( mem_required ) + 'G' )
             kmer_script.write_script()
             current_job_id = kmer_script.run()
             job_ids.append( current_job_id )
@@ -470,7 +474,7 @@ def get_mem_required_per_cluster( cluster_size_dict, mem_per_thousand_kmers ):
     
     for file_name, num_kmers in cluster_size_dict.items():
         current_size = float( num_kmers )
-        memory_dict[ file_name ] = int( math.ceil( mem_per_thousand_kmers / current_size ) )
+        memory_dict[ file_name ] = int( math.ceil( current_size / 1000 ) ) * mem_per_thousand_kmers
 
     return memory_dict
   
