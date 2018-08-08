@@ -219,7 +219,9 @@ def add_program_options( option_parser ):
                             )
     option_parser.add_option( '--mem_ratio', default = 2, type = int,
                               help = (
-                                        "Number of gigabytes per 1000 kmers to allocate for each job"
+                                        "Number of gigabytes per 1000 kmers to allocate for each job, "
+                                        "note that this will also be the minimum memory allocation for each "
+                                        "job submitted, and clusters of <1000 kmers will allocate this much memory."
                                         "[2]"
                                      )
                             )
