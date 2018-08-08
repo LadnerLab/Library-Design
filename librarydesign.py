@@ -60,20 +60,22 @@ def main():
            sys.exit( 1 )
 
     while not os.path.exists( options.cluster_dir ): 
-        time.sleep( 1 )
+        time.sleep( SLEEP_INTERVAL )
 
     cluster_files = os.listdir( options.cluster_dir )
     num_files = len( cluster_files )
 
     while num_files < 1:
-        time.sleep( 1 )
+        time.sleep( SLEEP_INTERVAL )
         num_files = len( os.listdir( options.cluster_dir ) )
     
     os.chdir( options.cluster_dir )
     job_ids = list()
 
+    kmer_size_dict = get_kmer_sizes_for_clusters( 'cluster_sizes.txt' )
+
     for current_file in cluster_files:
-        if os.path.isfile( current_file ):
+        if os.path.isfile( current_file ) and '.fasta' in current_file:
             kmer_options += ' -q ' + str( current_file )
             kmer_options += ' -o ' + str( current_file ) + "_out "
 
@@ -211,8 +213,8 @@ def add_program_options( option_parser ):
                             )
     option_parser.add_option( '--mem_ratio', default = 2, type = int,
                               help = (
-                                  "Number of gigabytes per 1000 kmers to allocate for each job"
-                                  "[2]"
+                                        "Number of gigabytes per 1000 kmers to allocate for each job"
+                                        "[2]"
                                      )
                             )
 
@@ -445,7 +447,21 @@ def check_to_cluster( cluster_dir ):
         return not os.listdir( cluster_dir )
     return True
             
+def get_kmer_sizes_for_clusters( file_name ):
 
+    cluster_size_file = open( file_name, 'r' )
+    cluster_size_dict = {}
+
+    for line in cluster_size_file:
+        current_cluster_size = line.split( '|' )
+        cluster_name = current_cluster_size[ 0 ]
+        cluster_size = current_cluster_size[ 1 ]
+
+        cluster_size_dict[ cluster_name ] = cluster_size
+
+    cluster_size_file.close()
+    
+    return cluster_size_dict
   
 if __name__ == '__main__':
     main()
