@@ -39,9 +39,12 @@ def main():
                        )
                    )
     if options.functional_groups:
-        kmer_options += ' -p '
+        kmer_options += ' -p ' + " "
     if options.min_xmer_coverage:
-        kmer_options += '-c ' + str( options.min_xmer_coverage )
+        kmer_options += '-c ' + str( options.min_xmer_coverage ) + " "
+    if options.blosum:
+        kmer_options += '-b ' + options.blosum + " "
+        kmer_options += '-n ' + options.blosum_cutoff + " "
 
     if need_to_cluster:
         cluster_script = SBatchScript( "clustering.py " + cluster_options, "slurm_script",
@@ -223,6 +226,20 @@ def add_program_options( option_parser ):
                                         "note that this will also be the minimum memory allocation for each "
                                         "job submitted, and clusters of <1000 kmers will allocate this much memory."
                                         "[2]"
+                                     )
+                            )
+    option_parser.add_option( '--blosum',
+                              help = (
+                                        "blosum matrix to be used in inclusion of xmer functional groups. "
+                                        "Note that blosum90 and blosum62 are hard-coded into this program, "
+                                        "and are specified by blosum90 or blosum62. Otherwise, specify a "
+                                        "text file containing a blosum matrix."
+                                     )
+                            )
+    option_parser.add_option( '--blosum_cutoff', default = "0",
+                              help = (
+                                       "integer cutoff for whether an amino acid can be substituted "
+                                       "only relationships greater to or equal to this number will be added [0]"
                                      )
                             )
 
