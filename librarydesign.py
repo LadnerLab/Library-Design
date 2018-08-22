@@ -19,6 +19,7 @@ def main():
     options, arguments = option_parser.parse_args()
 
     need_to_cluster = check_to_cluster( options.cluster_dir )
+
     SLEEP_INTERVAL = 3
 
     if need_to_cluster:
@@ -45,6 +46,7 @@ def main():
     if options.blosum:
         kmer_options += '-b ' + options.blosum + " "
         kmer_options += '-n ' + options.blosum_cutoff + " "
+
 
     if need_to_cluster:
         cluster_script = SBatchScript( "clustering.py " + cluster_options, "slurm_script",
@@ -74,6 +76,7 @@ def main():
         time.sleep( SLEEP_INTERVAL )
         num_files = len( os.listdir( options.cluster_dir ) )
     
+    starting_dir = os.getcwd()
     os.chdir( options.cluster_dir )
     job_ids = list()
 
@@ -81,7 +84,7 @@ def main():
     kmer_memory_dict = get_mem_required_per_cluster( kmer_size_dict, options.mem_ratio )
 
     for current_file in cluster_files:
-        if os.path.isfile( current_file ) and '.fasta' in current_file:
+        if os.path.isfile( current_file ) and '.fasta' in current_file and 'out' not in current_file:
             kmer_options += ' -q ' + str( current_file )
             kmer_options += ' -o ' + str( current_file ) + "_out "
 
@@ -90,6 +93,7 @@ def main():
             kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
             kmer_script.add_slurm_arg( "--job-name " + current_file )
             kmer_script.add_slurm_arg( "--mem " + str( mem_required ) + 'G' )
+
             kmer_script.write_script()
             current_job_id = kmer_script.run()
             job_ids.append( current_job_id )
@@ -222,26 +226,12 @@ def add_program_options( option_parser ):
                             )
     option_parser.add_option( '--mem_ratio', default = 2, type = int,
                               help = (
-                                        "Number of gigabytes per 1000 kmers to allocate for each job, "
-                                        "note that this will also be the minimum memory allocation for each "
-                                        "job submitted, and clusters of <1000 kmers will allocate this much memory."
+                                        "Number of gigabytes per 1000 kmers to allocate for each job"
                                         "[2]"
                                      )
                             )
-    option_parser.add_option( '--blosum',
-                              help = (
-                                        "blosum matrix to be used in inclusion of xmer functional groups. "
-                                        "Note that blosum90 and blosum62 are hard-coded into this program, "
-                                        "and are specified by blosum90 or blosum62. Otherwise, specify a "
-                                        "text file containing a blosum matrix."
-                                     )
-                            )
-    option_parser.add_option( '--blosum_cutoff', default = "0",
-                              help = (
-                                       "integer cutoff for whether an amino acid can be substituted "
-                                       "only relationships greater to or equal to this number will be added [0]"
-                                     )
-                            )
+    option_parser.add_option( '--blosum', help = "h" )
+    option_parser.add_option( '--blosum_cutoff', default = "0", help = "v" )
 
 
 
