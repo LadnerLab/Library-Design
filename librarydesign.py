@@ -21,6 +21,7 @@ def main():
     need_to_cluster = check_to_cluster( options.cluster_dir )
 
     SLEEP_INTERVAL = 3
+    LARGE_CLUSTER_THRESHOLD = 25000
 
     if need_to_cluster:
         check_required_option( options.query, "Fasta query file must be provided", True )
@@ -91,8 +92,11 @@ def main():
             mem_required = kmer_memory_dict[ current_file ]
 
             kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
-            kmer_script.add_slurm_arg( "--job-name " + current_file )
+            kmer_script.add_slurm_arg( "--job-name " + current_file + "_19mer_lib_final_2" )
             kmer_script.add_slurm_arg( "--mem " + str( mem_required ) + 'G' )
+
+            if int( kmer_size_dict[ current_file ] ) < LARGE_CLUSTER_THRESHOLD:
+                kmer_script.add_slurm_arg( "--time 00:54:00" )
 
             kmer_script.write_script()
             current_job_id = kmer_script.run()
