@@ -60,6 +60,8 @@ def main():
     y_axis = get_axis_data( args.yaxis, job_array )
     x_axis = get_axis_data( args.xaxis, job_array )
 
+    y_axis_label = get_axis_label( args.yaxis )
+    x_axis_label = get_axis_label( args.xaxis )
 
     if y_axis is None or x_axis is None:
         print( "Incorrect specification for either the y or x axis, program cannot continue" )
@@ -133,6 +135,26 @@ def get_axis_data( data_label, job_array ):
 
     return return_array
 
+def get_axis_label( data_label ):
+    return_str = None
+
+    if data_label == "kmers":
+        return_str = "Number of kmers"
+    elif data_label == "elapsed":
+        return_str = "Elapsed time (in minutes)"
+    elif data_label == "mem_used":
+        return_str = "Amount of Memory Used"
+    elif data_label == "req_cpu":
+        return_str = "Number of required CPUs"
+    elif data_label == "state":
+        return_str = "Job state"
+    elif data_label == "time_limit":
+        return_str = "Time limit (in minutes)"
+    elif data_label == "mem_req":
+        return_str = "Memory allocated for Job"
+
+    return return_str
+    
 
 
 class DataParser:
