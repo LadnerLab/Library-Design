@@ -72,11 +72,15 @@ def main():
 
         ax = plt.subplot()
         ax.set_yticks( y_tick_vals )
-        ax.set_yticklabels( [ from_seconds( item ) for item in y_tick_vals ] )
+        if "minutes" in y_axis_label:
+            ax.set_yticklabels( [ from_seconds( item ) for item in y_tick_vals ] )
+        else:
+            ax.set_yticklabels( [ item for item in y_tick_vals ] )
+            
         ax.plot()
         ax.scatter( x_axis, y_axis )
-        plt.xlabel( "Number of kmers" )
-        plt.ylabel( "Time (in seconds) to run " )
+        plt.xlabel( x_axis_label )
+        plt.ylabel( y_axis_label )
         plt.show()
     else:
         print( "No valid values were found to place on the y-axis" )
