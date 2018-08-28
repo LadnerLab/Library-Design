@@ -30,8 +30,6 @@ def main():
 
     job_names = {}
 
-    step_size = calc_step_size( args.max_yval, args.num_yticks )
-
     sizes_file = open( args.kmers, "r" )
 
     for line in sizes_file:
@@ -63,6 +61,8 @@ def main():
     y_axis_label = get_axis_label( args.yaxis )
     x_axis_label = get_axis_label( args.xaxis )
 
+    step_size = calc_step_size( max( y_axis ), args.num_yticks )
+
     if y_axis is None or x_axis is None:
         print( "Incorrect specification for either the y or x axis, program cannot continue" )
         sys.exit( 1 )
@@ -76,7 +76,7 @@ def main():
             ax.set_yticklabels( [ from_seconds( item ) for item in y_tick_vals ] )
         else:
             ax.set_yticklabels( [ item for item in y_tick_vals ] )
-            
+
         ax.plot()
         ax.scatter( x_axis, y_axis )
         plt.xlabel( x_axis_label )
@@ -91,7 +91,6 @@ def to_seconds( string_time ):
     hours = int( string_time[ 0 ] )
     minutes = int( string_time[ 1 ] )
     seconds = int( string_time[ 2 ] )
-
 
     return ( 60 * hours * 60 ) + ( 60 * minutes ) + ( seconds )
 
