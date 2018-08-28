@@ -17,6 +17,8 @@ def main():
     arg_parser.add_argument( '--num_yticks', default = 20, type = int )
     arg_parser.add_argument( '--suffix', help = "Suffix to remove from each name" )
     arg_parser.add_argument( '--max_yval', type = int, default = 9000 ) # multiple of 60
+    arg_parser.add_argument( '--yaxis', help = "Data to show on yaxis", type = str, default = "elapsed" )
+    arg_parser.add_argument( '--xaxis', help = "Data to show on xaxis", type = str, default = "kmers" )
 
     args = arg_parser.parse_args()
 
@@ -36,8 +38,8 @@ def main():
         line = line.split( '|' )
         job_names[ line[ 0 ] ] = line[ 1 ]
 
+    job_array = list()
     if runtime_data_from_file:
-        job_array = list()
 
         for current_data in runtime_data_from_file:
             data_job = SlurmJob( current_data )
@@ -50,11 +52,19 @@ def main():
                     job_array.append( data_job )
             elif not data_job.is_completed() and SUFFIX in data_job._name:
                 print( "Job %s (%s) completed with a data_jobstats of %s and was excluded" % ( data_job._name, data_job._id, data_job._state ) )
+    else:
+        print( "Unable to find data from statistics file, exiting..." )
+        sys.exit( 1 )
+                
 
-    y_axis = [ to_seconds( job._elapsed ) for job in job_array ]
-    # y_axis = [ float( job._used_mem ) for job in job_array ]
-    x_axis = [ int( job._kmers ) for job in job_array ]
+    y_axis = get_axis_data( args.yaxis, job_array )
+    x_axis = get_axis_data( args.xaxis, job_array )
 
+
+    if y_axis is None or x_axis is None:
+        print( "Incorrect specification for either the y or x axis, program cannot continue" )
+        sys.exit( 1 )
+            
     if len( y_axis ) > 0:
         y_tick_vals = get_yvals( y_axis, step_size )
 
@@ -64,7 +74,7 @@ def main():
         ax.plot()
         ax.scatter( x_axis, y_axis )
         plt.xlabel( "Number of kmers" )
-        plt.ylabel( "Time (in minutes) to run " )
+        plt.ylabel( "Time (in seconds) to run " )
         plt.show()
     else:
         print( "No valid values were found to place on the y-axis" )
@@ -102,6 +112,26 @@ def to_datetime( string_time ):
 
 def calc_step_size( max_val, num_ticks ):
     return  max_val // num_ticks
+
+def get_axis_data( data_label, job_array ):
+    return_array = None
+
+    if data_label == "kmers":
+        return_array = [ int( job._kmers ) for job in job_array ]
+    elif data_label == "elapsed":
+        return_array = [ to_seconds( job._elapsed ) for job in job_array ]
+    elif data_label == "mem_used":
+        return_array = [ int( job._used_mem ) for job in job_array ]
+    elif data_label == "req_cpu":
+        return_array = [ int( job._req_cpu ) for job in job_array ]
+    elif data_label == "state":
+        return_array = [ job._state for job in job_array ]
+    elif data_label == "time_limit":
+        return_array = [ to_seconds( job._time_limit ) for job in job_array ]
+    elif data_label == "mem_req":
+        return_array = [ job._req_mem for job in job_array ]
+
+    return return_array
 
 
 
