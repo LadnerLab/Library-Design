@@ -72,7 +72,7 @@ def main():
 
         ax = plt.subplot()
         ax.set_yticks( y_tick_vals )
-        if "minutes" in y_axis_label:
+        if "minutes" in y_axis_label.lower():
             ax.set_yticklabels( [ from_seconds( round_to_minute( item ) ) for item in y_tick_vals ] )
         else:
             ax.set_yticklabels( [ item for item in y_tick_vals ] )
@@ -144,7 +144,7 @@ def get_axis_label( data_label ):
     if data_label == "kmers":
         return_str = "Number of kmers"
     elif data_label == "elapsed":
-        return_str = "Elapsed time (in minutes)"
+        return_str = "Elapsed time (Hours:Minutes:Seconds)"
     elif data_label == "mem_used":
         return_str = "Amount of Memory Used (Megabytes)"
     elif data_label == "req_cpu":
