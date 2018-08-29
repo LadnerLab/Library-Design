@@ -73,7 +73,7 @@ def main():
         ax = plt.subplot()
         ax.set_yticks( y_tick_vals )
         if "minutes" in y_axis_label:
-            ax.set_yticklabels( [ from_seconds( item ) for item in y_tick_vals ] )
+            ax.set_yticklabels( [ from_seconds( round_to_minute( item ) ) for item in y_tick_vals ] )
         else:
             ax.set_yticklabels( [ item for item in y_tick_vals ] )
 
@@ -95,7 +95,7 @@ def to_seconds( string_time ):
     return ( 60 * hours * 60 ) + ( 60 * minutes ) + ( seconds )
 
 def get_yvals( y_axis_vals, step_size ):
-    return range( 0, max( y_axis_vals ) + 1, step_size )
+    return range( 0, int( max( y_axis_vals ) + 1 ), int( step_size ) )
 
 def from_seconds( int_seconds ):
     hours = int_seconds // ( 60 * 60 )
@@ -126,7 +126,7 @@ def get_axis_data( data_label, job_array ):
     elif data_label == "elapsed":
         return_array = [ to_seconds( job._elapsed ) for job in job_array ]
     elif data_label == "mem_used":
-        return_array = [ int( job._used_mem ) for job in job_array ]
+        return_array = [ float( job._used_mem ) for job in job_array ]
     elif data_label == "req_cpu":
         return_array = [ int( job._req_cpu ) for job in job_array ]
     elif data_label == "state":
@@ -146,7 +146,7 @@ def get_axis_label( data_label ):
     elif data_label == "elapsed":
         return_str = "Elapsed time (in minutes)"
     elif data_label == "mem_used":
-        return_str = "Amount of Memory Used"
+        return_str = "Amount of Memory Used (Megabytes)"
     elif data_label == "req_cpu":
         return_str = "Number of required CPUs"
     elif data_label == "state":
@@ -158,7 +158,13 @@ def get_axis_label( data_label ):
 
     return return_str
     
+def round_to_minute( input_seconds ):
+    remainder = input_seconds % 60
 
+    rounded_time = input_seconds - remainder
+
+    return rounded_time
+    
 
 class DataParser:
     def __init__( self, input_file, delimiter_char = '|' ):
