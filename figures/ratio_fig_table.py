@@ -31,12 +31,15 @@ def main():
 
     alignment_size_dict = {}
     alignment_count_dict = {}
+    alignment_length_dict = {}
 
     kmer_size_dict = {}
     kmer_count_dict = {}
+    kmer_length_dict = {}
 
     ref_dict = {}
     ref_count_dict = {}
+    ref_length_dict = {}
 
 
     for current_cluster in os.listdir( spanning_dir ):
@@ -44,9 +47,11 @@ def main():
 
         alignment_size_dict[ current_cluster.split( aligned_suffix )[0] ] = set()
         alignment_count_dict[ current_cluster.split( aligned_suffix )[0] ] = len( names )
+        alignment_length_dict[ current_cluster.split( aligned_suffix )[ 0 ] ] = 0
 
         for current_seq in sequences:
             alignment_size_dict[ current_cluster.split(aligned_suffix )[0] ] |= subset_lists_iter( current_seq, 10, 1 )
+            alignment_length_dict[ current_cluster.split( aligned_suffix )[ 0 ] ] += len( current_seq )
 
 
     for current_cluster in os.listdir( kmer_dir ):
@@ -55,18 +60,23 @@ def main():
         kmer_size_dict[ current_cluster.split('_out_R_1' )[0] ] = set()
 
         kmer_count_dict[ current_cluster.split('_out_R_1' )[0] ] = len( names )
+        kmer_length_dict[ current_cluster.split('_out_R_1' )[0] ] = 0
+
 
         for current_seq in sequences:
-            kmer_size_dict[ current_cluster.split('_out_R_1' )[0] ] |= oligo.subset_lists_iter( current_seq, 10, 1 )
+            kmer_size_dict[ current_cluster.split('_out_R_1' )[0] ] |= subset_lists_iter( current_seq, 10, 1 )
+            kmer_length_dict[ current_cluster.split('_out_R_1' )[0] ] += len( current_seq )
 
     for current_cluster in os.listdir( ref_dir ):
         names, sequences = read_fasta_lists( ref_dir + '/' + current_cluster )
 
         ref_count_dict[current_cluster] = len(names)
         ref_dict[ current_cluster ] = set()
+        ref_length_dict[ current_cluster ] = 0
 
         for current_seq in sequences:
             ref_dict[ current_cluster ] |= subset_lists_iter( current_seq, 10, 1 )
+            ref_length_dict[ current_cluster ] += len( current_seq )
 
     xaxis_vals = list()
     yaxis_vals = list()
@@ -81,10 +91,17 @@ def main():
     if kmer_only: print ("Clusters absent from aligned library: %s" % (",".join(kmer_only)))
     
     fout = open(args.out, "w")
-    fout.write("Cluster\tNumSeqs\tKmerOligos\tAlignOligos\tOligosRatios\tRefEpitopes\tKmerEpitopes\tAlignEpitopes\tKmerPropEpi\tAlignPropEpif\tPropEpiRatio\n")
+    fout.write("Cluster\tNumSeqs\tKmerOligos\tAlignOligos\tOligosRatios\tRefEpitopes\tKmerEpitopes\tAlignEpitopes\tKmerPropEpi\tAlignPropEpif\tPropEpiRatio\tLenKmerOligosInDesign\tLenAlignOligosInDesign\tLenSeqsInCluster\n")
     for current_clust in cluster_names:
         if current_clust in kmer_size_dict.keys():
             if alignment_count_dict[ current_clust ] > 0:
+
+                current_clust_num_kmers = kmer_count_dict[ current_clust ]
+                current_clust_num_alignment_kmers = alignment_count_dict[ current_clust ]
+
+                current_clust_kmer_length = kmer_length_dict[ current_clust ]
+                current_clust_alignment_length = alignment_length_dict[ current_clust ]
+
                 yaxis_vals.append( kmer_count_dict[ current_clust ] / alignment_count_dict[ current_clust ] )
 
                 percent_kmer_cov = len( kmer_size_dict[ current_clust ] ) / len( ref_dict[ current_clust ] )
@@ -93,10 +110,14 @@ def main():
                 xaxis_vals.append( percent_kmer_cov / percent_alignment_cov )
                 
                 #Write values to output file
-                fout.write("%s\t%d\t%d\t%d\t%.5f\t%d\t%d\t%d\t%.5f\t%.5f\t%.5f\n" % (current_clust, ref_count_dict[current_clust], kmer_count_dict[current_clust], alignment_count_dict[current_clust], 
+                fout.write("%s\t%d\t%d\t%d\t%.5f\t%d\t%d\t%d\t%.5f\t%.5f\t%.5f\t%d\t%d\t%d\n" % (current_clust, ref_count_dict[current_clust], kmer_count_dict[current_clust], alignment_count_dict[current_clust], 
                                  kmer_count_dict[ current_clust ] / alignment_count_dict[ current_clust ],
                                  len(ref_dict[current_clust]), len(kmer_size_dict[current_clust]), len(alignment_size_dict[current_clust]),
-                                  percent_kmer_cov, percent_alignment_cov, percent_kmer_cov/percent_alignment_cov))
+                                                                                             percent_kmer_cov, percent_alignment_cov,
+                                                                                             percent_kmer_cov/percent_alignment_cov,
+                                                                                             kmer_length_dict[ current_clust ],
+                                                                                             alignment_length_dict[ current_clust ],
+                                                                                             ref_length_dict[ current_clust ] ))
     
     fout.close()
     
