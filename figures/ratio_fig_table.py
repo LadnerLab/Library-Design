@@ -110,14 +110,20 @@ def main():
                 xaxis_vals.append( percent_kmer_cov / percent_alignment_cov )
                 
                 #Write values to output file
-                fout.write("%s\t%d\t%d\t%d\t%.5f\t%d\t%d\t%d\t%.5f\t%.5f\t%.5f\t%d\t%d\t%d\n" % (current_clust, ref_count_dict[current_clust], kmer_count_dict[current_clust], alignment_count_dict[current_clust], 
-                                 kmer_count_dict[ current_clust ] / alignment_count_dict[ current_clust ],
-                                 len(ref_dict[current_clust]), len(kmer_size_dict[current_clust]), len(alignment_size_dict[current_clust]),
-                                                                                             percent_kmer_cov, percent_alignment_cov,
-                                                                                             percent_kmer_cov/percent_alignment_cov,
-                                                                                             kmer_length_dict[ current_clust ],
-                                                                                             alignment_length_dict[ current_clust ],
-                                                                                             ref_length_dict[ current_clust ] ))
+                fout.write("%s\t%d\t%d\t%d\t%.5f\t%d\t%d\t%d\t%.5f\t%.5f\t%.5f\t%d\t%d\t%d\n" %
+                              (
+                                  current_clust, ref_count_dict[current_clust],
+                                  kmer_count_dict[current_clust], alignment_count_dict[current_clust], 
+                                  kmer_count_dict[ current_clust ] / alignment_count_dict[ current_clust ],
+                                  len(ref_dict[current_clust]), len(kmer_size_dict[current_clust]),
+                                  len(alignment_size_dict[current_clust]),
+                                  percent_kmer_cov, percent_alignment_cov,
+                                  percent_kmer_cov/percent_alignment_cov,
+                                  kmer_length_dict[ current_clust ],
+                                  alignment_length_dict[ current_clust ],
+                                  ref_length_dict[ current_clust ]
+                              )
+                )
     
     fout.close()
     
