@@ -131,6 +131,38 @@ def subset_lists_iter(sequence, window_size, step_size ):
 
     return xmer_set
 
+def read_fasta_lists( file_to_read ):
+    """
+       Reads a list of fastas from file_to_read
+    
+       Returns:
+        names- a list of names of the sequences found in the fasta file
+        sequences- a list of the sequences found in the fasta file
+    """
+
+    file_in = open( file_to_read, 'r' )
+    count = 0
+
+    names = []
+    sequences = []
+    current_sequence = ''
+
+    for line in file_in:
+        line = line.strip()
+        if line and line[ 0 ] == '>':
+            count += 1
+            names.append( line[ 1: ] )
+            if count > 1:
+                sequences.append( current_sequence )
+            current_sequence = ''
+
+        else:
+            current_sequence += line
+
+    sequences.append( current_sequence )
+    file_in.close()
+
+    return names, sequences
 
 
 if __name__ == '__main__':
