@@ -2,10 +2,14 @@
 
 import os
 import sys
-#import matplotlib.pyplot as plt
 import argparse 
 
 import protein_oligo_library as oligo
+
+try:
+    import matplotlib.pyplot as plt
+except:
+    pass
 
 def main():
     parser = argparse.ArgumentParser(
@@ -18,6 +22,7 @@ def main():
     parser.add_argument( '--kmer_dir', type = str )
     parser.add_argument( '--ref_dir', type = str )
     parser.add_argument( '--out', type = str )
+    parser.add_argument( '--plot', action = "store_true", default = False )
 
     args = parser.parse_args()
 
@@ -97,16 +102,17 @@ def main():
     
     fout.close()
     
-#     ax = plt.subplot()
-#     ax.scatter( xaxis_vals, yaxis_vals )
-#     plt.xlabel( "Percent coverage (kmer / alignment )" )
-#     plt.ylabel( "Oligo counts (kmer / alignment)" )
-#     # plt.plot( [ item for item in range( 12000 ) ] )
-#     plt.ylim( ymax = 12 )
-#     plt.xlim( xmin = 0, xmax = 12 )
-# 
-#     plt.title( "Gap Spanning" )
-#     plt.show()
+    if args.plot:
+        ax = plt.subplot()
+        ax.scatter( xaxis_vals, yaxis_vals )
+        plt.xlabel( "Percent coverage (kmer / alignment )" )
+        plt.ylabel( "Oligo counts (kmer / alignment)" )
+        # plt.plot( [ item for item in range( 12000 ) ] )
+        plt.ylim( ymax = 12 )
+        plt.xlim( xmin = 0, xmax = 12 )
+        
+        plt.title( "Gap Spanning" )
+        plt.show()
 
 
 
