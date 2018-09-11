@@ -118,7 +118,8 @@ def subset_lists_iter(sequence, window_size, step_size ):
 
     while end <= len( sequence ):
         xmer = sequence[start:end]
-        xmer_set.add(xmer)
+        if 'X' not in xmer:
+            xmer_set.add(xmer)
         start += step_size
         end = start + step_size + window_size - 1
 
