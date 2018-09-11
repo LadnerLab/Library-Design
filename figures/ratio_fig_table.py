@@ -4,8 +4,6 @@ import os
 import sys
 import argparse 
 
-import protein_oligo_library as oligo
-
 try:
     import matplotlib.pyplot as plt
 except:
@@ -42,17 +40,17 @@ def main():
 
 
     for current_cluster in os.listdir( spanning_dir ):
-        names, sequences = oligo.read_fasta_lists( spanning_dir + '/' + current_cluster )
+        names, sequences = read_fasta_lists( spanning_dir + '/' + current_cluster )
 
         alignment_size_dict[ current_cluster.split( aligned_suffix )[0] ] = set()
         alignment_count_dict[ current_cluster.split( aligned_suffix )[0] ] = len( names )
 
         for current_seq in sequences:
-            alignment_size_dict[ current_cluster.split(aligned_suffix )[0] ] |= oligo.subset_lists_iter( current_seq, 10, 1 )
+            alignment_size_dict[ current_cluster.split(aligned_suffix )[0] ] |= subset_lists_iter( current_seq, 10, 1 )
 
 
     for current_cluster in os.listdir( kmer_dir ):
-        names, sequences = oligo.read_fasta_lists( kmer_dir + '/' + current_cluster )
+        names, sequences = read_fasta_lists( kmer_dir + '/' + current_cluster )
 
         kmer_size_dict[ current_cluster.split('_out_R_1' )[0] ] = set()
 
@@ -62,13 +60,13 @@ def main():
             kmer_size_dict[ current_cluster.split('_out_R_1' )[0] ] |= oligo.subset_lists_iter( current_seq, 10, 1 )
 
     for current_cluster in os.listdir( ref_dir ):
-        names, sequences = oligo.read_fasta_lists( ref_dir + '/' + current_cluster )
+        names, sequences = read_fasta_lists( ref_dir + '/' + current_cluster )
 
         ref_count_dict[current_cluster] = len(names)
         ref_dict[ current_cluster ] = set()
 
         for current_seq in sequences:
-            ref_dict[ current_cluster ] |= oligo.subset_lists_iter( current_seq, 10, 1 )
+            ref_dict[ current_cluster ] |= subset_lists_iter( current_seq, 10, 1 )
 
     xaxis_vals = list()
     yaxis_vals = list()
