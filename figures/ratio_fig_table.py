@@ -68,12 +68,12 @@ def main():
         ref_count_dict[current_cluster] = len(names)
         ref_dict[ current_cluster ] = set()
         ref_length_dict[ current_cluster ] = 0
-        ref_19mer_len[ current_cluster ] = 0
+        ref_19mer_len[ current_cluster ] = set()
 
         for current_seq in sequences:
             ref_dict[ current_cluster ] |= subset_lists_iter( current_seq, 10, 1 )
             ref_length_dict[ current_cluster ] += len( current_seq )
-            ref_19mer_len[ current_cluster ] += sum( [  len( item ) for item in subset_lists_iter( current_seq, 19, 1 ) ] )
+            ref_19mer_len[ current_cluster ] |= subset_lists_iter( current_seq, 19, 1  )
 
     xaxis_vals = list()
     yaxis_vals = list()
@@ -88,7 +88,7 @@ def main():
     if kmer_only: print ("Clusters absent from aligned library: %s" % (",".join(kmer_only)))
     
     fout = open(args.out, "w")
-    fout.write("Cluster\tNumSeqs\tKmerOligos\tAlignOligos\tOligosRatios\tRefEpitopes\tKmerEpitopes\tAlignEpitopes\tKmerPropEpi\tAlignPropEpif\tPropEpiRatio\tLenKmersInCluster\tLenSeqsInCluster\n")
+    fout.write("Cluster\tNumSeqs\tKmerOligos\tAlignOligos\tOligosRatios\tRefEpitopes\tKmerEpitopes\tAlignEpitopes\tKmerPropEpi\tAlignPropEpif\tPropEpiRatio\tNumUniqYmersInClust\tTotalLenSeqsInCluster\n")
     for current_clust in cluster_names:
         if current_clust in kmer_size_dict.keys():
             if alignment_count_dict[ current_clust ] > 0:
@@ -113,7 +113,7 @@ def main():
                                   len(alignment_size_dict[current_clust]),
                                   percent_kmer_cov, percent_alignment_cov,
                                   percent_kmer_cov/percent_alignment_cov,
-                                  ref_19mer_len[ current_clust ],
+                                  len( ref_19mer_len[ current_clust ] ),
                                   ref_length_dict[ current_clust ]
                               )
                 )
