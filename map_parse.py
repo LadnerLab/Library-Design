@@ -23,11 +23,9 @@ def main():
 
     args = arg_parser.parse_args()
 
-    # try to parse the map file
+    map_dict = None
     try:
-       # function: parse_map
-        parse_map( args.map )
-    # except error:
+        map_dict = parse_map( args.map )
     except ( IOError, OSError, TypeError ):
         print( "ERROR: An IO exception occurred when trying to "
                "open and parse map file"
@@ -40,6 +38,9 @@ def main():
              )
         sys.exit( 1 )
 
+    #
+    print( map_dict )
+
 def parse_map( file_name ):
     """
         Opens, reads, and parses a file containing an epitope map.
@@ -49,8 +50,9 @@ def parse_map( file_name ):
         On successful operation, returns a dictionary containing
         epitope: list of items mapping
     """
-    READ_FLAG = 'r'
-    TAB_CHAR  = '\t'
+    READ_FLAG  = 'r'
+    TAB_CHAR   = '\t'
+    COMMA_CHAR = ','
 
     file_dict = {}
     open_file = None
@@ -77,8 +79,9 @@ def parse_map( file_name ):
                  or new_dict_key in file_dict.keys():
                 raise InputFormatFileError
             
+            # String is formatted correctly 
             else:
-                file_dict[ new_dict_key ] = new_dict_val.split()
+                file_dict[ new_dict_key ] = new_dict_val.split( COMMA_CHAR )
     except:
         raise
 
