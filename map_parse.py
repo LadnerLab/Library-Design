@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import sys
 
 import protein_oligo_library as oligo
 
@@ -48,21 +49,43 @@ def parse_map( file_name ):
         On successful operation, returns a dictionary containing
         epitope: list of items mapping
     """
-    # create variables
+    READ_FLAG = 'r'
+    TAB_CHAR  = '\t'
+
+    file_dict = {}
+    open_file = None
+
+    split_line   = ""
+    new_dict_key = ""
+    new_dict_val = ""
 
     # try to open the input file
-        # function: open
+    try:
+        open_file = open( file_name, READ_FLAG )
+        # loop through each line in file
+        for line in open_file:
+            # split the line on the tab character
+            try:
+                split_line = line.split( TAB_CHAR )
+                new_dict_key = split_line[ 0 ]
+                new_dict_val = split_line[ 1 ]
+            except ( IndexError, Exception ):
+                raise InputFormatFileError
 
-    # loop through each line in file
-        # split the line on the tab character
-            # function: split
-        # if line[ 0 ] in the dict
-            # raise InputFormatFileException
-        # set line[ 0 ] to a key in the dictionary
-        # split line[ 1 ] on the space
-            # dict[ line[ 0 ] ] = the split line
+            if len( new_dict_key ) == 0 \
+               or len( new_dict_val ) == 0 \
+                 or new_dict_key in file_dict.keys():
+                raise InputFormatFileError
+            
+            else:
+                file_dict[ new_dict_key ] = new_dict_val.split()
+    except:
+        raise
 
-    # return the complete dictionary
+    open_file.close()
+
+    return file_dict
+
 
 class InputFormatFileError( Exception ):
     pass
