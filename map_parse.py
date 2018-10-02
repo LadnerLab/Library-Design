@@ -39,7 +39,7 @@ def main():
              )
         sys.exit( 1 )
 
-def parse_map( str: file_name ):
+def parse_map( file_name ):
     """
         Opens, reads, and parses a file containing an epitope map.
         
@@ -48,7 +48,21 @@ def parse_map( str: file_name ):
         On successful operation, returns a dictionary containing
         epitope: list of items mapping
     """
-    return 0
+    # create variables
+
+    # try to open the input file
+        # function: open
+
+    # loop through each line in file
+        # split the line on the tab character
+            # function: split
+        # if line[ 0 ] in the dict
+            # raise InputFormatFileException
+        # set line[ 0 ] to a key in the dictionary
+        # split line[ 1 ] on the space
+            # dict[ line[ 0 ] ] = the split line
+
+    # return the complete dictionary
 
 class InputFormatFileError( Exception ):
     pass
