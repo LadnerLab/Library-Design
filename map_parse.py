@@ -16,8 +16,33 @@ def main():
     arg_parser.add_argument( '-t', '--tax_db',
                              help = "Name of file containing mappings of taxonomic id -> rank data"
                            )
+    arg_parser.add_argument( '-v', '--verbose',
+                             help = "Flag to add if output should be written to STDOUT"
+                           )
 
     args = arg_parser.parse_args()
+
+    # try to parse the map file
+    try:
+       # function: parse_map
+        parse_map( args.map )
+    # except error:
+    except ( IOError, OSError, TypeError ):
+        print( "ERROR: An IO exception occurred when trying to "
+               "open and parse map file"
+             )
+        sys.exit( 1 )
+    except InputFormatFileError:
+        print( "ERORR: The input file provided "
+               "is not formatted correctly and cannot be "
+               "parsed by this program."
+             )
+        sys.exit( 1 )
+    
+
+
+
+   
 
 if __name__ == '__main__':
     main()
