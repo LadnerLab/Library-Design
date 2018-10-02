@@ -38,11 +38,21 @@ def main():
                "parsed by this program."
              )
         sys.exit( 1 )
+
+def parse_map( str: file_name ):
+    """
+        Opens, reads, and parses a file containing an epitope map.
+        
+        On error, raises the appropriate error.
+     
+        On successful operation, returns a dictionary containing
+        epitope: list of items mapping
+    """
+    return 0
+
+class InputFormatFileError( Exception ):
+    pass
     
-
-
-
-   
 
 if __name__ == '__main__':
     main()
