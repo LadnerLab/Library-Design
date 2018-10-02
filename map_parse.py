@@ -69,7 +69,7 @@ def parse_map( file_name ):
             # split the line on the tab character
             try:
                 split_line = line.split( TAB_CHAR )
-                new_dict_key = split_line[ 0 ]
+                new_dict_key = remove_loc_markers( split_line[ 0 ] )
                 new_dict_val = split_line[ 1 ]
             except ( IndexError, Exception ):
                 raise InputFormatFileError
@@ -89,6 +89,22 @@ def parse_map( file_name ):
 
     return file_dict
 
+def remove_loc_markers( input_str ):
+    """
+        Removes the location markers from a name in the epitope map file
+
+        Input is the name of a sequences followed by int_int
+     
+        e.g. Seq1_23_45
+    """
+    UNDERSCORE_CHAR = '_'
+
+    split_str = string.split( UNDERSCORE_CHAR )
+
+    split_str.pop()
+    split_str.pop()
+
+    return ''.join( split_str )
 
 class InputFormatFileError( Exception ):
     pass
