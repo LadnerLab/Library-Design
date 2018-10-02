@@ -75,13 +75,17 @@ def parse_map( file_name ):
                 raise InputFormatFileError
 
             if len( new_dict_key ) == 0 \
-               or len( new_dict_val ) == 0 \
-                 or new_dict_key in file_dict.keys():
+               or len( new_dict_val ) == 0:
                 raise InputFormatFileError
             
             # String is formatted correctly 
             else:
-                file_dict[ new_dict_key ] = new_dict_val.split( COMMA_CHAR )
+                if new_dict_key in file_dict.keys():
+                    file_dict[ new_dict_key ] = file_dict[ new_dict_key ] + \
+                                                new_dict_val.strip().split( COMMA_CHAR )
+                else:
+                    file_dict[ new_dict_key ] = new_dict_val.strip().split( COMMA_CHAR )
+                    
     except:
         raise
 
@@ -99,12 +103,15 @@ def remove_loc_markers( input_str ):
     """
     UNDERSCORE_CHAR = '_'
 
-    split_str = string.split( UNDERSCORE_CHAR )
+    split_str = input_str.split( UNDERSCORE_CHAR )
+
+    if len( split_str ) < 3:
+        raise InputFormatFileError
 
     split_str.pop()
     split_str.pop()
 
-    return ''.join( split_str )
+    return '_'.join( split_str )
 
 class InputFormatFileError( Exception ):
     pass
