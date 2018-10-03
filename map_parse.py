@@ -129,9 +129,6 @@ def oligo_to_tax( input_dict, tax_data_file ):
         for current in input_dict[ item ]:
             current_tax_id = int( oligo.get_taxid_from_name( current ) )
 
-            if current_tax_id == 11630:
-                print( "Found it " )
-
             if current_tax_id in taxid_dict.keys():
                 output_dict[ item ].append( taxid_dict[ current_tax_id ] )
 
