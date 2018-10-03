@@ -44,8 +44,8 @@ def main():
     # data that can be parsed for statistical output
         # function: oligo_to_tax
     try:
-        oligo_to_tax( map_dict, args.tax_db )
-    except ( IOError, OSError, TypeError ):
+        tax_dict = oligo_to_tax( map_dict, args.tax_db )
+    except ( IOError, OSError ):
         print( "ERROR: An IO exception occurred when trying "
                "to open and parse the taxonomic database file."
              )
@@ -55,6 +55,8 @@ def main():
                "as input to the program is incorrectly formatted."
              )
         sys.exit( 1 )
+
+    print( "Made it" )
 
 def parse_map( file_name ):
     """
@@ -114,7 +116,29 @@ def oligo_to_tax( input_dict, tax_data_file ):
        containing seq_name: [ tax ranks ] for each entry
        in the dictionary
     """
-    return {}
+    output_dict = {}
+    taxid_dict = oligo.get_taxdata_from_file( tax_data_file )
+
+    dict_keys = input_dict.keys()
+
+    output_dict[ 'NoID' ] = list()
+
+    for item in dict_keys:
+        output_dict[ item ] = list()
+
+        for current in input_dict[ item ]:
+            current_tax_id = int( oligo.get_taxid_from_name( current ) )
+
+            if current_tax_id == 11630:
+                print( "Found it " )
+
+            if current_tax_id in taxid_dict.keys():
+                output_dict[ item ].append( taxid_dict[ current_tax_id ] )
+
+            else:
+                output_dict[ 'NoID' ].append( current )
+
+    return output_dict
 
 def remove_loc_markers( input_str ):
     """
