@@ -38,11 +38,6 @@ def main():
              )
         sys.exit( 1 )
 
-    # Input file was valid
-    
-    # convert the data in the input file into
-    # data that can be parsed for statistical output
-        # function: oligo_to_tax
     try:
         tax_dict = oligo_to_tax( map_dict, args.tax_db )
     except ( IOError, OSError ):
