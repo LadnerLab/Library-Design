@@ -167,24 +167,44 @@ def create_oligo_centric_table( tax_dict, map_dict ):
                  "Num Families Share 7-mer\n"
               )
     oligo_names    = map_dict.keys()
+    num_oligos     = len( oligo_names )
     species_shared = set()
 
+    species_total   = 0
+    genus_total     = 0
+    family_total    = 0
+    sequences_total = 0
 
     for current_oligo in oligo_names:
+        current_species = get_num_items_at_rank( tax_dict[ current_oligo ],
+                                                 oligo.Rank.SPECIES.value
+                                               )
+        current_genus   = get_num_items_at_rank( tax_dict[ current_oligo ],
+                                                 oligo.Rank.GENUS.value
+                                               )
+
+        current_family  =  get_num_items_at_rank( tax_dict[ current_oligo ],
+                                                  oligo.Rank.GENUS.value
+                                                )
         current_entry = current_oligo
         current_entry += "\t%d\t" % len( map_dict[ current_oligo ] )
-        current_entry += "%d\t"   % get_num_items_at_rank( tax_dict[ current_oligo ],
-                                                           oligo.Rank.SPECIES.value
-                                                         )
-        current_entry += "%d\t"   % get_num_items_at_rank( tax_dict[ current_oligo ],
-                                                           oligo.Rank.GENUS.value
-                                                         )
+        current_entry += "%d\t"   %  current_species
+        current_entry += "%d\t"   %  current_genus
+        current_entry += "%d\t"   %  current_family
 
-        current_entry += "%d\t"   % get_num_items_at_rank( tax_dict[ current_oligo ],
-                                                           oligo.Rank.FAMILY.value
-                                                         )
+        sequences_total += len( map_dict[ current_oligo ] )
+        species_total   += current_species
+        genus_total     += current_genus
+        family_total    += current_family
 
-        out_str       += current_entry + "\n"
+        out_str         += current_entry + "\n"
+
+    out_str += "Average\t%.2f\t%.2f\t%.2f\t%.2f\n" % ( ( sequences_total / num_oligos ),
+                                                 ( species_total / num_oligos ),
+                                                 ( genus_total / num_oligos ),
+                                                 ( family_total / num_oligos )
+                                               )
+
 
     return out_str 
 
