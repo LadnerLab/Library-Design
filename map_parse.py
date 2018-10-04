@@ -53,6 +53,14 @@ def main():
 
     print( "Made it" )
 
+    # By this point, our data can be safely assumed as valid,
+    #so we don't have to do any more verification
+
+    oligo_centric_table = create_oligo_centric_table( tax_dict, map_dict )
+    print( oligo_centric_table )
+
+    
+
 def parse_map( file_name ):
     """
         Opens, reads, and parses a file containing an epitope map.
@@ -154,7 +162,37 @@ def remove_loc_markers( input_str ):
 
 class InputFormatFileError( Exception ):
     pass
+
+def create_oligo_centric_table( tax_dict, map_dict ):
+    out_str = (  "Oligo Name\tNum Sequences Share 7-mer\tNum Species Share 7-mer\t"
+                 "Num Families Share 7-mer\n"
+              )
+    oligo_names    = map_dict.keys()
+    species_shared = set()
+
+    for current_oligo in oligo_names:
+        current_entry = current_oligo
+        current_entry += "\t%d\t" % len( map_dict[ current_oligo ] )
+        current_entry += "%d\t"   % get_num_items_at_rank( tax_dict[ current_oligo ],
+                                                           oligo.Rank.SPECIES.value
+                                                         )
+        current_entry += "%d\t"   % get_num_items_at_rank( tax_dict[ current_oligo ],
+                                                           oligo.Rank.FAMILY.value
+                                                         )
+
+        out_str       += current_entry + "\n"
+
+    return out_str 
+
+def get_num_items_at_rank( tax_list, rank ):
+    shared_items = set()
+
+    for current in tax_list:
+        if len( current[ rank ] ) > 0:
+            shared_items.add( current[ rank ] )
+    return len( shared_items )
     
+
 
 if __name__ == '__main__':
     main()
