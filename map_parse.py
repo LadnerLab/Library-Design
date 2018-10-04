@@ -128,9 +128,12 @@ def oligo_to_tax( input_dict, tax_data_file ):
         output_dict[ item ] = list()
 
         for current in input_dict[ item ]:
-            current_tax_id = int( oligo.get_taxid_from_name( current ) )
+            current_tax_id = oligo.get_taxid_from_name( current ) 
 
-            if current_tax_id in taxid_dict.keys():
+            if current_tax_id \
+                 and int( current_tax_id ) in taxid_dict.keys():
+
+                current_tax_id = int( current_tax_id )
                 output_dict[ item ].append( taxid_dict[ current_tax_id ] )
 
             else:
@@ -162,13 +165,14 @@ class InputFormatFileError( Exception ):
     pass
 
 def create_oligo_centric_table( tax_dict, map_dict ):
+
     out_str = (  "Oligo Name\tNum Sequences Share 7-mer\tNum Species Share 7-mer\t"
                  "Num Genera Share 7-mer\t"
                  "Num Families Share 7-mer\n"
               )
-    oligo_names    = map_dict.keys()
-    num_oligos     = len( oligo_names )
-    species_shared = set()
+    oligo_names     = map_dict.keys()
+    num_oligos      = len( oligo_names )
+    species_shared  = set()
 
     species_total   = 0
     genus_total     = 0
@@ -201,10 +205,9 @@ def create_oligo_centric_table( tax_dict, map_dict ):
 
     out_str += "Average\t%.2f\t%.2f\t%.2f\t%.2f\n" % ( ( sequences_total / num_oligos ),
                                                  ( species_total / num_oligos ),
-                                                 ( genus_total / num_oligos ),
-                                                 ( family_total / num_oligos )
+                                                 ( genus_total   / num_oligos ),
+                                                 ( family_total  / num_oligos )
                                                )
-
 
     return out_str 
 
