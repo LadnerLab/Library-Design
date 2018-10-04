@@ -51,8 +51,6 @@ def main():
              )
         sys.exit( 1 )
 
-    print( "Made it" )
-
     # By this point, our data can be safely assumed as valid,
     #so we don't have to do any more verification
 
@@ -165,10 +163,12 @@ class InputFormatFileError( Exception ):
 
 def create_oligo_centric_table( tax_dict, map_dict ):
     out_str = (  "Oligo Name\tNum Sequences Share 7-mer\tNum Species Share 7-mer\t"
+                 "Num Genera Share 7-mer\t"
                  "Num Families Share 7-mer\n"
               )
     oligo_names    = map_dict.keys()
     species_shared = set()
+
 
     for current_oligo in oligo_names:
         current_entry = current_oligo
@@ -176,6 +176,10 @@ def create_oligo_centric_table( tax_dict, map_dict ):
         current_entry += "%d\t"   % get_num_items_at_rank( tax_dict[ current_oligo ],
                                                            oligo.Rank.SPECIES.value
                                                          )
+        current_entry += "%d\t"   % get_num_items_at_rank( tax_dict[ current_oligo ],
+                                                           oligo.Rank.GENUS.value
+                                                         )
+
         current_entry += "%d\t"   % get_num_items_at_rank( tax_dict[ current_oligo ],
                                                            oligo.Rank.FAMILY.value
                                                          )
