@@ -223,7 +223,7 @@ def create_oligo_centric_table( tax_dict, map_dict ):
                                                  ( species_total / num_oligos ),
                                                  ( genus_total   / num_oligos ),
                                                  ( family_total  / num_oligos )
-                                               )
+                                                     )
 
     return out_str 
 
@@ -234,8 +234,22 @@ def get_num_items_at_rank( tax_list, rank ):
         if len( current[ rank ] ) > 0:
             shared_items.add( current[ rank ] )
     return len( shared_items )
+
+def write_outputs( out_file, oligo_centric, sequence_centric ):
+    WRITE_FLAG = "w"
+    EXTENSION  = ".tsv"
+
+    oligo_file = open( out_file + "oligo_table" + EXTENSION,
+                       WRITE_FLAG
+                     )
+    oligo_file.write( oligo_centric )
+    oligo_file.close()
+
+    sequence_file = open( out_file + "sequence_table" + EXTENSION,
+                          WRITE_FLAG
+                        )
+    sequence_file.write( sequence_centric )
+    sequence_file.close()   
     
-
-
 if __name__ == '__main__':
     main()
