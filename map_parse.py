@@ -238,7 +238,7 @@ def get_num_items_at_rank( tax_list, rank ):
     for current in tax_list:
         if len( current[ rank ] ) > 0:
             shared_items.add( current[ rank ] )
-    return len( shared_items )
+    return len( shared_items ) + 1 # +1 because each rank is represented by at least this sequence
 
 def write_outputs( out_file, oligo_centric, sequence_centric ):
     WRITE_FLAG = "w"
