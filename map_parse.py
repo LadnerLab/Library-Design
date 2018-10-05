@@ -68,6 +68,9 @@ def parse_map( file_name ):
      
         On successful operation, returns a dictionary containing
         epitope: list of items mapping
+        
+        On successful operation, returns a dictionary containing
+        sequence: number of occurences mapping
     """
     READ_FLAG  = 'r'
     TAB_CHAR   = '\t'
@@ -101,9 +104,11 @@ def parse_map( file_name ):
                 sequence_dict_key = remove_loc_markers( split_line[ 0 ] )
 
                 if sequence_dict_key in seq_dict.keys():
-                    seq_dict[ sequence_dict_key ] += 1
+                    curent_entry = seq_dict[ sequence_dict_key ]
+                    current_entry[ 0 ] += 1
+                    current_entry[ 1 ] += len( split_line[ 1 ] )
                 else:
-                    seq_dict[ sequence_dict_key ] = 1
+                    seq_dict[ sequence_dict_key ] = [ 1, len( split_line[ 1 ] ) ]
 
             except ( IndexError, Exception ):
                 raise InputFormatFileError
@@ -253,10 +258,15 @@ def write_outputs( out_file, oligo_centric, sequence_centric ):
     
 def create_sequence_centric_table( seq_dict ):
     dict_keys  = seq_dict.keys()
-    out_string = "Sequence Name\tNumber Oligos\n"
+    out_string = ( "Sequence Name\t"
+                   "Number Oligos Seq Contrib. to Design\t"
+                   "Number Seqs share 7-mer\n"
+                 )
 
     for item in dict_keys:
-        out_string += "%s\t%d\n" % ( item, seq_dict[ item ] )
+        out_string += "%s\t%d\t%d\n" % ( item, seq_dict[ item ][ 0 ],
+                                         seq_dict[ item ][ 1 ]
+                                       )
 
     return out_string
         
