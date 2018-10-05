@@ -25,7 +25,7 @@ def main():
 
     map_dict = None
     try:
-        map_dict, seq_dict = parse_map( args.map )
+        map_dict, seq_dict, oligo_seq_dict = parse_map( args.map )
     except ( IOError, OSError, TypeError ):
         print( "ERROR: An IO exception occurred when trying to "
                "open and parse map file"
@@ -55,7 +55,7 @@ def main():
     #so we don't have to do any more verification
 
     oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict )
-    sequence_centric_table = create_sequence_centric_table( seq_dict )
+    sequence_centric_table = create_sequence_centric_table( seq_dict, oligo_seq_dict )
 
     write_outputs( args.output, oligo_centric_table, sequence_centric_table )
     
@@ -87,6 +87,10 @@ def parse_map( file_name ):
     sequence_dict_key = ""
     sequence_dict_val = ""
 
+    oligo_list     = list()
+    seq_list       = set()
+    oligo_seq_dict = {}
+
     # try to open the input file
     try:
         open_file = open( file_name, READ_FLAG )
@@ -102,6 +106,13 @@ def parse_map( file_name ):
 
                 #information for sequence-centric data
                 sequence_dict_key = remove_loc_markers( split_line[ 0 ] )
+
+                oligo_seq_dict[ sequence_dict_key ] = [ split_line[ 0 ] ]
+                for current_item in split_line[ 1 ]:
+                    if current_item in oligo_seq_dict.keys():
+                        oligo_seq_dict[ current_item ].append( split_line[ 0 ] )
+                    else:
+                        oligo_seq_dict[ current_item ] = [ split_line[ 0 ] ]
 
                 if sequence_dict_key in seq_dict.keys():
                     curent_entry = seq_dict[ sequence_dict_key ]
@@ -130,7 +141,7 @@ def parse_map( file_name ):
 
     open_file.close()
 
-    return oligo_dict, seq_dict
+    return oligo_dict, seq_dict, oligo_seq_dict
 
 def oligo_to_tax( input_dict, tax_data_file ):
     """
@@ -256,16 +267,18 @@ def write_outputs( out_file, oligo_centric, sequence_centric ):
     sequence_file.write( sequence_centric )
     sequence_file.close()   
     
-def create_sequence_centric_table( seq_dict ):
+def create_sequence_centric_table( seq_dict, oligo_seq_dict ):
     dict_keys  = seq_dict.keys()
     out_string = ( "Sequence Name\t"
                    "Number Oligos Seq Contrib. to Design\t"
-                   "Number Seqs share 7-mer\n"
+                   "Number Seqs share 7-mer\t"
+                   "Number Oligos Share 7-mer\n"
                  )
 
     for item in dict_keys:
-        out_string += "%s\t%d\t%d\n" % ( item, seq_dict[ item ][ 0 ],
-                                         seq_dict[ item ][ 1 ]
+        out_string += "%s\t%d\t%d\t%d\n" % ( item, seq_dict[ item ][ 0 ],
+                                         seq_dict[ item ][ 1 ],
+                                         len( set( oligo_seq_dict[ item ] ) )
                                        )
 
     return out_string
