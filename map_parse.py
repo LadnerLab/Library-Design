@@ -25,7 +25,7 @@ def main():
 
     map_dict = None
     try:
-        map_dict = parse_map( args.map )
+        map_dict, seq_dict = parse_map( args.map )
     except ( IOError, OSError, TypeError ):
         print( "ERROR: An IO exception occurred when trying to "
                "open and parse map file"
@@ -54,9 +54,10 @@ def main():
     # By this point, our data can be safely assumed as valid,
     #so we don't have to do any more verification
 
-    oligo_centric_table = create_oligo_centric_table( tax_dict, map_dict )
-    print( oligo_centric_table )
+    oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict )
+    sequence_centric_table = create_sequence_centric_table( seq_dict )
 
+    write_outputs( args.output, oligo_centric_table, sequence_centric_table )
     
 
 def parse_map( file_name ):
@@ -100,9 +101,9 @@ def parse_map( file_name ):
                 sequence_dict_key = remove_loc_markers( split_line[ 0 ] )
 
                 if sequence_dict_key in seq_dict.key():
-                    seq_dict[ sequence_dict_key ].add( sequence_dict_key )
+                    seq_dict[ sequence_dict_key ] += 1
                 else:
-                    seq_dict[ sequence_dict_key ] = set()
+                    seq_dict[ sequence_dict_key ] = 0
 
             except ( IndexError, Exception ):
                 raise InputFormatFileError
