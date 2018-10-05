@@ -188,7 +188,7 @@ def create_oligo_centric_table( tax_dict, map_dict ):
                                                )
 
         current_family  =  get_num_items_at_rank( tax_dict[ current_oligo ],
-                                                  oligo.Rank.GENUS.value
+                                                  oligo.Rank.FAMILY.value
                                                 )
         current_entry = current_oligo
         current_entry += "\t%d\t" % len( map_dict[ current_oligo ] )
