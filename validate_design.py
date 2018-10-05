@@ -55,7 +55,7 @@ def main():
 
             fout = open("%s_epitopemap.txt" % opts.out, "w")
             for oname, rmatches in oligo_dict_sets.iteritems():
-                fout.write("%s\t%s\n" % (oname, ",".join(rmatches)))
+                fout.write("%s\t%s\n" % (oname, "~".join(rmatches)))
 
 #----------------------End of main()
 
