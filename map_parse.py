@@ -72,12 +72,16 @@ def parse_map( file_name ):
     TAB_CHAR   = '\t'
     DELIMITER_CHAR = '~'
 
-    file_dict = {}
-    open_file = None
+    oligo_dict = {}
+    seq_dict   = {}
+    open_file  = None
 
     split_line   = ""
     new_dict_key = ""
     new_dict_val = ""
+
+    sequence_dict_key = ""
+    sequence_dict_val = ""
 
     # try to open the input file
     try:
@@ -86,9 +90,20 @@ def parse_map( file_name ):
         for line in open_file:
             # split the line on the tab character
             try:
+
                 split_line = line.split( TAB_CHAR )
-                new_dict_key = remove_loc_markers( split_line[ 0 ] )
+                # Information for oligo-centric data
+                new_dict_key = split_line[ 0 ]
                 new_dict_val = split_line[ 1 ]
+
+                #information for sequence-centric data
+                sequence_dict_key = remove_loc_markers( split_line[ 0 ] )
+
+                if sequence_dict_key in seq_dict.key():
+                    seq_dict[ sequence_dict_key ].add( sequence_dict_key )
+                else:
+                    seq_dict[ sequence_dict_key ] = set()
+
             except ( IndexError, Exception ):
                 raise InputFormatFileError
 
@@ -98,18 +113,18 @@ def parse_map( file_name ):
             
             # String is formatted correctly 
             else:
-                if new_dict_key in file_dict.keys():
-                    file_dict[ new_dict_key ] = file_dict[ new_dict_key ] + \
+                if new_dict_key in oligo_dict.keys():
+                    oligo_dict[ new_dict_key ] = oligo_dict[ new_dict_key ] + \
                                                 new_dict_val.strip().split( DELIMITER_CHAR )
                 else:
-                    file_dict[ new_dict_key ] = new_dict_val.strip().split( DELIMITER_CHAR )
+                    oligo_dict[ new_dict_key ] = new_dict_val.strip().split( DELIMITER_CHAR )
                     
     except:
         raise
 
     open_file.close()
 
-    return file_dict
+    return oligo_dict, seq_dict
 
 def oligo_to_tax( input_dict, tax_data_file ):
     """
