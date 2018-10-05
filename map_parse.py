@@ -100,10 +100,10 @@ def parse_map( file_name ):
                 #information for sequence-centric data
                 sequence_dict_key = remove_loc_markers( split_line[ 0 ] )
 
-                if sequence_dict_key in seq_dict.key():
+                if sequence_dict_key in seq_dict.keys():
                     seq_dict[ sequence_dict_key ] += 1
                 else:
-                    seq_dict[ sequence_dict_key ] = 0
+                    seq_dict[ sequence_dict_key ] = 1
 
             except ( IndexError, Exception ):
                 raise InputFormatFileError
@@ -239,17 +239,27 @@ def write_outputs( out_file, oligo_centric, sequence_centric ):
     WRITE_FLAG = "w"
     EXTENSION  = ".tsv"
 
-    oligo_file = open( out_file + "oligo_table" + EXTENSION,
+    oligo_file = open( out_file + "_oligo_table" + EXTENSION,
                        WRITE_FLAG
                      )
     oligo_file.write( oligo_centric )
     oligo_file.close()
 
-    sequence_file = open( out_file + "sequence_table" + EXTENSION,
+    sequence_file = open( out_file + "_sequence_table" + EXTENSION,
                           WRITE_FLAG
                         )
     sequence_file.write( sequence_centric )
     sequence_file.close()   
     
+def create_sequence_centric_table( seq_dict ):
+    dict_keys  = seq_dict.keys()
+    out_string = "Sequence Name\tNumber Oligos\n"
+
+    for item in dict_keys:
+        out_string += "%s\t%d\n" % ( item, seq_dict[ item ] )
+
+    return out_string
+        
+
 if __name__ == '__main__':
     main()
