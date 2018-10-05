@@ -70,7 +70,7 @@ def parse_map( file_name ):
     """
     READ_FLAG  = 'r'
     TAB_CHAR   = '\t'
-    COMMA_CHAR = ','
+    DELIMITER_CHAR = '~'
 
     file_dict = {}
     open_file = None
@@ -100,9 +100,9 @@ def parse_map( file_name ):
             else:
                 if new_dict_key in file_dict.keys():
                     file_dict[ new_dict_key ] = file_dict[ new_dict_key ] + \
-                                                new_dict_val.strip().split( COMMA_CHAR )
+                                                new_dict_val.strip().split( DELIMITER_CHAR )
                 else:
-                    file_dict[ new_dict_key ] = new_dict_val.strip().split( COMMA_CHAR )
+                    file_dict[ new_dict_key ] = new_dict_val.strip().split( DELIMITER_CHAR )
                     
     except:
         raise
