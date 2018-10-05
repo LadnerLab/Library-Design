@@ -8,9 +8,9 @@ def main():
     arg_parser = argparse.ArgumentParser( description = "Script to parse information given by validate_design's epitope map output" )
 
     arg_parser.add_argument( '-m', '--map', help = "Name of file containing epitope map" )
-    arg_parser.add_argument( '-o', '--output', default = "parsed_map.txt",
+    arg_parser.add_argument( '-o', '--output', default = "parsed_map",
                              help = (
-                                      "Name of file to write parsed output to."
+                                      "Identifier to preface output files."
                                       " Output will be written in a tab-delimited format"
                                     )
                            )
