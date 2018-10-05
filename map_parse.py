@@ -107,7 +107,11 @@ def parse_map( file_name ):
                 #information for sequence-centric data
                 sequence_dict_key = remove_loc_markers( split_line[ 0 ] )
 
-                oligo_seq_dict[ sequence_dict_key ] = [ split_line[ 0 ] ]
+                if sequence_dict_key in oligo_seq_dict.keys():
+                    oligo_seq_dict[ sequence_dict_key ].append( split_line[ 0 ] )
+                else:
+                    oligo_seq_dict[ sequence_dict_key ] = [ split_line[ 0 ] ]
+
                 for current_item in split_line[ 1 ]:
                     if current_item in oligo_seq_dict.keys():
                         oligo_seq_dict[ current_item ].append( split_line[ 0 ] )
@@ -115,13 +119,13 @@ def parse_map( file_name ):
                         oligo_seq_dict[ current_item ] = [ split_line[ 0 ] ]
 
                 if sequence_dict_key in seq_dict.keys():
-                    curent_entry = seq_dict[ sequence_dict_key ]
+                    current_entry = seq_dict[ sequence_dict_key ]
                     current_entry[ 0 ] += 1
                     current_entry[ 1 ] += len( split_line[ 1 ] )
                 else:
                     seq_dict[ sequence_dict_key ] = [ 1, len( split_line[ 1 ] ) ]
 
-            except ( IndexError, Exception ):
+            except ( IndexError ):
                 raise InputFormatFileError
 
             if len( new_dict_key ) == 0 \
