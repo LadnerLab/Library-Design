@@ -123,7 +123,7 @@ def parse_map( file_name ):
                     current_entry[ 0 ] += 1
                     current_entry[ 1 ] += len( split_line[ 1 ] )
                 else:
-                    seq_dict[ sequence_dict_key ] = [ 1, len( split_line[ 1 ] ) ]
+                    seq_dict[ sequence_dict_key ] = [ 1, len( split_line[ 1 ].split( DELIMITER_CHAR ) ) ]
 
             except ( IndexError ):
                 raise InputFormatFileError
@@ -295,7 +295,7 @@ def create_sequence_centric_table( seq_dict, oligo_seq_dict ):
     for item in dict_keys:
         out_string += "%s\t%d\t%d\t%d\n" % ( item, seq_dict[ item ][ 0 ],
                                          seq_dict[ item ][ 1 ],
-                                         len( set( oligo_seq_dict[ item ] ) )
+                                         len( oligo_seq_dict[ item ] )
                                        )
 
     return out_string
