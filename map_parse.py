@@ -204,7 +204,10 @@ def create_oligo_centric_table( tax_dict, map_dict ):
 
     out_str = (  "Oligo Name\tNum Sequences Share 7-mer\tNum Species Share 7-mer\t"
                  "Num Genera Share 7-mer\t"
-                 "Num Families Share 7-mer\n"
+                 "Num Families Share 7-mer\t"
+                 "Species Covered by 7-mer\t"
+                 "Genera Covered by 7-mer\t"
+                 "Families Covered by 7-mer\n"
               )
     oligo_names     = map_dict.keys()
     num_oligos      = len( oligo_names )
@@ -216,26 +219,30 @@ def create_oligo_centric_table( tax_dict, map_dict ):
     sequences_total = 0
 
     for current_oligo in oligo_names:
-        current_species = get_num_items_at_rank( tax_dict[ current_oligo ],
+        current_species = get_items_at_rank( tax_dict[ current_oligo ],
                                                  oligo.Rank.SPECIES.value
                                                )
-        current_genus   = get_num_items_at_rank( tax_dict[ current_oligo ],
+        current_genus   = get_items_at_rank( tax_dict[ current_oligo ],
                                                  oligo.Rank.GENUS.value
                                                )
 
-        current_family  =  get_num_items_at_rank( tax_dict[ current_oligo ],
+        current_family  =  get_items_at_rank( tax_dict[ current_oligo ],
                                                   oligo.Rank.FAMILY.value
                                                 )
         current_entry = current_oligo
         current_entry += "\t%d\t" % len( map_dict[ current_oligo ] )
-        current_entry += "%d\t"   %  current_species
-        current_entry += "%d\t"   %  current_genus
-        current_entry += "%d\t"   %  current_family
+        current_entry += "%d\t"   %  current_species[ 1 ]
+        current_entry += "%d\t"   %  current_genus[ 1 ]
+        current_entry += "%d\t"   %  current_family[ 1 ]
+        current_entry += "%s\t"   %  ",".join( current_species[ 0 ] ).strip()
+        current_entry += "%s\t"   %  ",".join( current_genus[ 0 ] ).strip()
+        current_entry += "%s\t"   %  ",".join( current_family[ 0 ] ).strip()
+
 
         sequences_total += len( map_dict[ current_oligo ] )
-        species_total   += current_species
-        genus_total     += current_genus
-        family_total    += current_family
+        species_total   += current_species[ 1 ]
+        genus_total     += current_genus[ 1 ]
+        family_total    += current_family[ 1 ]
 
         out_str         += current_entry + "\n"
 
@@ -247,13 +254,19 @@ def create_oligo_centric_table( tax_dict, map_dict ):
 
     return out_str 
 
-def get_num_items_at_rank( tax_list, rank ):
+def get_items_at_rank( tax_list, rank ):
     shared_items = set()
+    num_items    = 0
+
+    if not tax_list:
+        num_items = 1
 
     for current in tax_list:
         if len( current[ rank ] ) > 0:
             shared_items.add( current[ rank ] )
-    return len( shared_items ) + 1 # +1 because each rank is represented by at least this sequence
+        else:
+            num_items += 1
+    return ( shared_items, len( shared_items ) + num_items ) # +1 because each rank is represented by at least this sequence
 
 def write_outputs( out_file, oligo_centric, sequence_centric ):
     WRITE_FLAG = "w"
