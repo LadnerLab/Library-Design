@@ -241,9 +241,19 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
         current_entry += "%d\t"   %  current_species[ 1 ]
         current_entry += "%d\t"   %  current_genus[ 1 ]
         current_entry += "%d\t"   %  current_family[ 1 ]
-        current_entry += "%s\t"   %  ",".join( current_species[ 0 ] ).strip()
-        current_entry += "%s\t"   %  ",".join( current_genus[ 0 ] ).strip()
-        current_entry += "%s\t"   %  ",".join( current_family[ 0 ] ).strip()
+
+        try:
+            if oligo.Rank[
+                           gap_dict[ oligo.get_taxid_from_name( current_oligo ) ].strip()
+                         ].value \
+                         >= oligo.Rank.FAMILY.value: 
+
+                current_entry += "%s\t"   %  ",".join( current_species[ 0 ] ).strip()
+                current_entry += "%s\t"   %  ",".join( current_genus[ 0 ] ).strip()
+                current_entry += "%s\t"   %  ",".join( current_family[ 0 ] ).strip()
+        except KeyError:
+            pass
+            
 
 
         sequences_total += len( map_dict[ current_oligo ] )
@@ -322,7 +332,7 @@ def parse_gaps( gap_file ):
 
         for line in open_file:
             split_line = line.split( '|' )
-            return_dict[ split_line[ 0 ] ] = split_line[ 1 ]
+            return_dict[ split_line[ 0 ].strip() ] = split_line[ 1 ]
 
         open_file.close() 
 
