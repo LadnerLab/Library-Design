@@ -46,7 +46,7 @@ def main():
         sys.exit( 1 )
 
     try:
-        tax_dict = oligo_to_tax( map_dict, args.tax_db, gap_dict )
+        tax_dict = oligo_to_tax( map_dict, args.tax_db )
     except ( IOError, OSError ):
         print( "ERROR: An IO exception occurred when trying "
                "to open and parse the taxonomic database file."
@@ -61,8 +61,8 @@ def main():
     # By this point, our data can be safely assumed as valid,
     #so we don't have to do any more verification
 
-    oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict )
-    sequence_centric_table = create_sequence_centric_table( seq_dict, oligo_seq_dict )
+    oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, gap_dict )
+    sequence_centric_table = create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict )
 
     write_outputs( args.output, oligo_centric_table, sequence_centric_table )
     
@@ -207,7 +207,7 @@ def remove_loc_markers( input_str ):
 class InputFormatFileError( Exception ):
     pass
 
-def create_oligo_centric_table( tax_dict, map_dict ):
+def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
 
     out_str = (  "Oligo Name\tNum Sequences Share 7-mer\tNum Species Share 7-mer\t"
                  "Num Genera Share 7-mer\t"
@@ -291,7 +291,7 @@ def write_outputs( out_file, oligo_centric, sequence_centric ):
     sequence_file.write( sequence_centric )
     sequence_file.close()   
     
-def create_sequence_centric_table( seq_dict, oligo_seq_dict ):
+def create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict = None ):
     dict_keys  = seq_dict.keys()
     out_string = ( "Sequence Name\t"
                    "Number Oligos Seq Contrib. to Design\t"
