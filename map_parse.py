@@ -108,20 +108,20 @@ def parse_map( file_name ):
                 sequence_dict_key = remove_loc_markers( split_line[ 0 ] )
 
                 if sequence_dict_key in oligo_seq_dict.keys():
-                    oligo_seq_dict[ sequence_dict_key ].append( split_line[ 0 ] )
+                    oligo_seq_dict[ sequence_dict_key ] += 1
                 else:
-                    oligo_seq_dict[ sequence_dict_key ] = [ split_line[ 0 ] ]
+                    oligo_seq_dict[ sequence_dict_key ] = 1
 
                 for current_item in split_line[ 1 ]:
                     if current_item in oligo_seq_dict.keys():
-                        oligo_seq_dict[ current_item ].append( split_line[ 0 ] )
+                        oligo_seq_dict[ current_item ] += 1
                     else:
-                        oligo_seq_dict[ current_item ] = [ split_line[ 0 ] ]
+                        oligo_seq_dict[ current_item ] = 1
 
                 if sequence_dict_key in seq_dict.keys():
                     current_entry = seq_dict[ sequence_dict_key ]
                     current_entry[ 0 ] += 1
-                    current_entry[ 1 ] += len( split_line[ 1 ] )
+                    current_entry[ 1 ] += len( split_line[ 1 ].split( DELIMITER_CHAR ) )
                 else:
                     seq_dict[ sequence_dict_key ] = [ 1, len( split_line[ 1 ].split( DELIMITER_CHAR ) ) ]
 
@@ -295,8 +295,11 @@ def create_sequence_centric_table( seq_dict, oligo_seq_dict ):
     for item in dict_keys:
         out_string += "%s\t%d\t%d\t%d\n" % ( item, seq_dict[ item ][ 0 ],
                                          seq_dict[ item ][ 1 ],
-                                         len( oligo_seq_dict[ item ] )
+                                         oligo_seq_dict[ item ]
                                        )
+        if seq_dict[ item ][ 0 ] != oligo_seq_dict[ item ]:
+            print( "DIFFERENT" )
+        
 
     return out_string
         
