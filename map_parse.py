@@ -20,6 +20,10 @@ def main():
     arg_parser.add_argument( '-v', '--verbose',
                              help = "Flag to add if output should be written to STDOUT"
                            )
+    arg_parser.add_argument( '-g', '--gap_file',
+                             help = ( "File containing mappings of taxid->rank for "
+                                      "use in filling gaps."
+                                    )
 
     args = arg_parser.parse_args()
 
