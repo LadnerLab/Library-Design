@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import sys
 
+import protein_oligo_library as oligo
+
 def main():
 
     nodes_dmp   = sys.argv[ 1 ]
@@ -32,7 +34,16 @@ def parse_nodes( file_name ):
         current_parent_id = int( split_line[ 1 ] )
         current_rank      = split_line[ 2 ]
 
+        if current_parent_id not in nodes_dict.keys():
+            data = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
+            nodes_dict[ current_parent_id ] = data
 
+        try:
+            rank_index = oligo.Rank[ current_rank.upper().replace( ' ', '_' ) ].value
+        except( KeyError):
+            rank_index = 9
+
+        nodes_dict[ current_parent_id ][ rank_index ] = current_id
 
     nodes_file.close()
 
