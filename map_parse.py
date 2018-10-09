@@ -46,7 +46,7 @@ def main():
         sys.exit( 1 )
 
     try:
-        tax_dict = oligo_to_tax( map_dict, args.tax_db )
+        tax_dict = oligo_to_tax( map_dict, args.tax_db, gap_dict )
     except ( IOError, OSError ):
         print( "ERROR: An IO exception occurred when trying "
                "to open and parse the taxonomic database file."
@@ -154,7 +154,7 @@ def parse_map( file_name ):
 
     return oligo_dict, seq_dict, oligo_seq_dict
 
-def oligo_to_tax( input_dict, tax_data_file ):
+def oligo_to_tax( input_dict, tax_data_file, gap_dict = None ):
     """
        Parses data in input dict, and returns a dictionary
        containing seq_name: [ tax ranks ] for each entry
