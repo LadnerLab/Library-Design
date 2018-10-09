@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+import sys
 
 def main():
-    return
 
+    nodes_dmp   = sys.argv[ 1 ]
+    lineage_dmp = sys.argv[ 2 ]
 
 
 
