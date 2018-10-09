@@ -24,10 +24,13 @@ def main():
                              help = ( "File containing mappings of taxid->rank for "
                                       "use in filling gaps."
                                     )
+                           )
 
     args = arg_parser.parse_args()
 
     map_dict = None
+    gap_dict = parse_gaps( args.gap_file )
+
     try:
         map_dict, seq_dict, oligo_seq_dict = parse_map( args.map )
     except ( IOError, OSError, TypeError ):
@@ -307,6 +310,25 @@ def create_sequence_centric_table( seq_dict, oligo_seq_dict ):
 
     return out_string
         
+def parse_gaps( gap_file ):
+    return_dict = {}
+
+    return_val = None
+
+    open_file = None
+
+    if gap_file:
+        open_file = open( gap_file, 'r' )
+
+        for line in open_file:
+            split_line = line.split( '|' )
+            return_dict[ split_line[ 0 ] ] = split_line[ 1 ]
+
+        open_file.close() 
+
+        return_val = return_dict
+        
+    return return_val 
 
 if __name__ == '__main__':
     main()
