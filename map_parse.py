@@ -190,7 +190,7 @@ def remove_loc_markers( input_str ):
 
         Input is the name of a sequences followed by int_int
      
-        e.g. Seq1_23_45
+        e.g. Seq1_23_45 -> Seq1
     """
     UNDERSCORE_CHAR = '_'
 
@@ -228,14 +228,14 @@ def create_oligo_centric_table( tax_dict, map_dict ):
     for current_oligo in oligo_names:
         current_species = get_items_at_rank( tax_dict[ current_oligo ],
                                                  oligo.Rank.SPECIES.value
-                                               )
+                                           )
         current_genus   = get_items_at_rank( tax_dict[ current_oligo ],
                                                  oligo.Rank.GENUS.value
-                                               )
+                                           )
 
-        current_family  =  get_items_at_rank( tax_dict[ current_oligo ],
+        current_family  = get_items_at_rank( tax_dict[ current_oligo ],
                                                   oligo.Rank.FAMILY.value
-                                                )
+                                           )
         current_entry = current_oligo
         current_entry += "\t%d\t" % len( map_dict[ current_oligo ] )
         current_entry += "%d\t"   %  current_species[ 1 ]
