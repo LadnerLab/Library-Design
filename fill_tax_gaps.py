@@ -11,6 +11,8 @@ def main():
 
     nodes_dict = parse_dict( nodes_dmp )
 
+    write_dict( nodes_dict, out_file )
+
 def parse_nodes( file_name ):
     READ_ONLY_FLAG = 'r'
     DELIMITER_CHAR = '|'
@@ -69,12 +71,24 @@ def parse_dict( nodes_file ):
         current_id        = int( split_line[ 0 ] )
         current_rank      = split_line[ 2 ]
 
-        nodes_dict[ current_id ] = current_rank
+        nodes_dict[ current_id ] = current_rank.upper().replace( ' ', '_' )
 
     nodes_file.close()
 
     return nodes_dict
 
+def write_dict( parsed_dict, out_file ):
+    WRITE_FLAG = 'w'
+
+    out_str = ""
+
+    for current in parsed_dict.keys():
+        out_str += "%s|%s\n" % ( current, parsed_dict[ current ] )
+    
+    open_file = open( out_file, WRITE_FLAG )
+
+    open_file.write( out_str )
+    open_file.close()
 
 if __name__ == '__main__':
     main()
