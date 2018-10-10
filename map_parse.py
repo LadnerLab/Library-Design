@@ -227,18 +227,15 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
 
     for current_oligo in oligo_names:
         current_taxid   = oligo.get_taxid_from_name( current_oligo )
-        current_entry = ""
+        current_entry = "%s\t%s\t" % ( current_oligo, len( tax_dict[ current_oligo ] ) )
 
         try:
             if current_taxid:
                 rank_data = gap_dict[ current_taxid ].strip()
 
                 rank_val = oligo.Rank[ rank_data ].value
-                print( current_taxid )
-                print( rank_data )
                 rank_val = oligo.Rank[ rank_data ].value
-            else:
-                print( "Not found " )
+
             if rank_val >= oligo.Rank.FAMILY.value: 
 
                 current_family = get_items_at_rank( tax_dict[ current_oligo ],
@@ -251,6 +248,11 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
                                                     oligo.Rank.SPECIES.value
                                                   )
 
+                current_entry += "%d\t%d\t%d\t" % ( len( set( current_species[ 0 ] ) ),
+                                                    len( set( current_genus[ 0 ] ) ),
+                                                    len( set( current_family[ 0 ] ) )
+                                                  )
+
                 current_entry += "%s\t" % ",".join( current_species[ 0 ] ).strip()
                 current_entry += "%s\t" % ",".join( current_genus[ 0 ] ).strip()
                 current_entry += "%s\t" % ",".join( current_family[ 0 ] ).strip()
@@ -260,12 +262,25 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
                                                      0
                                                    )
 
+                current_entry += "%d\t%d\t%d\t" % (
+                                                    len( set() ) + 1,
+                                                    len( set( current_genus[ 0 ] ) ),
+                                                    len( set() ) + 1
+                                                  )
+
                 current_entry += "%s\t\t" % ",".join( current_genus[ 0 ] ).strip()
 
             elif rank_val == oligo.Rank.SPECIES.value:
                 current_species = get_items_at_rank( tax_dict[ current_oligo ],
                                                      0
                                                    )
+
+                current_entry += "%d\t%d\t%d\t" % (
+                                                    len( set( current_species[ 0 ] ) ),
+                                                    len( set() ) + 1,
+                                                    len( set() ) + 1
+                                                  )
+
 
                 current_entry += "%s\t\t\t" % ",".join( current_species[ 0 ] ).strip()
             
@@ -278,13 +293,6 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
 
         except KeyError:
             pass
-
-    print( out_str )
-    out_str += "Average\t%.2f\t%.2f\t%.2f\t%.2f\n" % ( ( sequences_total / num_oligos ),
-                                                 ( len( species_total ) / num_oligos ),
-                                                 ( len( genus_total   ) / num_oligos ),
-                                                 ( len( family_total  ) / num_oligos )
-                                                     )
 
     return out_str 
 
