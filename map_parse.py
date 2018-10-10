@@ -237,7 +237,7 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
                                                   oligo.Rank.FAMILY.value
                                            )
         current_entry = current_oligo
-        current_entry += "\t%d\t" % len( map_dict[ current_oligo ] )
+        current_entry += "\t%d\t" %  len( map_dict[ current_oligo ] )
         current_entry += "%d\t"   %  current_species[ 1 ]
         current_entry += "%d\t"   %  current_genus[ 1 ]
         current_entry += "%d\t"   %  current_family[ 1 ]
@@ -248,14 +248,13 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
                          ].value \
                          >= oligo.Rank.FAMILY.value: 
 
-                current_entry += "%s\t"   %  ",".join( current_species[ 0 ] ).strip()
-                current_entry += "%s\t"   %  ",".join( current_genus[ 0 ] ).strip()
-                current_entry += "%s\t"   %  ",".join( current_family[ 0 ] ).strip()
+                current_entry += "%s\t" % ",".join( current_species[ 0 ] ).strip()
+                current_entry += "%s\t" % ",".join( current_genus[ 0 ] ).strip()
+                current_entry += "%s\t" % ",".join( current_family[ 0 ] ).strip()
+
         except KeyError:
             pass
             
-
-
         sequences_total += len( map_dict[ current_oligo ] )
         species_total   += current_species[ 1 ]
         genus_total     += current_genus[ 1 ]
