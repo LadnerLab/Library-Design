@@ -220,52 +220,70 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
     num_oligos      = len( oligo_names )
     species_shared  = set()
 
-    species_total   = 0
-    genus_total     = 0
-    family_total    = 0
+    species_total   = set()
+    genus_total     = set()
+    family_total    = set()
     sequences_total = 0
 
     for current_oligo in oligo_names:
-        current_species = get_items_at_rank( tax_dict[ current_oligo ],
-                                                 oligo.Rank.SPECIES.value
-                                           )
-        current_genus   = get_items_at_rank( tax_dict[ current_oligo ],
-                                                 oligo.Rank.GENUS.value
-                                           )
-
-        current_family  = get_items_at_rank( tax_dict[ current_oligo ],
-                                                  oligo.Rank.FAMILY.value
-                                           )
-        current_entry = current_oligo
-        current_entry += "\t%d\t" %  len( map_dict[ current_oligo ] )
-        current_entry += "%d\t"   %  current_species[ 1 ]
-        current_entry += "%d\t"   %  current_genus[ 1 ]
-        current_entry += "%d\t"   %  current_family[ 1 ]
+        current_taxid   = oligo.get_taxid_from_name( current_oligo )
+        current_entry = ""
 
         try:
-            if oligo.Rank[
-                           gap_dict[ oligo.get_taxid_from_name( current_oligo ) ].strip()
-                         ].value \
-                         >= oligo.Rank.FAMILY.value: 
+            if current_taxid:
+                rank_data = gap_dict[ current_taxid ].strip()
+
+                rank_val = oligo.Rank[ rank_data ].value
+                print( current_taxid )
+                print( rank_data )
+                rank_val = oligo.Rank[ rank_data ].value
+            else:
+                print( "Not found " )
+            if rank_val >= oligo.Rank.FAMILY.value: 
+
+                current_family = get_items_at_rank( tax_dict[ current_oligo ],
+                                                    oligo.Rank.FAMILY.value
+                                                  )
+                current_genus = get_items_at_rank( tax_dict[ current_oligo ],
+                                                    oligo.Rank.GENUS.value
+                                                  )
+                current_species = get_items_at_rank( tax_dict[ current_oligo ],
+                                                    oligo.Rank.SPECIES.value
+                                                  )
 
                 current_entry += "%s\t" % ",".join( current_species[ 0 ] ).strip()
                 current_entry += "%s\t" % ",".join( current_genus[ 0 ] ).strip()
                 current_entry += "%s\t" % ",".join( current_family[ 0 ] ).strip()
 
+            elif rank_val == oligo.Rank.GENUS.value:
+                current_genus = get_items_at_rank( tax_dict[ current_oligo ],
+                                                     0
+                                                   )
+
+                current_entry += "%s\t\t" % ",".join( current_genus[ 0 ] ).strip()
+
+            elif rank_val == oligo.Rank.SPECIES.value:
+                current_species = get_items_at_rank( tax_dict[ current_oligo ],
+                                                     0
+                                                   )
+
+                current_entry += "%s\t\t\t" % ",".join( current_species[ 0 ] ).strip()
+            
+            sequences_total += len( map_dict[ current_oligo ] )
+            species_total   |= set( current_species[ 0 ] )
+            genus_total     |= set( current_genus[ 0 ] )
+            family_total    |= set( current_family[ 0 ] )
+
+            out_str         += current_entry + "\n"
+
         except KeyError:
             pass
-            
-        sequences_total += len( map_dict[ current_oligo ] )
-        species_total   += current_species[ 1 ]
-        genus_total     += current_genus[ 1 ]
-        family_total    += current_family[ 1 ]
 
-        out_str         += current_entry + "\n"
-
+    print( out_str )
     out_str += "Average\t%.2f\t%.2f\t%.2f\t%.2f\n" % ( ( sequences_total / num_oligos ),
-                                                 ( species_total / num_oligos ),
-                                                 ( genus_total   / num_oligos ),
-                                                 ( family_total  / num_oligos )
+                                                 ( len( species_total ) / num_oligos ),
+                                                 ( len( genus_total   ) / num_oligos ),
+                                                 ( len( family_total  ) / num_oligos )
                                                      )
 
     return out_str 
