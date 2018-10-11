@@ -416,10 +416,11 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
                     seq_tax_dict[ species ].add( current_species )
 
     for item in seq_tax_dict.keys():
-        out_string += "%s\t%d\t%d\t%d\n" % ( item, 0,
-                                             0,
-                                             0
-                                           )
+        if len( item ) > 0:
+            out_string += "%s\t%d\t%d\t%d\n" % ( item, len( "" ),
+                                                 len( item ),
+                                                 0
+                                               )
 
     print( out_string )
     return out_string
