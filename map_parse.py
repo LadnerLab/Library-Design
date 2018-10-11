@@ -355,8 +355,10 @@ def create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict = None ):
     return out_string
 
 def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict = None ):
-    dict_keys    = map_dict.keys()
-    seq_tax_dict = {}
+    dict_keys      = map_dict.keys()
+    seq_tax_dict   = {}
+    oligo_dict     = {}
+
     out_string = ( "Species Name\t"
                    "Number Oligos Species Contrib. to Design\t"
                    "Number Species share 7-mer\t"
@@ -413,16 +415,13 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
 
                     seq_tax_dict[ species ].add( current_species )
 
-    print( seq_tax_dict )
     for item in seq_tax_dict.keys():
-        out_string += "%s\t%d\t%d\t%d\n" % ( item, seq_dict[ item ][ 0 ],
-                                         seq_dict[ item ][ 1 ],
-                                         oligo_seq_dict[ item ]
-                                       )
-        if seq_dict[ item ][ 0 ] != oligo_seq_dict[ item ]:
-            print( "DIFFERENT" )
-        
+        out_string += "%s\t%d\t%d\t%d\n" % ( item, 0,
+                                             0,
+                                             0
+                                           )
 
+    print( out_string )
     return out_string
 
         
