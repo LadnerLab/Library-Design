@@ -389,10 +389,13 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
             species = species.strip() 
 
             if species not in seq_tax_dict.keys():
-                seq_tax_dict[ species ] = set()
+                seq_tax_dict[ species ] = [ 1, set() ]
+            else:
+                seq_tax_dict[ species ][ 0 ] += 1
 
             for current_value in map_dict[ item ]:
 
+                current_value = current_value[ 1 ]
                 current_taxid = oligo.get_taxid_from_name( current_value )
                 if current_taxid:
                     try:
@@ -413,12 +416,14 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
                         pass
 
 
-                    seq_tax_dict[ species ].add( current_species )
+                    print( current_species )
+                    print( seq_tax_dict[ species ][ 1 ]
+                    seq_tax_dict[ species ][ 1 ].add( current_species )
 
     for item in seq_tax_dict.keys():
         if len( item ) > 0:
-            out_string += "%s\t%d\t%d\t%d\n" % ( item, len( "" ),
-                                                 len( item ),
+            out_string += "%s\t%d\t%d\t%d\n" % ( item, seq_tax_dict[ item ][ 0 ],
+                                                 len( seq_tax_dict[ item ][ 1 ] ),
                                                  0
                                                )
 
