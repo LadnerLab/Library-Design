@@ -28,6 +28,10 @@ def main():
 
     args = arg_parser.parse_args()
 
+    oligo_centric_table    = None
+    sequence_centric_table = None
+    species_centric_table  = None
+
     map_dict = None
     gap_dict = parse_gaps( args.gap_file )
 
@@ -46,7 +50,7 @@ def main():
         sys.exit( 1 )
 
     try:
-        tax_dict = oligo_to_tax( map_dict, args.tax_db )
+        tax_dict, taxid_dict = oligo_to_tax( map_dict, args.tax_db )
     except ( IOError, OSError ):
         print( "ERROR: An IO exception occurred when trying "
                "to open and parse the taxonomic database file."
@@ -61,6 +65,7 @@ def main():
     # By this point, our data can be safely assumed as valid,
     #so we don't have to do any more verification
 
+    species_centric_table  = create_species_centric_table( seq_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
     oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, gap_dict )
     sequence_centric_table = create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict )
 
@@ -182,7 +187,7 @@ def oligo_to_tax( input_dict, tax_data_file, gap_dict = None ):
             else:
                 output_dict[ 'NoID' ].append( current )
 
-    return output_dict
+    return output_dict, taxid_dict
 
 def remove_loc_markers( input_str ):
     """
@@ -233,7 +238,6 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
             if current_taxid:
                 rank_data = gap_dict[ current_taxid ].strip()
 
-                rank_val = oligo.Rank[ rank_data ].value
                 rank_val = oligo.Rank[ rank_data ].value
 
             if rank_val >= oligo.Rank.FAMILY.value: 
@@ -317,17 +321,19 @@ def write_outputs( out_file, oligo_centric, sequence_centric ):
     WRITE_FLAG = "w"
     EXTENSION  = ".tsv"
 
-    oligo_file = open( out_file + "_oligo_table" + EXTENSION,
-                       WRITE_FLAG
-                     )
-    oligo_file.write( oligo_centric )
-    oligo_file.close()
+    if oligo_centric:
+        oligo_file = open( out_file + "_oligo_table" + EXTENSION,
+                           WRITE_FLAG
+                         )
+        oligo_file.write( oligo_centric )
+        oligo_file.close()
 
-    sequence_file = open( out_file + "_sequence_table" + EXTENSION,
-                          WRITE_FLAG
-                        )
-    sequence_file.write( sequence_centric )
-    sequence_file.close()   
+    if sequence_centric:
+        sequence_file = open( out_file + "_sequence_table" + EXTENSION,
+                              WRITE_FLAG
+                            )
+        sequence_file.write( sequence_centric )
+        sequence_file.close()   
     
 def create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict = None ):
     dict_keys  = seq_dict.keys()
@@ -347,6 +353,49 @@ def create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict = None ):
         
 
     return out_string
+
+def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict = None ):
+    dict_keys    = map_dict.keys()
+    seq_tax_dict = {}
+    out_string = ( "Species Name\t"
+                   "Number Oligos Species Contrib. to Design\t"
+                   "Number Species share 7-mer\t"
+                   "Number Oligos Share 7-mer\n"
+                 )
+
+    for item in dict_keys:
+        current_taxid = oligo.get_taxid_from_name( item )
+
+        if current_taxid:
+            try:
+                rank_data     = gap_dict[ current_taxid ].strip()
+                rank_val      = oligo.Rank[ rank_data ].value
+
+                if rank_val >= oligo.Rank.FAMILY.value: 
+
+                    species = taxid_dict[ int( current_taxid ) ][ oligo.Rank.SPECIES.value ]
+                    print( species )
+                                                       
+                elif rank_val == oligo.Rank.SPECIES.value:
+
+                    species = taxid_dict[ int( current_taxid ) ][ 0 ]
+                    print( species )
+                else:
+                    print( rank_data )
+            except KeyError:
+                pass
+
+    for item in dict_keys:
+        out_string += "%s\t%d\t%d\t%d\n" % ( item, seq_dict[ item ][ 0 ],
+                                         seq_dict[ item ][ 1 ],
+                                         oligo_seq_dict[ item ]
+                                       )
+        if seq_dict[ item ][ 0 ] != oligo_seq_dict[ item ]:
+            print( "DIFFERENT" )
+        
+
+    return out_string
+
         
 def parse_gaps( gap_file ):
     return_dict = {}
