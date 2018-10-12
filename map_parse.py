@@ -65,7 +65,7 @@ def main():
     # By this point, our data can be safely assumed as valid,
     #so we don't have to do any more verification
 
-    species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
+    # species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
     oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, gap_dict )
     sequence_centric_table = create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict )
 
@@ -242,6 +242,11 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
 
             if rank_val >= oligo.Rank.FAMILY.value: 
 
+                get_items_at_rank_from_seqs( map_dict[ current_oligo ],
+                                             tax_dict,
+                                             gap_dict,
+                                             oligo.Rank.FAMILY.value
+                                           )  
                 current_family = get_items_at_rank( tax_dict[ current_oligo ],
                                                     oligo.Rank.FAMILY.value
                                                   )
@@ -272,9 +277,9 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
                                                    )
 
                 current_entry += "%d\t%d\t%d\t" % (
-                                                    len( set() ) + 1,
+                                                    1,
                                                     len( set( current_genus[ 0 ] ) ),
-                                                    len( set() ) + 1
+                                                    1
                                                   )
 
                 genus_total     |= set( current_genus[ 0 ] )
@@ -282,13 +287,13 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
 
             elif rank_val == oligo.Rank.SPECIES.value:
                 current_species = get_items_at_rank( tax_dict[ current_oligo ],
-                                                     0
+                                                     1
                                                    )
 
                 current_entry += "%d\t%d\t%d\t" % (
                                                     len( set( current_species[ 0 ] ) ),
-                                                    len( set() ) + 1,
-                                                    len( set() ) + 1
+                                                    1,
+                                                    1
                                                   )
 
 
@@ -417,7 +422,7 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
 
 
                     print( current_species )
-                    print( seq_tax_dict[ species ][ 1 ]
+                    print( seq_tax_dict[ species ][ 1 ] )
                     seq_tax_dict[ species ][ 1 ].add( current_species )
 
     for item in seq_tax_dict.keys():
@@ -450,6 +455,22 @@ def parse_gaps( gap_file ):
         return_val = return_dict
         
     return return_val 
+
+def get_items_at_rank_from_seqs( oligo_items,
+                                 tax_dict,
+                                 gap_dict, 
+                                 oligo_rank
+                               ):
+
+    out_items = set()
+
+    for current_name in oligo_items:
+
+        current_id = oligo.get_taxid_from_name( item )
+        id_rank    = gap_dict[ current_id ]
+        
+        if id_rank >= oligo.Rank.FAMILY.value:
+            out_items.add( tax_dict[ current_name ][ oligo_rank ] )
 
 if __name__ == '__main__':
     main()
