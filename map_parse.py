@@ -65,7 +65,7 @@ def main():
     # By this point, our data can be safely assumed as valid,
     #so we don't have to do any more verification
 
-    # species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
+    species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
     oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, gap_dict )
     sequence_centric_table = create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict )
 
@@ -124,7 +124,7 @@ def parse_map( file_name ):
                 else:
                     oligo_seq_dict[ sequence_dict_key ] = 1
 
-                for current_item in split_line[ 1 ]:
+                for current_item in split_line[ 1 ].split( DELIMITER_CHAR ):
                     if current_item in oligo_seq_dict.keys():
                         oligo_seq_dict[ current_item ] += 1
                     else:
@@ -242,11 +242,11 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
 
             if rank_val >= oligo.Rank.FAMILY.value: 
 
-                get_items_at_rank_from_seqs( map_dict[ current_oligo ],
-                                             tax_dict,
-                                             gap_dict,
-                                             oligo.Rank.FAMILY.value
-                                           )  
+#                get_items_at_rank_from_seqs( map_dict[ current_oligo ],
+#                                             tax_dict,
+#                                             gap_dict,
+#                                             oligo.Rank.FAMILY.value
+#                                           )  
                 current_family = get_items_at_rank( tax_dict[ current_oligo ],
                                                     oligo.Rank.FAMILY.value
                                                   )
@@ -350,13 +350,10 @@ def create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict = None ):
 
     for item in dict_keys:
         out_string += "%s\t%d\t%d\t%d\n" % ( item, seq_dict[ item ][ 0 ],
-                                         seq_dict[ item ][ 1 ],
-                                         oligo_seq_dict[ item ]
-                                       )
-        if seq_dict[ item ][ 0 ] != oligo_seq_dict[ item ]:
-            print( "DIFFERENT" )
+                                             seq_dict[ item ][ 1 ],
+                                             oligo_seq_dict[ item ]
+                                           )
         
-
     return out_string
 
 def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict = None ):
