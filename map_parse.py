@@ -240,65 +240,27 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
 
                 rank_val = oligo.Rank[ rank_data ].value
 
-            if rank_val >= oligo.Rank.FAMILY.value: 
+            current_species, \
+            current_genus, \
+            current_family = get_items_at_rank_from_seqs( map_dict[ current_oligo ],
+                                                          taxid_dict, 
+                                                          gap_dict,
+                                                          oligo.Rank.FAMILY.value
+                                       )  
 
-                get_items_at_rank_from_seqs( map_dict[ current_oligo ],
-                                             taxid_dict, 
-                                             gap_dict,
-                                             oligo.Rank.FAMILY.value
-                                           )  
-                current_family = get_items_at_rank( tax_dict[ current_oligo ],
-                                                    oligo.Rank.FAMILY.value
-                                                  )
-                current_genus = get_items_at_rank( tax_dict[ current_oligo ],
-                                                    oligo.Rank.GENUS.value
-                                                  )
-                current_species = get_items_at_rank( tax_dict[ current_oligo ],
-                                                    oligo.Rank.SPECIES.value
-                                                  )
+            current_entry += "%d\t%d\t%d\t" % ( len( current_species ),
+                                                len( current_genus ),
+                                                len( current_family )
+                                              )
 
-                current_entry += "%d\t%d\t%d\t" % ( len( set( current_species[ 0 ] ) ),
-                                                    len( set( current_genus[ 0 ] ) ),
-                                                    len( set( current_family[ 0 ] ) )
-                                                  )
+            current_entry += "%s\t" % ",".join( current_species ).strip()
+            current_entry += "%s\t" % ",".join( current_genus  ).strip()
+            current_entry += "%s\t" % ",".join( current_family ).strip()
 
-                current_entry += "%s\t" % ",".join( current_species[ 0 ] ).strip()
-                current_entry += "%s\t" % ",".join( current_genus[ 0 ] ).strip()
-                current_entry += "%s\t" % ",".join( current_family[ 0 ] ).strip()
+            species_total   |= set( current_species )
+            genus_total     |= set( current_genus )
+            family_total    |= set( current_family )
 
-                species_total   |= set( current_species[ 0 ] )
-                genus_total     |= set( current_genus[ 0 ] )
-                family_total    |= set( current_family[ 0 ] )
-
-
-            elif rank_val == oligo.Rank.GENUS.value:
-                current_genus = get_items_at_rank( tax_dict[ current_oligo ],
-                                                     0
-                                                   )
-
-                current_entry += "%d\t%d\t%d\t" % (
-                                                    1,
-                                                    len( set( current_genus[ 0 ] ) ),
-                                                    1
-                                                  )
-
-                genus_total     |= set( current_genus[ 0 ] )
-                current_entry += "%s\t\t" % ",".join( current_genus[ 0 ] ).strip()
-
-            elif rank_val == oligo.Rank.SPECIES.value:
-                current_species = get_items_at_rank( tax_dict[ current_oligo ],
-                                                     1
-                                                   )
-
-                current_entry += "%d\t%d\t%d\t" % (
-                                                    len( set( current_species[ 0 ] ) ),
-                                                    1,
-                                                    1
-                                                  )
-
-
-                current_entry += "%s\t\t\t" % ",".join( current_species[ 0 ] ).strip()
-                species_total   |= set( current_species[ 0 ] )
             
             sequences_total += len( map_dict[ current_oligo ] )
             out_str         += current_entry + "\n"
@@ -459,14 +421,31 @@ def get_items_at_rank_from_seqs( oligo_items,
                                  oligo_rank
                                ):
 
-    out_items = set()
+    out_species  = set()
+    out_genera   = set()
+    out_families = set()
 
     for current_name in oligo_items:
 
         current_id = oligo.get_taxid_from_name( current_name ).strip()
         
         if oligo_rank >= oligo.Rank.FAMILY.value:
-            out_items.add( taxid_dict[ int( current_id ) ][ oligo_rank ] )
+            out_families.add( taxid_dict[ int( current_id ) ][ oligo_rank ] )
+            out_genera.add( taxid_dict[ int( current_id ) ][ oligo.Rank.GENUS.value ] )
+            out_species.add( taxid_dict[ int( current_id ) ][ oligo.Rank.SPECIES.value ] )
+
+        elif oligo_rank == oligo.Rank.GENUS.value:
+            out_genera.add( taxid_dict[ int( current_id ) ][ 0 ] )
+
+        elif oligo_rank == oligo.Rank.SPECIES.value:
+            out_species.add( taxid_dict[ int( current_id ) ][ 0 ] )
+            
+    print( out_species )
+    print( out_genera )
+    print( out_families )
+    return out_species, out_genera, out_families
+
+
 
 if __name__ == '__main__':
     main()
