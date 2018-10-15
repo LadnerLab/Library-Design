@@ -380,8 +380,6 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
                         pass
 
 
-                    print( current_species )
-                    print( seq_tax_dict[ species ][ 1 ] )
                     seq_tax_dict[ species ][ 1 ].add( current_species )
 
     for item in seq_tax_dict.keys():
@@ -391,7 +389,6 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
                                                  0
                                                )
 
-    print( out_string )
     return out_string
 
         
