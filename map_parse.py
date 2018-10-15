@@ -429,23 +429,22 @@ def get_items_at_rank_from_seqs( oligo_items,
 
         current_id = oligo.get_taxid_from_name( current_name ).strip()
         
-        if oligo_rank >= oligo.Rank.FAMILY.value:
-            out_families.add( taxid_dict[ int( current_id ) ][ oligo_rank ] )
-            out_genera.add( taxid_dict[ int( current_id ) ][ oligo.Rank.GENUS.value ] )
-            out_species.add( taxid_dict[ int( current_id ) ][ oligo.Rank.SPECIES.value ] )
+        try:
+            if oligo_rank >= oligo.Rank.FAMILY.value:
+                out_families.add( taxid_dict[ int( current_id ) ][ oligo_rank ] )
+                out_genera.add( taxid_dict[ int( current_id ) ][ oligo.Rank.GENUS.value ] )
+                out_species.add( taxid_dict[ int( current_id ) ][ oligo.Rank.SPECIES.value ] )
 
-        elif oligo_rank == oligo.Rank.GENUS.value:
-            out_genera.add( taxid_dict[ int( current_id ) ][ 0 ] )
+            elif oligo_rank == oligo.Rank.GENUS.value:
+                out_genera.add( taxid_dict[ int( current_id ) ][ 0 ] )
 
-        elif oligo_rank == oligo.Rank.SPECIES.value:
-            out_species.add( taxid_dict[ int( current_id ) ][ 0 ] )
+            elif oligo_rank == oligo.Rank.SPECIES.value:
+                out_species.add( taxid_dict[ int( current_id ) ][ 0 ] )
+
+        except KeyError:
+            pass
             
-    print( out_species )
-    print( out_genera )
-    print( out_families )
     return out_species, out_genera, out_families
-
-
 
 if __name__ == '__main__':
     main()
