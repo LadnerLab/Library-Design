@@ -464,10 +464,9 @@ def get_items_at_rank_from_seqs( oligo_items,
     for current_name in oligo_items:
 
         current_id = oligo.get_taxid_from_name( current_name ).strip()
-        id_rank    = gap_dict[ current_id ].strip()
         
-        if oligo.Rank[ id_rank ].value >= oligo.Rank.FAMILY.value:
-            out_items.add( taxid_dict[ int( current_id ) ][ oligo.Rank.FAMILY.value ] )
+        if oligo_rank >= oligo.Rank.FAMILY.value:
+            out_items.add( taxid_dict[ int( current_id ) ][ oligo_rank ] )
 
 if __name__ == '__main__':
     main()
