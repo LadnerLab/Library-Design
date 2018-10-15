@@ -66,7 +66,7 @@ def main():
     #so we don't have to do any more verification
 
     species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
-    oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, gap_dict )
+    oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict )
     sequence_centric_table = create_sequence_centric_table( seq_dict, oligo_seq_dict, gap_dict )
 
     write_outputs( args.output, oligo_centric_table, sequence_centric_table )
@@ -212,7 +212,7 @@ def remove_loc_markers( input_str ):
 class InputFormatFileError( Exception ):
     pass
 
-def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
+def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None ):
 
     out_str = (  "Oligo Name\tNum Sequences Share 7-mer\tNum Species Share 7-mer\t"
                  "Num Genera Share 7-mer\t"
@@ -242,11 +242,11 @@ def create_oligo_centric_table( tax_dict, map_dict, gap_dict = None ):
 
             if rank_val >= oligo.Rank.FAMILY.value: 
 
-#                get_items_at_rank_from_seqs( map_dict[ current_oligo ],
-#                                             tax_dict,
-#                                             gap_dict,
-#                                             oligo.Rank.FAMILY.value
-#                                           )  
+                get_items_at_rank_from_seqs( map_dict[ current_oligo ],
+                                             taxid_dict, 
+                                             gap_dict,
+                                             oligo.Rank.FAMILY.value
+                                           )  
                 current_family = get_items_at_rank( tax_dict[ current_oligo ],
                                                     oligo.Rank.FAMILY.value
                                                   )
@@ -454,7 +454,7 @@ def parse_gaps( gap_file ):
     return return_val 
 
 def get_items_at_rank_from_seqs( oligo_items,
-                                 tax_dict,
+                                 taxid_dict,
                                  gap_dict, 
                                  oligo_rank
                                ):
@@ -463,11 +463,11 @@ def get_items_at_rank_from_seqs( oligo_items,
 
     for current_name in oligo_items:
 
-        current_id = oligo.get_taxid_from_name( item )
-        id_rank    = gap_dict[ current_id ]
+        current_id = oligo.get_taxid_from_name( current_name ).strip()
+        id_rank    = gap_dict[ current_id ].strip()
         
-        if id_rank >= oligo.Rank.FAMILY.value:
-            out_items.add( tax_dict[ current_name ][ oligo_rank ] )
+        if oligo.Rank[ id_rank ].value >= oligo.Rank.FAMILY.value:
+            out_items.add( taxid_dict[ int( current_id ) ][ oligo.Rank.FAMILY.value ] )
 
 if __name__ == '__main__':
     main()
