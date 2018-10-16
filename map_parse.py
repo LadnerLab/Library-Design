@@ -39,7 +39,7 @@ def main():
     gap_dict = parse_gaps( args.gap_file )
 
     try:
-        map_dict, seq_dict, oligo_seq_dict = parse_map( args.map )
+        map_dict, epitope_dict, oligo_seq_dict = parse_map( args.map )
     except ( IOError, OSError, TypeError ):
         print( "ERROR: An IO exception occurred when trying to "
                "open and parse map file"
@@ -71,7 +71,7 @@ def main():
 
     species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
     oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict )
-    sequence_centric_table = create_sequence_centric_table_from_oligos( seq_dict, oligo_seq_dict, gap_dict )
+    sequence_centric_table = create_sequence_centric_table_from_oligos( epitope_dict, oligo_seq_dict, gap_dict )
 
     write_outputs( args.output, oligo_centric_table, sequence_centric_table )
     
