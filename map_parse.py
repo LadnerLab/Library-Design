@@ -25,6 +25,9 @@ def main():
                                       "use in filling gaps."
                                     )
                            )
+    arg_parser.add_argument( '-r', '--reference',
+                             help = "Fasta reference dataset used to create library"
+                           )
 
     args = arg_parser.parse_args()
 
