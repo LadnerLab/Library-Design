@@ -332,7 +332,8 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
     out_string = ( "Species Name\t"
                    "Number Oligos Species Contrib. to Design\t"
                    "Number Species share 7-mer\t"
-                   "Number Oligos Share 7-mer\n"
+                   "Number Oligos Share 7-mer\t"
+                   "Species that Share 7-mer\n"
                  )
 
     for item in dict_keys:
@@ -365,7 +366,6 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
 
             for current_value in map_dict[ item ]:
 
-                current_value = current_value[ 1 ]
                 current_taxid = oligo.get_taxid_from_name( current_value )
                 if current_taxid:
                     try:
@@ -390,11 +390,17 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
 
     for item in seq_tax_dict.keys():
         if len( item ) > 0:
-            out_string += "%s\t%d\t%d\t%d\n" % ( item, seq_tax_dict[ item ][ 0 ],
+            out_string += "%s\t%d\t%d\t%d\t%s\n" % ( item, seq_tax_dict[ item ][ 0 ],
                                                  len( seq_tax_dict[ item ][ 1 ] ),
-                                                 0
-                                               )
+                                                 0,
+                                                 ",".join( [ species for species \
+                                                             in seq_tax_dict[ item ][ 1 ] \
+                                                             if len( species ) > 0
+                                                           ]
+                                                         )
+                                                   )
 
+    print( out_string )
     return out_string
 
         
