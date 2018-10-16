@@ -207,7 +207,7 @@ def remove_loc_markers( input_str ):
     split_str.pop()
     split_str.pop()
 
-    return '_'.join( split_str )
+    return UNDERSCORE_CHAR.join( split_str )
 
 class InputFormatFileError( Exception ):
     pass
@@ -253,9 +253,15 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
                                                 len( current_family )
                                               )
 
-            current_entry += "%s\t" % ",".join( current_species ).strip()
-            current_entry += "%s\t" % ",".join( current_genus  ).strip()
-            current_entry += "%s\t" % ",".join( current_family ).strip()
+            current_entry += "%s\t" % ",".join( [ item for item in current_species \
+                                                if len( item ) > 0 ]
+                                              )
+            current_entry += "%s\t" % ",".join( [ item for item in current_genus \
+                                                  if len( item ) > 0 ]
+                                              )
+            current_entry += "%s\t" % ",".join( [ item for item in current_family \
+                                                  if len( item ) > 0 ]
+                                              )
 
             species_total   |= set( current_species )
             genus_total     |= set( current_genus )
