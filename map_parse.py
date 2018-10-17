@@ -254,20 +254,18 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
                                                           oligo.Rank.FAMILY.value
                                        )  
 
+            current_species = [ item for item in current_species if len( item ) > 0 ]
+            current_genus   = [ item for item in current_genus if len( item ) > 0 ]
+            current_family  = [ item for item in current_family if len( item ) > 0 ]
+
             current_entry += "%d\t%d\t%d\t" % ( len( current_species ),
                                                 len( current_genus ),
                                                 len( current_family )
                                               )
 
-            current_entry += "%s\t" % ",".join( [ item for item in current_species \
-                                                if len( item ) > 0 ]
-                                              )
-            current_entry += "%s\t" % ",".join( [ item for item in current_genus \
-                                                  if len( item ) > 0 ]
-                                              )
-            current_entry += "%s" % ",".join( [ item for item in current_family \
-                                                  if len( item ) > 0 ]
-                                              )
+            current_entry += "%s\t" % ",".join( current_species )
+            current_entry += "%s\t" % ",".join( current_genus )
+            current_entry += "%s" % ",".join( current_family )
 
             species_total   |= set( current_species )
             genus_total     |= set( current_genus )
@@ -413,7 +411,6 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
                                                          )
                                                    )
 
-    print( out_string )
     return out_string
 
         
