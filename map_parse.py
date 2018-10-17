@@ -69,9 +69,11 @@ def main():
     # By this point, our data can be safely assumed as valid,
     #so we don't have to do any more verification
 
-    species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
-    oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict )
-    sequence_centric_table = create_sequence_centric_table_from_oligos( epitope_dict, oligo_seq_dict, gap_dict )
+    # species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict )
+    # oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict )
+    # sequence_centric_table = create_sequence_centric_table_from_oligos( epitope_dict, oligo_seq_dict, gap_dict )
+
+    create_sequence_centric_table( sequence_dict, epitope_dict, gap_dict )
 
     write_outputs( args.output, oligo_centric_table, sequence_centric_table )
     
@@ -465,6 +467,24 @@ def get_items_at_rank_from_seqs( oligo_items,
             pass
             
     return out_species, out_genera, out_families
+
+def create_sequence_centric_table( ref_dict, epitope_dict, gap_dict ):
+    out_string = ( "Sequence Name\t"
+                   "Oligos that Share 7-mer with Sequence\t"
+                   "Oligos Share 7-mer with only sequence\t"
+                 )
+
+    oligo_share_dict = {}
+
+    for current_seq in ref_dict.keys():
+        for current_oligo in epitope_dict:
+            if current_seq in epitope_dict[ current_oligo ]:
+                if current_seq not in oligo_share_dict.keys():
+                    oligo_share_dict[ current_seq ] = 1
+                oligo_share_dict[ current_seq ] += 1
+
+        out_string += current_seq
+    return out_string
 
 if __name__ == '__main__':
     main()
