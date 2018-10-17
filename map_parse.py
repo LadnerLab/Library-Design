@@ -265,7 +265,7 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
             current_entry += "%s\t" % ",".join( [ item for item in current_genus \
                                                   if len( item ) > 0 ]
                                               )
-            current_entry += "%s\t" % ",".join( [ item for item in current_family \
+            current_entry += "%s" % ",".join( [ item for item in current_family \
                                                   if len( item ) > 0 ]
                                               )
 
