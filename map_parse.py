@@ -253,13 +253,15 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
 
         try:
 
-            current_species = set( [ x[ 1 ] for x in tax_dict[ current_oligo ] ] )
-            current_genus   = set( [ x[ 2 ] for x in tax_dict[ current_oligo ] ] )
-            current_family  = set( [ x[ 3 ] for x in tax_dict[ current_oligo ] ] )
-
-            current_species = [ item for item in current_species if len( item ) > 0 ]
-            current_genus   = [ item for item in current_genus if len( item ) > 0 ]
-            current_family  = [ item for item in current_family if len( item ) > 0 ]
+            current_species = get_items_at_rank( tax_dict[ current_oligo ],
+                                                 oligo.Rank.SPECIES.value
+                                               )
+            current_genus   = get_items_at_rank( tax_dict[ current_oligo ],
+                                                 oligo.Rank.GENUS.value
+                                               )
+            current_family  = get_items_at_rank( tax_dict[ current_oligo ],
+                                                 oligo.Rank.FAMILY.value
+                                               )
 
             current_entry += "%d\t%d\t%d\t" % ( len( current_species ),
                                                 len( current_genus ),
