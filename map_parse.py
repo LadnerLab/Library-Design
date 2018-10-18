@@ -326,7 +326,7 @@ def create_sequence_centric_table_from_oligos( seq_dict, oligo_seq_dict, gap_dic
         
     return out_string
 
-def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict, gap_dict = None ):
+def create_species_centric_table( ):
     dict_keys      = map_dict.keys()
     seq_tax_dict   = {}
     oligo_dict     = {}
@@ -337,77 +337,6 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
                    "Number Oligo Species Share 7-mer\t"
                    "Species that Share 7-mer\n"
                  )
-
-    for item in dict_keys:
-        current_taxid = oligo.get_taxid_from_name( item )
-
-        if current_taxid:
-            try:
-                rank_data     = gap_dict[ current_taxid ].strip()
-                rank_val      = oligo.Rank[ rank_data ].value
-
-                if rank_val >= oligo.Rank.FAMILY.value: 
-
-                    species = taxid_dict[ int( current_taxid ) ][ oligo.Rank.SPECIES.value ]
-                                                       
-                elif rank_val == oligo.Rank.SPECIES.value:
-                    species = taxid_dict[ int( current_taxid ) ][ 0 ]
-
-                elif rank_val == oligo.Rank.GENUS.value:
-                    print( rank_val )
-                    
-            except KeyError:
-                pass
-
-            species = species.strip() 
-
-            if species not in seq_tax_dict.keys():
-                seq_tax_dict[ species ] = [ 1, set() ]
-            else:
-                seq_tax_dict[ species ][ 0 ] += 1
-
-            for current_value in map_dict[ item ]:
-
-                current_taxid = oligo.get_taxid_from_name( current_value )
-                if current_taxid:
-                    try:
-                        rank_data     = gap_dict[ current_taxid ].strip()
-                        rank_val      = oligo.Rank[ rank_data ].value
-
-                        if rank_val >= oligo.Rank.FAMILY.value: 
-
-                            current_species = taxid_dict[ int( current_taxid ) ][ oligo.Rank.SPECIES.value ]
-                                                               
-                        elif rank_val == oligo.Rank.SPECIES.value:
-
-                            current_species = taxid_dict[ int( current_taxid ) ][ 0 ]
-                        elif rank_val == oligo.Rank.GENUS.value:
-                            print( rank_val )
-                            
-                    except KeyError:
-                        pass
-
-
-                    seq_tax_dict[ species ][ 1 ].add( current_species )
-
-    for item in seq_tax_dict.keys():
-        for current_species in seq_tax_dict[ item ][ 1 ]:
-            if current_species not in oligo_dict.keys():
-                oligo_dict[ current_species ] = 0
-
-            oligo_dict[ current_species ] += 1
-
-    for item in seq_tax_dict.keys():
-        if len( item ) > 0:
-            out_string += "%s\t%d\t%d\t%d\t%s\n" % ( item, seq_tax_dict[ item ][ 0 ],
-                                                 len( seq_tax_dict[ item ][ 1 ] ),
-                                                 oligo_dict[ item ],
-                                                 ",".join( [ species for species \
-                                                             in seq_tax_dict[ item ][ 1 ] \
-                                                             if len( species ) > 0
-                                                           ]
-                                                         )
-                                                   )
 
     return out_string
 
