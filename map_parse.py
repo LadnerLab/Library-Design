@@ -177,16 +177,16 @@ def oligo_to_tax( input_dict, tax_data_file, gap_dict = None ):
     # "Fix" taxid_dict using gap_dict
     if gap_dict:
         for id, info in taxid_dict.items():
-            if str(id) in gap_dict:
-                if gap_dict[str(id)] == "SPECIES":
-                    taxid_dict[id][1] = taxid_dict[id][0]
-                    taxid_dict[id][0] = ""
-                elif gap_dict[str(id)] == "GENUS":
-                    taxid_dict[id][2] = taxid_dict[id][0]
-                    taxid_dict[id][0] = ""
-                elif gap_dict[str(id)] == "FAMILY":
-                    taxid_dict[id][3] = taxid_dict[id][0]
-                    taxid_dict[id][0] = ""
+            if str( id ) in gap_dict:
+                if gap_dict[ str( id ) ] == "SPECIES":
+                    taxid_dict[ id ][ 1 ] = taxid_dict[ id ][ 0 ]
+                    taxid_dict[ id ][ 0 ] = ""
+                elif gap_dict[ str( id ) ] == "GENUS":
+                    taxid_dict[ id ][ 2 ] = taxid_dict[ id ][ 0 ]
+                    taxid_dict[ id ][ 0 ] = ""
+                elif gap_dict[ str( id ) ] == "FAMILY":
+                    taxid_dict[ id ][ 3 ] = taxid_dict[ id ][ 0 ]
+                    taxid_dict[ id ][ 0 ] = ""
 
     dict_keys = input_dict.keys()
 
@@ -242,29 +242,13 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
               )
     oligo_names     = map_dict.keys()
     num_oligos      = len( oligo_names )
-#    species_shared  = set()
 
-#    species_total   = set()
-#    genus_total     = set()
-#    family_total    = set()
-#    sequences_total = 0
 
     for current_oligo in oligo_names:
         current_taxid   = oligo.get_taxid_from_name( current_oligo )
         current_entry = "%s\t%s\t" % ( current_oligo, len( tax_dict[ current_oligo ] ) )
 
         try:
-#            if current_taxid:
-#                rank_data = gap_dict[ current_taxid ].strip()
-#                rank_val = oligo.Rank[ rank_data ].value
-
-#             current_species, \
-#             current_genus, \
-#             current_family = get_items_at_rank_from_seqs( map_dict[ current_oligo ],
-#                                                           taxid_dict, 
-#                                                           gap_dict,
-#                                                           oligo.Rank.FAMILY.value
-#                                        )  
 
             current_species = set([x[1] for x in tax_dict[current_oligo]])
             current_genus = set([x[2] for x in tax_dict[current_oligo]])
@@ -283,12 +267,6 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
             current_entry += "%s\t" % ",".join( current_genus )
             current_entry += "%s" % ",".join( current_family )
 
-#            species_total   |= set( current_species )
-#            genus_total     |= set( current_genus )
-#            family_total    |= set( current_family )
-
-            
-#            sequences_total += len( map_dict[ current_oligo ] )
             out_str         += current_entry + "\n"
 
         except KeyError:
@@ -449,33 +427,6 @@ def parse_gaps( gap_file ):
         return_val = return_dict
         
     return return_val 
-
-# def get_items_at_rank_from_seqs( oligo_items, taxid_dict, gap_dict, oligo_rank):
-# 
-#     out_species  = set()
-#     out_genera   = set()
-#     out_families = set()
-# 
-#     for current_name in oligo_items:
-# 
-#         current_id = oligo.get_taxid_from_name( current_name ).strip()
-#         
-#         try:
-#             if oligo_rank >= oligo.Rank.FAMILY.value:
-#                 out_families.add( taxid_dict[ int( current_id ) ][ oligo_rank ] )
-#                 out_genera.add( taxid_dict[ int( current_id ) ][ oligo.Rank.GENUS.value ] )
-#                 out_species.add( taxid_dict[ int( current_id ) ][ oligo.Rank.SPECIES.value ] )
-# 
-#             elif oligo_rank == oligo.Rank.GENUS.value:
-#                 out_genera.add( taxid_dict[ int( current_id ) ][ 0 ] )
-# 
-#             elif oligo_rank == oligo.Rank.SPECIES.value:
-#                 out_species.add( taxid_dict[ int( current_id ) ][ 0 ] )
-# 
-#         except KeyError:
-#             pass
-#             
-#     return out_species, out_genera, out_families
 
 def create_sequence_centric_table( ref_dict, epitope_dict, gap_dict ):
     out_string = ( "Sequence Name\t"
