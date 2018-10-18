@@ -69,11 +69,10 @@ def main():
     # By this point, our data can be safely assumed as valid,
     #so we don't have to do any more verification
 
-#    species_centric_table  = create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict)
+    species_centric_table  = create_species_centric_table( sequence_dict, epitope_dict, taxid_dict )
     oligo_centric_table    = create_oligo_centric_table( tax_dict, map_dict, taxid_dict)
     sequence_centric_table = create_sequence_centric_table_from_oligos( epitope_dict, oligo_seq_dict)
 
-#    create_sequence_centric_table( sequence_dict, epitope_dict)
 
     write_outputs( args.output, oligo_centric_table, sequence_centric_table )
     
@@ -326,10 +325,7 @@ def create_sequence_centric_table_from_oligos( seq_dict, oligo_seq_dict, gap_dic
         
     return out_string
 
-def create_species_centric_table( ):
-    dict_keys      = map_dict.keys()
-    seq_tax_dict   = {}
-    oligo_dict     = {}
+def create_species_centric_table( reference_dict, oligo_dict, taxid_dict ):
 
     out_string = ( "Species Name\t"
                    "Number Oligos Species Contrib. to Design\t"
