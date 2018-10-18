@@ -278,19 +278,12 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
     return out_str 
 
 def get_items_at_rank( tax_list, rank ):
-    shared_items = set()
-    num_items    = 0
+    current_items = set( [ item[ rank ] for item in tax_list \
+                           if len( item ) > 0 ]
+                       )
 
-    if not tax_list:
-        num_items = 1
-
-    for current in tax_list:
-        if len( current[ rank ] ) > 0:
-            shared_items.add( current[ rank ] )
-        else:
-            num_items += 1
-    return ( shared_items, len( shared_items ) + num_items ) # +1 because each rank is represented by at least this sequence
-
+    return current_items 
+    
 def write_outputs( out_file, oligo_centric, sequence_centric ):
     WRITE_FLAG = "w"
     EXTENSION  = ".tsv"
