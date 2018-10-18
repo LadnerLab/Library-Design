@@ -243,9 +243,9 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
                  "Genera Covered by 7-mer\t"
                  "Families Covered by 7-mer\n"
               )
+
     oligo_names     = map_dict.keys()
     num_oligos      = len( oligo_names )
-
 
     for current_oligo in oligo_names:
         current_taxid   = oligo.get_taxid_from_name( current_oligo )
@@ -281,7 +281,7 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
 
 def get_items_at_rank( tax_list, rank ):
     current_items = set( [ item[ rank ] for item in tax_list \
-                           if len( item ) > 0 ]
+                           if len( item[ rank ] ) > 0 ]
                        )
 
     return current_items 
