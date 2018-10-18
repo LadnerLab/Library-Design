@@ -114,10 +114,11 @@ def parse_map( file_name ):
         open_file = open( file_name, READ_FLAG )
         # loop through each line in file
         for line in open_file:
-            # split the line on the tab character
+            # split the line on the delimiter character
             try:
 
                 split_line = line.split( TAB_CHAR )
+
                 # Information for oligo-centric data
                 new_dict_key = split_line[ 0 ]
                 new_dict_val = split_line[ 1 ].strip()
@@ -178,12 +179,15 @@ def oligo_to_tax( input_dict, tax_data_file, gap_dict = None ):
     if gap_dict:
         for id, info in taxid_dict.items():
             if str( id ) in gap_dict:
+
                 if gap_dict[ str( id ) ] == "SPECIES":
                     taxid_dict[ id ][ 1 ] = taxid_dict[ id ][ 0 ]
                     taxid_dict[ id ][ 0 ] = ""
+
                 elif gap_dict[ str( id ) ] == "GENUS":
                     taxid_dict[ id ][ 2 ] = taxid_dict[ id ][ 0 ]
                     taxid_dict[ id ][ 0 ] = ""
+
                 elif gap_dict[ str( id ) ] == "FAMILY":
                     taxid_dict[ id ][ 3 ] = taxid_dict[ id ][ 0 ]
                     taxid_dict[ id ][ 0 ] = ""
@@ -250,9 +254,9 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
 
         try:
 
-            current_species = set([x[1] for x in tax_dict[current_oligo]])
-            current_genus = set([x[2] for x in tax_dict[current_oligo]])
-            current_family = set([x[3] for x in tax_dict[current_oligo]])
+            current_species = set( [ x[ 1 ] for x in tax_dict[ current_oligo ] ] )
+            current_genus   = set( [ x[ 2 ] for x in tax_dict[ current_oligo ] ] )
+            current_family  = set( [ x[ 3 ] for x in tax_dict[ current_oligo ] ] )
 
             current_species = [ item for item in current_species if len( item ) > 0 ]
             current_genus   = [ item for item in current_genus if len( item ) > 0 ]
@@ -265,7 +269,7 @@ def create_oligo_centric_table( tax_dict, map_dict, taxid_dict, gap_dict = None 
 
             current_entry += "%s\t" % ",".join( current_species )
             current_entry += "%s\t" % ",".join( current_genus )
-            current_entry += "%s" % ",".join( current_family )
+            current_entry += "%s"   % ",".join( current_family )
 
             out_str         += current_entry + "\n"
 
@@ -347,8 +351,8 @@ def create_species_centric_table( map_dict, taxid_dict, oligo_seq_dict, tax_dict
                     species = taxid_dict[ int( current_taxid ) ][ oligo.Rank.SPECIES.value ]
                                                        
                 elif rank_val == oligo.Rank.SPECIES.value:
-
                     species = taxid_dict[ int( current_taxid ) ][ 0 ]
+
                 elif rank_val == oligo.Rank.GENUS.value:
                     print( rank_val )
                     
