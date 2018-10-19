@@ -102,7 +102,7 @@ def main():
 
         taxids = set( [ oligo.get_taxid_from_name( item ) for item in line[ 1 ].split( '~' ) ] )
 
-
+        taxids = create_valid_taxids( taxids, missing_id_key )
 
         current_entry = line[ 0 ].strip() + '\t'
 
@@ -115,8 +115,8 @@ def main():
         for current_item in taxids:
             try:
                 current_species |= set( [ taxid_dict[current_item][ 1 ] ] )
-                current_genus |= set( [ taxid_dict[ current_item][2] ] )
-                current_family |= set( [ taxid_dict[current_item][3] ] )
+                current_genus   |= set( [ taxid_dict[ current_item][2] ] )
+                current_family  |= set( [ taxid_dict[current_item][3] ] )
             except KeyError:
                 missing_ids.add( current_item )
 
@@ -207,6 +207,15 @@ def main():
         fout.write("%s\t%d\t%d\n" % (fam, count, specific))
     fout.close()
 
+def create_valid_taxids( taxids, missing_id_key ):
+    return_set = set()
+    for current_item in taxids:
+        if int( current_item ) in missing_id_key:
+            return_set.add( str( missing_id_key[ current_item ] ) )
+        else:
+            return_set.add( current_item )
 
+    return return_set
+        
 if __name__ == '__main__':
     main()

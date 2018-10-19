@@ -88,6 +88,9 @@ def main():
 
     for current in tax_ids:
         try:
+            if int( current ) in missing_id_key:
+                current = str( missing_id_key[ int( current ) ] )
+
             unique_species.add(   taxid_dict[ current ][ 1 ] )
             unique_genera.add(    taxid_dict[ current ][ 2 ] )
             unique_families.add(  taxid_dict[ current ][ 3 ] )
