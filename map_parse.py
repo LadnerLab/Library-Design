@@ -134,19 +134,22 @@ def main():
             name, numSeqs, numSp, numGen, numFam, namesSp, namesGen, namesFam = line.strip("\n").split("\t")
             #species-centric
             for each in namesSp.strip(',').split(','):
-                spDict[each] = spDict.get(each, 0) + 1
-                if len(namesSp.strip(',').split(','))==1:
-                    spDictSpec[each] = spDictSpec.get(each, 0) + 1
+                if len( each ) > 0:
+                    spDict[each] = spDict.get(each, 0) + 1
+                    if len(namesSp.strip(',').split(','))==1:
+                        spDictSpec[each] = spDictSpec.get(each, 0) + 1
             #genus-centric
             for each in namesGen.strip(',').split(','):
-                genDict[each] = genDict.get(each, 0) + 1
-                if len(namesGen.strip(',').split(','))==1:
-                    genDictSpec[each] = genDictSpec.get(each, 0) + 1
+                if len( each ) > 0:
+                    genDict[each] = genDict.get(each, 0) + 1
+                    if len(namesGen.strip(',').split(','))==1:
+                        genDictSpec[each] = genDictSpec.get(each, 0) + 1
             #family-centric
             for each in namesFam.strip(',').split(','):
-                famDict[each] = famDict.get(each, 0) + 1
-                if len(namesFam.strip(',').split(','))==1:
-                    famDictSpec[each] = famDictSpec.get(each, 0) + 1
+                if len( each ) > 0:
+                    famDict[each] = famDict.get(each, 0) + 1
+                    if len(namesFam.strip(',').split(','))==1:
+                        famDictSpec[each] = famDictSpec.get(each, 0) + 1
     
     print (len(spDict), len(spDictSpec))
     print (len(genDict), len(genDictSpec))
