@@ -86,6 +86,7 @@ def main():
         current_genus = set()
         current_family = set()
 
+        JOIN_CHAR = '~'
 
         for current_item in taxids:
             try:
@@ -103,9 +104,9 @@ def main():
                                             len( current_genus ),
                                             len( current_family )
                                           )
-        current_entry += "%s\t" % ",".join( current_species )
-        current_entry += "%s\t" % ",".join( current_genus )
-        current_entry += "%s" % ",".join( current_family )
+        current_entry += "%s\t" % JOIN_CHAR.join( current_species )
+        current_entry += "%s\t" % JOIN_CHAR.join( current_genus   )
+        current_entry += "%s"   % JOIN_CHAR.join( current_family  )
         current_entry += '\n'
 
         oligo_file.write( current_entry )
