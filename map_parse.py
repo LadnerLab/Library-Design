@@ -70,18 +70,7 @@ def main():
         line = line.split( '|' )
         taxid_dict[ line[ 0 ].strip() ] = [ item.strip() for item in line[ 1:: ] ]
 
-    for id, info in taxid_dict.items():
-        if str(id) in gap_dict:
-            if gap_dict[str(id)] == "SPECIES":
-                taxid_dict[id][1] = taxid_dict[id][0]
-                taxid_dict[id][0] = ""
-            elif gap_dict[str(id)] == "GENUS":
-                taxid_dict[id][2] = taxid_dict[id][0]
-                taxid_dict[id][0] = ""
-            elif gap_dict[str(id)] == "FAMILY":
-                taxid_dict[id][3] = taxid_dict[id][0]
-                taxid_dict[id][0] = ""
-
+    oligo.fill_tax_gaps( taxid_dict, gap_dict )
     
     oligo_file = open( args.output + "_oligo.tsv", 'w+' )
     oligo_file.write( 
@@ -102,7 +91,7 @@ def main():
 
         taxids = set( [ oligo.get_taxid_from_name( item ) for item in line[ 1 ].split( '~' ) ] )
 
-        taxids = create_valid_taxids( taxids, missing_id_key )
+        taxids = oligo.create_valid_taxids( taxids, missing_id_key )
 
         current_entry = line[ 0 ].strip() + '\t'
 
@@ -207,15 +196,5 @@ def main():
         fout.write("%s\t%d\t%d\n" % (fam, count, specific))
     fout.close()
 
-def create_valid_taxids( taxids, missing_id_key ):
-    return_set = set()
-    for current_item in taxids:
-        if int( current_item ) in missing_id_key:
-            return_set.add( str( missing_id_key[ current_item ] ) )
-        else:
-            return_set.add( current_item )
-
-    return return_set
-        
 if __name__ == '__main__':
     main()
