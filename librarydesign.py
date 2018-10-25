@@ -544,10 +544,12 @@ def get_names_containing( dirname, file_prefix, file_suffix ):
     files = os.listdir( dirname )
 
     for current in files:
-        if file_prefix in current or file_suffix in current:
+        if ( file_prefix and file_prefix in current ) \
+           or ( file_suffix and file_suffix in current ):
             out_files.append( current )
     
     return out_files
+
 
 if __name__ == '__main__':
     main()
