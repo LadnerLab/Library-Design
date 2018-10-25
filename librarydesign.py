@@ -550,6 +550,14 @@ def get_names_containing( dirname, file_prefix, file_suffix ):
     
     return out_files
 
+def count_char_in_file( current_file, char ):
+    total = 0
+    
+    with open( current_file, 'r' ) as open_file:
+        for line in open_file:
+            total += line.count( char )
+
+    return total
 
 if __name__ == '__main__':
     main()
