@@ -21,7 +21,10 @@ def main():
     need_to_cluster = check_to_cluster( options.cluster_dir )
 
     SLEEP_INTERVAL = 3
-    LARGE_CLUSTER_THRESHOLD = 25000
+
+    SMALL_CLUSTER_THRESHOLD   = 50 
+    MIDSIZE_CLUSTER_THRESHOLD = 100
+    LARGE_CLUSTER_THRESHOLD   = 1000
 
     if need_to_cluster:
         check_required_option( options.query, "Fasta query file must be provided", True )
@@ -86,6 +89,11 @@ def main():
 
     for current_file in cluster_files:
         if os.path.isfile( current_file ) and '.fasta' in current_file and 'out' not in current_file:
+
+            create_cluster_dir( "clusters", 1, SMALL_CLUSTER_THRESHOLD )
+            create_cluster_dir( "clusters", SMALL_CLUSTER_THRESHOLD, MIDSIZE_CLUSTER_THRESHOLD )
+            create_cluster_dir( "clusters", MIDSIZE_CLUSTER_THRESHOLD, LARGE_CLUSTER_THRESHOLD )
+
             kmer_options += ' -q ' + str( current_file )
             kmer_options += ' -o ' + str( current_file ) + "_out "
 
@@ -491,6 +499,19 @@ def get_mem_required_per_cluster( cluster_size_dict, mem_per_thousand_kmers ):
 
     return memory_dict
   
+def create_cluster_dir( name_prefix, lower_bound, upper_bound ):
+    dirname = "%s_%d" % ( name_prefix, upper_bound )
+
+    if not os.path.isdir( dirname ):
+        os.mkdir( dirname )
+
+    # get names of files that contain [ lower_bound, upper_bound ) num seqs
+    filenames = filenames_with_seqs( lower_bound, upper_bound )
+
+    # copy each of these files into the newly created directory
+    for current_file in filenames:
+        shutil.copy( current_file, dirname )
+
 if __name__ == '__main__':
     main()
 
