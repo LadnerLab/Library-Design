@@ -506,16 +506,20 @@ def create_cluster_dir( name_prefix, lower_bound, upper_bound ):
         os.mkdir( dirname )
 
     # get names of files that contain [ lower_bound, upper_bound ) num seqs
-    filenames = filenames_with_seqs( lower_bound, upper_bound )
+    filenames = filenames_with_seqs( lower_bound, upper_bound,
+                                     file_suffix = '.fasta',
+                                     exclude_containing = 'out'
+                                   )
 
     # copy each of these files into the newly created directory
     for current_file in filenames:
         shutil.copy( current_file, dirname )
 
 def filenames_with_seqs( lower_bound, upper_bound,
-                         file_suffix = None,
-                         file_prefix = None,
-                         scan_dir    = None
+                         file_suffix        = None,
+                         file_prefix        = None,
+                         scan_dir           = None,
+                         exclude_containing = None
                        ):
     out_file_names = list()
     
@@ -526,7 +530,8 @@ def filenames_with_seqs( lower_bound, upper_bound,
     # or both
     file_names = get_names_containing( os.getcwd(),
                                        file_prefix,
-                                       file_suffix
+                                       file_suffix,
+                                       exclude_containing
                                      )
     if file_names:
         for current_file in file_names:
@@ -538,14 +543,16 @@ def filenames_with_seqs( lower_bound, upper_bound,
 
     return out_file_names     
 
-def get_names_containing( dirname, file_prefix, file_suffix ):
+def get_names_containing( dirname, file_prefix, file_suffix, exclusion_str ):
     out_files = list()
 
     files = os.listdir( dirname )
 
     for current in files:
-        if ( file_prefix and file_prefix in current ) \
-           or ( file_suffix and file_suffix in current ):
+        if ( ( file_prefix and file_prefix in current ) \
+           or ( file_suffix and file_suffix in current ) ) \
+            and exclusion_str not in current:
+
             out_files.append( current )
     
     return out_files
