@@ -538,8 +538,16 @@ def filenames_with_seqs( lower_bound, upper_bound,
 
     return out_file_names     
 
-                                       
+def get_names_containing( dirname, file_prefix, file_suffix ):
+    out_files = list()
 
+    files = os.listdir( dirname )
+
+    for current in files:
+        if file_prefix in current or file_suffix in current:
+            out_files.append( current )
+    
+    return out_files
 
 if __name__ == '__main__':
     main()
