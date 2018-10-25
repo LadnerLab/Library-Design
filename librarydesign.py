@@ -512,6 +512,35 @@ def create_cluster_dir( name_prefix, lower_bound, upper_bound ):
     for current_file in filenames:
         shutil.copy( current_file, dirname )
 
+def filenames_with_seqs( lower_bound, upper_bound,
+                         file_suffix = None,
+                         file_prefix = None,
+                         scan_dir    = None
+                       ):
+    out_file_names = list()
+    
+    if scan_dir:
+        os.chdir( scan_dir )
+
+    # get the files containing either prefix, suffix
+    # or both
+    file_names = get_names_containing( os.getcwd(),
+                                       file_prefix,
+                                       file_suffix
+                                     )
+    if file_names:
+        for current_file in file_names:
+            num_seqs = count_char_in_file( current_file, '>' )
+            if num_seqs >= lower_bound \
+                 and num_seqs < upper_bound:
+
+                out_file_names.append( current_file )
+
+    return out_file_names     
+
+                                       
+
+
 if __name__ == '__main__':
     main()
 
