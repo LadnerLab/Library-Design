@@ -84,62 +84,18 @@ def main():
     os.chdir( options.cluster_dir )
     job_ids = list()
 
-    create_cluster_dir( "clusters", 1, SMALL_CLUSTER_THRESHOLD )
-    create_cluster_dir( "clusters", SMALL_CLUSTER_THRESHOLD, MIDSIZE_CLUSTER_THRESHOLD )
-    create_cluster_dir( "clusters", MIDSIZE_CLUSTER_THRESHOLD, LARGE_CLUSTER_THRESHOLD )
+    small_cluster_dir   = create_cluster_dir( "clusters", 1, SMALL_CLUSTER_THRESHOLD )
+    midsize_cluster_dir = create_cluster_dir( "clusters", SMALL_CLUSTER_THRESHOLD, MIDSIZE_CLUSTER_THRESHOLD )
+    large_cluster_dir   = create_cluster_dir( "clusters", MIDSIZE_CLUSTER_THRESHOLD, LARGE_CLUSTER_THRESHOLD )
 
+    align_cluster_script = create_cluster_script( "alignment", small_cluster_dir )
 
+    os.chdir( small_cluster_dir )
 
-    kmer_options += ' -q ' + str( current_file )
-    kmer_options += ' -o ' + str( current_file ) + "_out "
+    align_cluster_script.write_script()
 
-    mem_required = kmer_memory_dict[ current_file ]
+    align_cluster_script.run()
 
-    kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
-    kmer_script.add_slurm_arg( "--job-name " + current_file + "_19mer_lib_final_2" )
-    kmer_script.add_slurm_arg( "--mem " + str( mem_required ) + 'G' )
-
-    if int( kmer_size_dict[ current_file ] ) < LARGE_CLUSTER_THRESHOLD:
-        kmer_script.add_slurm_arg( "--time 00:54:00" )
-
-    kmer_script.write_script()
-    current_job_id = kmer_script.run()
-    job_ids.append( current_job_id )
-
-    out_file = options.output + ".fasta"
-    combination_script = SBatchScript( "cat $(pwd)/*_R_" + str( options.redundancy ) + " > combined.fasta",
-                                       "combine_script",
-                                        options.slurm,
-                                        dependency_mode = "afterany"
-                                     )
-    combination_script.add_command( "mv combined.fasta ../" + out_file )
-    combination_script.add_dependencies( job_ids )
-    combination_script.write_script()
-    combination_script.run()
-
-
-    os.chdir( ".." )
-    while not combination_script.is_finished():
-        time.sleep( 1 )
-
-
-    names, sequences = oligo.read_fasta_lists( out_file )
-    names, sequences = oligo.get_unique_sequences( names, sequences )
-
-    os.remove( out_file )
-    oligo.write_fastas( names, sequences, out_file )
-
-    if not options.keep_out:
-        os.remove( options.cluster_dir + '/' + kmer_script.script_name )
-        os.remove( options.cluster_dir + '/' + combination_script.script_name )
-        os.remove( cluster_script.script_name )
-    if not options.keep_out and need_to_cluster:
-        shutil.rmtree( options.cluster_dir )
-    
-        
-
-
-        
 
 def add_program_options( option_parser ):
     option_parser.add_option( '-q', '--query', help = "Fasta query file to read sequences from and do ordering of. [None, Required]" )
@@ -313,8 +269,14 @@ class SBatchScript:
         
             :param dependency_mode: Optional mode of dependencies this script is dependant upon.
         """
-        self.commands = [ SBatchScript.Command( command ) ]
-        self.slurm_args = [ item.split() for item in slurm_args ]
+        if command:
+            self.commands = [ SBatchScript.Command( command ) ]
+        else:
+            self.commands = list()
+        if slurm_args:
+            self.slurm_args = [ item.split() for item in slurm_args ]
+        else:
+            self.slurm_args = list()
         self.script_name = script_name
 
         self.dependencies = list()
@@ -511,6 +473,8 @@ def create_cluster_dir( name_prefix, lower_bound, upper_bound ):
     for current_file in filenames:
         shutil.copy( current_file, dirname )
 
+    return dirname
+
 def filenames_with_seqs( lower_bound, upper_bound,
                          file_suffix        = None,
                          file_prefix        = None,
@@ -561,6 +525,20 @@ def count_char_in_file( current_file, char ):
             total += line.count( char )
 
     return total
+
+def create_cluster_script( script_name, dir_name ):
+    cluster_script = SBatchScript( None, script_name, None )
+    cluster_script.add_module( "python/3.latest" )
+    cluster_script.add_module( "muscle" )
+    cluster_script.add_slurm_arg( "--time 24:00:00" )
+    cluster_script.add_slurm_arg( "--mem 80G" )
+
+    for current in os.listdir( dir_name ):
+        if ".fasta" in current:
+            cluster_script.add_command( "muscle -in %s -out %s.aligned" % ( current, current ) )
+            cluster_script.add_command( "protein_oligo_main -a %s.aligned -x 9 -w 24 -s 15 -o %s_align_out" % ( current, current ) )
+            cluster_script.add_command( "kmer_oligo -x 9 -y 24 -i 1000 -q %s -o %s_kmer_out -c 1" % ( current, current ) )
+    return cluster_script
 
 if __name__ == '__main__':
     main()
