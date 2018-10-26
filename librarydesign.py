@@ -84,31 +84,27 @@ def main():
     os.chdir( options.cluster_dir )
     job_ids = list()
 
-    kmer_size_dict = get_kmer_sizes_for_clusters( 'cluster_sizes.txt' )
-    kmer_memory_dict = get_mem_required_per_cluster( kmer_size_dict, options.mem_ratio )
+    create_cluster_dir( "clusters", 1, SMALL_CLUSTER_THRESHOLD )
+    create_cluster_dir( "clusters", SMALL_CLUSTER_THRESHOLD, MIDSIZE_CLUSTER_THRESHOLD )
+    create_cluster_dir( "clusters", MIDSIZE_CLUSTER_THRESHOLD, LARGE_CLUSTER_THRESHOLD )
 
-    for current_file in cluster_files:
-        if os.path.isfile( current_file ) and '.fasta' in current_file and 'out' not in current_file:
 
-            create_cluster_dir( "clusters", 1, SMALL_CLUSTER_THRESHOLD )
-            create_cluster_dir( "clusters", SMALL_CLUSTER_THRESHOLD, MIDSIZE_CLUSTER_THRESHOLD )
-            create_cluster_dir( "clusters", MIDSIZE_CLUSTER_THRESHOLD, LARGE_CLUSTER_THRESHOLD )
 
-            kmer_options += ' -q ' + str( current_file )
-            kmer_options += ' -o ' + str( current_file ) + "_out "
+    kmer_options += ' -q ' + str( current_file )
+    kmer_options += ' -o ' + str( current_file ) + "_out "
 
-            mem_required = kmer_memory_dict[ current_file ]
+    mem_required = kmer_memory_dict[ current_file ]
 
-            kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
-            kmer_script.add_slurm_arg( "--job-name " + current_file + "_19mer_lib_final_2" )
-            kmer_script.add_slurm_arg( "--mem " + str( mem_required ) + 'G' )
+    kmer_script = SBatchScript( "kmer_oligo " + kmer_options, "kmer_script", options.slurm )
+    kmer_script.add_slurm_arg( "--job-name " + current_file + "_19mer_lib_final_2" )
+    kmer_script.add_slurm_arg( "--mem " + str( mem_required ) + 'G' )
 
-            if int( kmer_size_dict[ current_file ] ) < LARGE_CLUSTER_THRESHOLD:
-                kmer_script.add_slurm_arg( "--time 00:54:00" )
+    if int( kmer_size_dict[ current_file ] ) < LARGE_CLUSTER_THRESHOLD:
+        kmer_script.add_slurm_arg( "--time 00:54:00" )
 
-            kmer_script.write_script()
-            current_job_id = kmer_script.run()
-            job_ids.append( current_job_id )
+    kmer_script.write_script()
+    current_job_id = kmer_script.run()
+    job_ids.append( current_job_id )
 
     out_file = options.output + ".fasta"
     combination_script = SBatchScript( "cat $(pwd)/*_R_" + str( options.redundancy ) + " > combined.fasta",
