@@ -84,11 +84,12 @@ def main():
     os.chdir( options.cluster_dir )
     job_ids = list()
 
-    small_cluster_dir   = create_cluster_dir( "clusters", 1, SMALL_CLUSTER_THRESHOLD )
-    midsize_cluster_dir = create_cluster_dir( "clusters", SMALL_CLUSTER_THRESHOLD, MIDSIZE_CLUSTER_THRESHOLD )
-    large_cluster_dir   = create_cluster_dir( "clusters", MIDSIZE_CLUSTER_THRESHOLD, LARGE_CLUSTER_THRESHOLD )
+    small_cluster_dir     = create_cluster_dir( "clusters", 1, SMALL_CLUSTER_THRESHOLD )
+    midsize_cluster_dir   = create_cluster_dir( "clusters", SMALL_CLUSTER_THRESHOLD, MIDSIZE_CLUSTER_THRESHOLD )
+    large_cluster_dir     = create_cluster_dir( "clusters", MIDSIZE_CLUSTER_THRESHOLD, LARGE_CLUSTER_THRESHOLD )
+    biggest_cluster_dir   = create_cluster_dir( "clusters", LARGE_CLUSTER_THRESHOLD, sys.maxsize )
 
-    align_cluster_script = create_cluster_script( "alignment", small_cluster_dir )
+    align_cluster_script = create_aligned_cluster_script( "alignment", small_cluster_dir )
 
     os.chdir( small_cluster_dir )
 
@@ -96,6 +97,38 @@ def main():
 
     align_cluster_script.run()
 
+    os.chdir( ".." )
+
+    midsize_cluster_scripts = create_unaligned_cluster_scripts( "medsize", midsize_cluster_dir,
+                                                                300, "28G", "1:00:00"
+                                                              )
+    large_cluster_scripts   = create_unaligned_cluster_scripts( "large", large_cluster_dir,
+                                                                50, "90G", "3:00:00"
+                                                                )
+    biggest_cluster_scripts = create_unaligned_cluster_scripts( "biggest", biggest_cluster_dir,
+                                                                3, "150G", "6:00:00"
+                                                              )
+
+    os.chdir( midsize_cluster_dir )
+
+    for current in midsize_cluster_scripts:
+        current.write_script()
+        current.run()
+    os.chdir( ".." )
+
+    os.chdir( large_cluster_dir )
+
+    for current in large_cluster_scripts:
+        current.write_script()
+        current.run()
+    os.chdir( ".." )       
+
+    os.chdir( biggest_cluster_dir )
+
+    for current in biggest_cluster_scripts:
+        current.write_script()
+        current.run()
+    os.chdir( ".." )
 
 def add_program_options( option_parser ):
     option_parser.add_option( '-q', '--query', help = "Fasta query file to read sequences from and do ordering of. [None, Required]" )
@@ -526,7 +559,7 @@ def count_char_in_file( current_file, char ):
 
     return total
 
-def create_cluster_script( script_name, dir_name ):
+def create_aligned_cluster_script( script_name, dir_name ):
     cluster_script = SBatchScript( None, script_name, None )
     cluster_script.add_module( "python/3.latest" )
     cluster_script.add_module( "muscle" )
@@ -539,6 +572,21 @@ def create_cluster_script( script_name, dir_name ):
             cluster_script.add_command( "protein_oligo_main -a %s.aligned -x 9 -w 24 -s 15 -o %s_align_out" % ( current, current ) )
             cluster_script.add_command( "kmer_oligo -x 9 -y 24 -i 1000 -q %s -o %s_kmer_out -c 1" % ( current, current ) )
     return cluster_script
+
+def create_unaligned_cluster_scripts( script_name, dir_name, num_iterations,
+                                      mem_req, time_req ):
+    out_scripts = list()
+
+    for current in os.listdir( dir_name ):
+        if ".fasta" in current:
+            cluster_script = SBatchScript( None, "%s_script" % current, None )
+            cluster_script.add_slurm_arg( "--time %s" % time_req )
+            cluster_script.add_slurm_arg( "--mem %s" % mem_req )
+
+            cluster_script.add_command( "kmer_oligo -x 9 -y 24 -i %d -q %s -o %s_kmer_out -c 1" % ( current, current, num_iterations ) )
+
+            out_scripts.append( cluster_script )
+    return out_scripts
 
 if __name__ == '__main__':
     main()
