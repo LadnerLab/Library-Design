@@ -137,7 +137,9 @@ def read_fasta_lists(file):
             count+=1
             names.append(line[1:])
             if count>1:
-                seqs.append(seq)
+                # Only grab the first item in the line,
+                # protects against SEQ followed by anything else
+                seqs.append( seq.strip().split()[ 0 ] )
             seq=''
         else: seq +=line
     seqs.append(seq)
