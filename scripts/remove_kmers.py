@@ -12,6 +12,7 @@ def main():
                                                     "that are found in multiple "
                                                     "of certain categories."
                                     )
+
     parser.add_argument( '-l', '--lower_bound', type = int, default = 0,
                          help = "Lower-bound (inclusive) for a value to be "
                                 "considered for output. If a value is less "
@@ -59,6 +60,7 @@ def main():
     # read the oligos from the library design into a dict
     design_dict = parse_fasta_file( args.design )
 
+    
     # try to read and parse the input file
         # function: read_oligo_table
 
@@ -125,6 +127,24 @@ def parse_fasta_file( file_name ):
         return_dict = None
     finally:
         return return_dict
+
+def report_error( error_code ):
+    """
+        Reports an error based upon the CommandArgError value supplied.
+    """
+    error_strings = [ "No error",
+                      "An oligo table was not supplied",
+                      "The design fasta file was not supplied",
+                      "Invalid bounds: upper_bound must not be less than lower_bound",
+                      "The supplied table file was not found, "
+                      "or another error occurred when opening the file",
+                      "The supplied design fasta file was either not found "
+                      "or another error occurred when trying to access it"
+                      ]
+
+    print( "ERROR: %s. Please resolve this "
+           "issue and restart the script. " % error_strings[ error_code.value ]
+         )
 
 if __name__ == '__main__':
     main()
