@@ -101,6 +101,8 @@ def main():
                                LOWER_BOUND, UPPER_BOUND
                              )
 
+    write_outputs( output_dict, args.output )
+
 class CommandArgError( Enum ):
     NO_ERROR                    = 0,
     TABLE_NOT_SUPPLIED_ERROR    = 1,
@@ -303,6 +305,19 @@ def is_within_bounds( list_items, consideration_list, lower_bound, upper_bound )
             return False
     return True
             
+def write_outputs( dict_to_write, filename ):
+    """
+        Writes all name:sequence pairings stored in dict_to_write
+        to the filename specified
+    """
+    names     = list()
+    sequences = list
+
+    for item in dict_to_write:
+        names.append( item )
+        sequences.append( dict_to_write[ item ] )
+
+    oligo.write_fastas( filename, names, sequences )
 
 if __name__ == '__main__':
     main()
