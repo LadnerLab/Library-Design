@@ -271,12 +271,6 @@ def pick_oligos( oligo_table_dict, design_dict,
         contains those items who meet these parameters.
     """
 
-    consideration_dict = { 'num_seqs':     0,
-                           'num_species':  1,
-                           'num_genera':   2,
-                           'num_families': 3
-                         }
-
     output_dict = {}
 
     # for item in design_dict
@@ -286,6 +280,25 @@ def pick_oligos( oligo_table_dict, design_dict,
             # add the name: sequence pairing to output dict
 
     return output_dict
+
+def is_within_bounds( list_items, consideration_list, lower_bound, upper_bound ):
+    """
+        Checks that every entry in list_items being considered
+        is valid, that is, lower_bound <= item <= upper_bound
+    """
+
+    consideration_dict = { 'num_seqs':     0,
+                           'num_species':  1,
+                           'num_genera':   2,
+                           'num_families': 3
+                         }
+
+    for item in consideration_list:
+        current_entry = list_items[ consideration_dict[ item ] ]
+        if current_entry > upper_bound or current_entry < lower_bound:
+            return False
+    return True
+            
 
 if __name__ == '__main__':
     main()
