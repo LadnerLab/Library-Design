@@ -92,6 +92,11 @@ def main():
         sys.exit( 1 )
 
     # assume valid input data
+    output_dict = pick_oligos( table_dict, design_dict,
+                               args.consideration,
+                               LOWER_BOUND, UPPER_BOUND
+                             )
+
 
 class CommandArgError( Enum ):
     NO_ERROR                    = 0,
@@ -254,6 +259,33 @@ def get_items_from_entry( line_list, taxons_covered ):
         return_val.append( family_cov.split( ',' ) )
 
     return retun_val
+
+def pick_oligos( oligo_table_dict, design_dict,
+                 consideration_list,
+                 lower_bound, upper_bound
+               ):
+    """
+        'Picks' oligos whose values for each item in 
+        the consideration_list are in the range
+        [lower_bound, upper_bound]. The return dictionary 
+        contains those items who meet these parameters.
+    """
+
+    consideration_dict = { 'num_seqs':     0,
+                           'num_species':  1,
+                           'num_genera':   2,
+                           'num_families': 3
+                         }
+
+    output_dict = {}
+
+    # for item in design_dict
+        # validate the bounds of this oligo in the oligo_table_dict
+            # function: is_within_bounds
+        # if the oligo is valid
+            # add the name: sequence pairing to output dict
+
+    return output_dict
 
 if __name__ == '__main__':
     main()
