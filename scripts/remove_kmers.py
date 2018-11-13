@@ -178,7 +178,7 @@ def parse_oligo_table( filename, species_covered = False ):
 
         # first line contains headers, skip it
         for current_entry in list( open_file )[ 1:: ]:
-            split_line = current_entry.split( DELIMITER_CHAR )
+            split_line = current_entry.strip( '\n' ).split( DELIMITER_CHAR )
 
             oligo_name = split_line[ 0 ].strip()
 
@@ -192,8 +192,45 @@ def parse_oligo_table( filename, species_covered = False ):
     finally:
         return return_dict
 
-def get_items_from_entry( line_list, species_covered ):
-    pass
+def get_items_from_entry( line_list, taxons_covered ):
+    """
+        Gets the appropriate items from line_list, casts them as integer.
+        If a list does not contain the same number of entries as all of the others,
+        raises ValueError as the table is formatted incorrectly. 
+ 
+        :pre: line_list contains one line from an oligo_table that is nto the header
+        :pre: species_covered is either True or False.
+
+        :post: returns a list, with entries being:
+               [ num_sequences, num_species, num_genera, num_families ]
+               If species_covered is True, the last item in the list is a list of all of the 
+               species some entry covered
+    """
+
+    DELIMITER_CHAR = ','
+
+    return_val = None
+
+    # raises ValueError if this does not work, thus our data is validated here
+    try:
+        name, num_seqs, num_species, \
+        num_genera, num_fam, \
+        species_cov, genera_cov, family_cov = line_list
+
+    except ValueError:
+        return None
+
+    return_val = [ int( num_seqs ), int( num_species ), int( num_genera ),
+                   int( num_fam )
+                 ]
+
+    if taxons_covered:
+        return_val.append( species_cov.split( ',' ) )
+        return_val.append( genera_cov.split( ',' ) )
+        return_val.append( family_cov.split( ',' ) )
+
+    return retun_val
+        
 
 if __name__ == '__main__':
     main()
