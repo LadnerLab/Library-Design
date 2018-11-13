@@ -97,7 +97,6 @@ def main():
                                LOWER_BOUND, UPPER_BOUND
                              )
 
-
 class CommandArgError( Enum ):
     NO_ERROR                    = 0,
     TABLE_NOT_SUPPLIED_ERROR    = 1,
@@ -244,7 +243,7 @@ def get_items_from_entry( line_list, taxons_covered ):
     try:
         name, num_seqs, num_species, \
         num_genera, num_fam, \
-        species_cov, genera_cov, family_cov = line_list
+        species_cov, genera_cov, family_cov, new_line = line_list
 
     except ValueError:
         return None
@@ -258,7 +257,7 @@ def get_items_from_entry( line_list, taxons_covered ):
         return_val.append( genera_cov.split( ',' ) )
         return_val.append( family_cov.split( ',' ) )
 
-    return retun_val
+    return return_val
 
 def pick_oligos( oligo_table_dict, design_dict,
                  consideration_list,
@@ -273,11 +272,12 @@ def pick_oligos( oligo_table_dict, design_dict,
 
     output_dict = {}
 
-    # for item in design_dict
+    for item in oligo_table_dict:
         # validate the bounds of this oligo in the oligo_table_dict
-            # function: is_within_bounds
-        # if the oligo is valid
-            # add the name: sequence pairing to output dict
+        if is_within_bounds( oligo_table_dict[ item ], consideration_list,
+                             lower_bound, upper_bound
+                           ):
+            output_dict[ item ] = design_dict[ item ]
 
     return output_dict
 
