@@ -61,6 +61,10 @@ def main():
                                 "num_seqs, num_species, num_genera, "
                                 "num_families."
                        )
+    parser.add_argument( '-o', '--output', default = 'out.fasta',
+                         help = "File to write oligos that fit the constraints "
+                                "supplied from the command line."
+                       )
 
     # parse options and arguments
     args = parser.parse_args()
