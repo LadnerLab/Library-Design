@@ -49,6 +49,7 @@ def main():
                                 "the designed oligos."
                      )
     parser.add_argument( '-c', '--consideration', action = 'append',
+                         default = [ 'num_families' ], 
                          help = "Values to consider when removing oligos. "
                                 "( adding oligos to the output ). For an "
                                 "oligo to be included, it must have at least "
@@ -93,12 +94,13 @@ def main():
     # assume valid input data
 
 class CommandArgError( Enum ):
-    NO_ERROR                  = 0,
-    TABLE_NOT_SUPPLIED_ERROR  = 1,
-    DESIGN_NOT_SUPPLIED_ERROR = 2,
-    INVALID_BOUNDS_ERROR      = 3,
-    TABLE_FILE_IO_ERROR       = 4,
-    DESIGN_FILE_IO_ERROR      = 5
+    NO_ERROR                    = 0,
+    TABLE_NOT_SUPPLIED_ERROR    = 1,
+    DESIGN_NOT_SUPPLIED_ERROR   = 2,
+    INVALID_BOUNDS_ERROR        = 3,
+    TABLE_FILE_IO_ERROR         = 4,
+    DESIGN_FILE_IO_ERROR        = 5,
+    INVALID_CONSIDERATION_ERROR = 6
     
 def validate_args( args ):
     """
@@ -116,6 +118,10 @@ def validate_args( args ):
                
     """
 
+    valid_considerations = [ 'num_seqs', 'num_species', 'num_genera',
+                             'num_families'
+                           ]
+
     # check that upper_bounds is greater than lower_bounds
     if args.upper_bound < args.lower_bound:
         return CommandArgError.INVALID_BOUNDS_ERROR
@@ -127,6 +133,10 @@ def validate_args( args ):
     # check that design was supplied
     elif args.design is None:
         return CommandArgError.DESIGN_NOT_SUPPLIED_ERROR
+
+    for item in args.consideration:
+        if item not in valid_considerations:
+            return CommandArgError.INVALID_CONSIDERATION_ERROR
     
     return CommandArgError.NO_ERROR
 
@@ -161,11 +171,13 @@ def report_error( error_code ):
                       "The supplied table file was not found, "
                       "or another error occurred when opening the file",
                       "The supplied design fasta file was either not found "
-                      "or another error occurred when trying to access it"
+                      "or another error occurred when trying to access it",
+                      "Incorrect 'consideration' included from command-line"
                       ]
 
     print( "ERROR: %s. Please resolve this "
-           "issue and restart the script. " % error_strings[ error_code.value[ 0 ] ]
+           "issue and restart the script.  "
+           "For usage information, try ./remove_kmers.py --help " % error_strings[ error_code.value[ 0 ] ]
          )
 
 def parse_oligo_table( filename, species_covered = False ):
@@ -242,7 +254,6 @@ def get_items_from_entry( line_list, taxons_covered ):
         return_val.append( family_cov.split( ',' ) )
 
     return retun_val
-        
 
 if __name__ == '__main__':
     main()
