@@ -156,7 +156,43 @@ def report_error( error_code ):
            "issue and restart the script. " % error_strings[ error_code.value[ 0 ] ]
          )
 
-def parse_oligo_table( filename ):
+def parse_oligo_table( filename, species_covered = False ):
+    """
+        Parses the oligo-centric table file found at filename.
+        
+        :post: Upon success, returns a dictionary containing mappings of:
+               oligo: [ num_seqs, num_species, num_genera, num_families ]
+               If species_covered is set to True, then a list of the names of the 
+               species covered by this oligo will be 4th element in each value.
+
+        :post: Upon failure (Due to IO or improper format), 
+               returns None
+    """
+
+    DELIMITER_CHAR = '\t'
+
+    return_dict = {}
+
+    try:
+        open_file = open( filename, 'r' )
+
+        # first line contains headers, skip it
+        for current_entry in list( open_file )[ 1:: ]:
+            split_line = current_entry.split( DELIMITER_CHAR )
+
+            oligo_name = split_line[ 0 ].strip()
+
+            return_dict[ oligo_name ] = get_items_from_entry( split_line, species_covered )
+
+    # upon error, set return_val to None
+    except( IOError, ValueError ):
+        return_dict = None
+
+    # finally
+    finally:
+        return return_dict
+
+def get_items_from_entry( line_list, species_covered ):
     pass
 
 if __name__ == '__main__':
