@@ -55,20 +55,30 @@ def main():
     UPPER_BOUND = args.upper_bound
     LOWER_BOUND = args.lower_bound
 
-    validate_args( args )
+    args_result = validate_args( args )
+
+    if args_result != CommandArgError.NO_ERROR:
+        report_error( args_result )
+        sys.exit( 1 )
 
     # read the oligos from the library design into a dict
     design_dict = parse_fasta_file( args.design )
 
-    
-    # try to read and parse the input file
-        # function: read_oligo_table
+    if not design_dict:
+        report_error( CommandArgError.DESIGN_FILE_IO_ERROR )
 
-    # on exception, report error to the user
+        sys.exit( 1 )
+
+
+    # try to read and parse the input file
+    table_dict = parse_oligo_table( args.table )
+
+    if not table_dict:
+        report_error( CommandArgError.TABLE_FILE_IO_ERROR )
+
+        sys.exit( 1 )
 
     # assume valid input data
-
-    # 
 
 class CommandArgError( Enum ):
     NO_ERROR                  = 0,
@@ -143,8 +153,11 @@ def report_error( error_code ):
                       ]
 
     print( "ERROR: %s. Please resolve this "
-           "issue and restart the script. " % error_strings[ error_code.value ]
+           "issue and restart the script. " % error_strings[ error_code.value[ 0 ] ]
          )
+
+def parse_oligo_table( filename ):
+    pass
 
 if __name__ == '__main__':
     main()
