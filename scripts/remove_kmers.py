@@ -48,6 +48,18 @@ def main():
                          help = "Name of the fasta file containing "
                                 "the designed oligos."
                      )
+    parser.add_argument( '-c', '--consideration', action = 'append',
+                         help = "Values to consider when removing oligos. "
+                                "( adding oligos to the output ). For an "
+                                "oligo to be included, it must have at least "
+                                "lower_bound and at most upper_bound of this "
+                                "and all items added with this flag. "
+                                "Including this flag multiple times with different "
+                                "values results in more items being checked."
+                                "Valid options include: "
+                                "num_seqs, num_species, num_genera, "
+                                "num_families."
+                       )
 
     # parse options and arguments
     args = parser.parse_args()
