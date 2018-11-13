@@ -54,6 +54,8 @@ def main():
     UPPER_BOUND = args.upper_bound
     LOWER_BOUND = args.lower_bound
 
+    validate_args( args )
+
     # read the oligos from the library design into a dict
         # function: oligo.sequence_dict_from_file
 
@@ -74,5 +76,35 @@ class CommandArgError( Enum ):
     TABLE_FILE_IO_ERROR       = 4,
     DESIGN_FILE_IO_ERROR      = 5
     
+def validate_args( args ):
+    """
+        Ensures that args supplied by user are valid.
+    
+        :pre: upper_bound < lower_bound
+        :pre: table was supplied by the command line
+        :pre: design was supplied by the command line
+    
+        :note: Does not check that the files table and design actually exist,
+               only that they were provided by the user.
+    
+        :post: Returns CommandArgError.NO_ERROR on success, 
+               on failure reports the appropriate error. 
+               
+    """
+
+    # check that upper_bounds is greater than lower_bounds
+    if args.upper_bound < args.lower_bound:
+        return CommandArgError.INVALID_BOUNDS_ERROR
+
+    # check that table was supplied
+    elif args.table is None:
+        return CommandArgError.TABLE_NOT_SUPPLIED_ERROR
+
+    # check that design was supplied
+    elif args.design is None:
+        return CommandArgError.DESIGN_NOT_SUPPLIED_ERROR
+    
+    return CommandArgError.NO_ERROR
+
 if __name__ == '__main__':
     main()
