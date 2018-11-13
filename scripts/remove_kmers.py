@@ -57,7 +57,7 @@ def main():
     validate_args( args )
 
     # read the oligos from the library design into a dict
-        # function: oligo.sequence_dict_from_file
+    design_dict = parse_fasta_file( args.design )
 
     # try to read and parse the input file
         # function: read_oligo_table
@@ -105,6 +105,26 @@ def validate_args( args ):
         return CommandArgError.DESIGN_NOT_SUPPLIED_ERROR
     
     return CommandArgError.NO_ERROR
+
+def parse_fasta_file( file_name ):
+    """
+        Reads and parses a fasta file, 
+        located at file_name. 
+        Upon successful operation, returns 
+        a dictionary containing name: sequence 
+        mappings parsed from file_name. Upon IOError,
+        returns None.
+    """
+
+    return_dict = None
+
+    try:
+        # read the files stored in file_name into a dict
+        return_dict = oligo.sequence_dict_from_file( file_name )
+    except IOError:
+        return_dict = None
+    finally:
+        return return_dict
 
 if __name__ == '__main__':
     main()
