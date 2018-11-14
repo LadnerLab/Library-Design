@@ -26,6 +26,31 @@ def main():
                        )
 
     args = parser.parse_args()
+
+    ref_names, ref_sequences  = oligo.read_fasta_lists( args.reference )
+    design_names, design_seqs = oligo.read_fasta_lists( args.design )
+
+    ref_dict    = create_kmer_dict( ref_names, ref_sequences, args.epitope_size )
+    design_dict = create_kmer_dict( design_names, design_sequences, args.epitope_size )
+
+
+def create_kmer_dict( names, sequences, epitope_size ):
+    out_dict = {}
+
+    for index in len( range( names ) ):
+        current_name     = names[ index ]
+        current_sequence = sequences[ index ]
+
+        kmers = oligo.subset_lists_iter( current_sequence,
+                                         epitope_size,
+                                         1
+                                       )
+        out_dict[ current_name ] = kmers 
+
+    return out_dict
+
+        
+    
                           
 
 
