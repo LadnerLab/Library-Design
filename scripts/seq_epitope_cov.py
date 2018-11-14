@@ -36,42 +36,26 @@ def main():
 
     out_strings  = list()
     design_kmers = set()
-    ref_dict     = create_kmer_dict( ref_names, ref_sequences, args.epitope_size )
 
     for item in design_seqs:
         design_kmers |= oligo.subset_lists_iter( item, args.epitope_size, 1 )
 
-    for current_item in ref_dict:
-        current_kmers = ref_dict[ current_item ]
-        perc_cov = len( current_kmers & design_kmers ) / len( current_kmers )
+    for index in range( len( ref_names ) ):
+        current_name  = ref_names[ index ]
+        current_seq   = ref_sequences[ index ]
+        current_kmers = oligo.subset_lists_iter( current_seq, args.epitope_size, 1 )
 
-        out_strings.append( "%s%s%f\n" % ( current_item, args.delimiter, perc_cov ) )
+        if len( current_kmers ) > 0:
+            perc_cov      = len( current_kmers & design_kmers ) / len( current_kmers )
+        else:
+            perc_cov = 4
+
+        out_strings.append( "%s%s%f\n" % ( current_name, args.delimiter, perc_cov ) )
 
     with open( args.output, 'w' ) as out_file:
         out_file.write( "%s\n" % header )
         for item in out_strings:
             out_file.write( item )
-        
-
-def create_kmer_dict( names, sequences, epitope_size ):
-    out_dict = {}
-
-    for index in len( range( names ) ):
-        current_name     = names[ index ]
-        current_sequence = sequences[ index ]
-
-        kmers = oligo.subset_lists_iter( current_sequence,
-                                         epitope_size,
-                                         1
-                                       )
-        out_dict[ current_name ] = kmers 
-
-    return out_dict
-
-        
-    
-                          
-
 
 if __name__ == '__main__':
     main()
