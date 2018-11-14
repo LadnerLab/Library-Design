@@ -30,9 +30,28 @@ def main():
     ref_names, ref_sequences  = oligo.read_fasta_lists( args.reference )
     design_names, design_seqs = oligo.read_fasta_lists( args.design )
 
-    ref_dict    = create_kmer_dict( ref_names, ref_sequences, args.epitope_size )
-    design_dict = create_kmer_dict( design_names, design_sequences, args.epitope_size )
+    header = "Sequence Name%sPercent Epitopes (%d-mers) Covered in design\n" % (
+             args.delimiter, args.epitope_size
+             )
 
+    out_strings  = list()
+    design_kmers = set()
+    ref_dict     = create_kmer_dict( ref_names, ref_sequences, args.epitope_size )
+
+    for item in design_seqs:
+        design_kmers |= oligo.subset_lists_iter( item, args.epitope_size, 1 )
+
+    for current_item in ref_dict:
+        current_kmers = ref_dict[ current_item ]
+        perc_cov = len( current_kmers & design_kmers ) / len( current_kmers )
+
+        out_strings.append( "%s%s%f\n" % ( current_item, args.delimiter, perc_cov ) )
+
+    with open( args.output, 'w' ) as out_file:
+        out_file.write( "%s\n" % header )
+        for item in out_strings:
+            out_file.write( item )
+        
 
 def create_kmer_dict( names, sequences, epitope_size ):
     out_dict = {}
