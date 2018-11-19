@@ -38,8 +38,32 @@ def main():
 
     args = parser.parse_args()
 
+    # parse the swisskb file
+        # function: DBParser( )
+
+    # convert the swisskb file to the FASTA format
+
+    # write the output file to args.outfile
+        
+
     sys.exit( 1 )
 
+
+class DBParser:
+    def __init__( self, filename, tags_list ):
+        self._tag_names = [ 'AC', 'DE', 'DR', 'DT',
+                            'FT', 'GN', 'ID', 'KW',
+                            'OC', 'OH', 'OS', 'OX',
+                            'PE', 'RA', 'RC', 'RG',
+                            'RL', 'RN', 'RP', 'RT'
+                          ]
+        self._tags = {}
+                            
+        self._filename  = filename
+        self._tags_list = tags_list
+
+    def parse():
+        pass
 
 
 if __name__ == '__main__':
