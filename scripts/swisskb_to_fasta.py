@@ -39,7 +39,9 @@ def main():
     args = parser.parse_args()
 
     # parse the swisskb file
-        # function: DBParser( )
+    db_parser = DBParser( args.swiss, args.output, args.tags )
+
+    db_parser.parse()
 
     # convert the swisskb file to the FASTA format
 
@@ -50,7 +52,7 @@ def main():
 
 
 class DBParser:
-    def __init__( self, filename, tags_list ):
+    def __init__( self, db_filename, out_filename, tags_list ):
         self._tag_names = [ 'AC', 'DE', 'DR', 'DT',
                             'FT', 'GN', 'ID', 'KW',
                             'OC', 'OH', 'OS', 'OX',
@@ -59,12 +61,23 @@ class DBParser:
                           ]
         self._tags = {}
                             
-        self._filename  = filename
-        self._tags_list = tags_list
+        self._db_filename  = db_filename
+        self._out_filename = out_filename
+        self._tags_list    = tags_list
 
-    def parse():
+    def parse( self ):
+
+        tag_dict = self._tags
+
+        with open( self._db_filename, 'r' ) as open_file:
+            for line in open_file:
+                split_line = line.split()
+                tag_name = split_line[ 0 ]
+                get_line_data( tag_name, split_line[ 1:: ] )
+
+    @staticmethod
+    def get_line_data( str_tag_name, list_line ):
         pass
-
 
 if __name__ == '__main__':
     main()
