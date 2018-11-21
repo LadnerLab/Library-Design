@@ -124,5 +124,18 @@ class TagDataFactory:
         return return_data
 
 
+class TagData:
+    def __init__( self, tag_type, delimiter ):
+        self.tag_type  = tag_type
+        self.delimiter = delimiter
+        self.data      = list()
+        
+    def process( self, line ):
+        split_line = line.split( self.delimiter )
+
+        for current_item in split_line:
+            self.data.append( current_item.strip()
+
+
 if __name__ == '__main__':
     main()
