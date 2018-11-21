@@ -37,15 +37,16 @@ def main():
                            )
 
     args = parser.parse_args()
+    tags = [ item.upper() for item in args.tags ]
 
     # parse the swisskb file
-    db_parser = DBParser( args.swiss, args.output, args.tags )
-
-    sequences = db_parser.parse()
+    db_parser = DBParser( args.swiss, args.output, tags )
 
     # convert the swisskb file to the FASTA format
+    sequences = db_parser.parse()
 
     # write the output file to args.outfile
+    write_outputs( args.output, sequences )
         
 
     sys.exit( 1 )
@@ -200,6 +201,11 @@ class TagData:
 
         for current_item in split_line:
             self.data.append( current_item.strip() )
+
+def write_outputs( outfile_name, seq_list ):
+    with open( outfile_name, 'w' ) as out_file:
+        for current_seq in seq_list:
+            out_file.write( str( current_seq ) )
 
 if __name__ == '__main__':
     main()
