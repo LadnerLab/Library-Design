@@ -56,7 +56,7 @@ class DBParser:
         self._tag_names = [ 'AC', 'DE', 'DR', 'DT',
                             'FT', 'GN', 'ID', 'KW',
                             'OC', 'OH', 'OS', 'OX',
-                            'PE', 'RA', 'RC', 'RG',
+                            'PE', 'RA', 'RC', 
                             'RL', 'RN', 'RP', 'RT'
                           ]
         self._tags = {}
@@ -73,11 +73,56 @@ class DBParser:
             for line in open_file:
                 split_line = line.split()
                 tag_name = split_line[ 0 ]
-                get_line_data( tag_name, split_line[ 1:: ] )
+                get_line_data( tag_name, split_line[ 1:: ], tags_list )
 
     @staticmethod
-    def get_line_data( str_tag_name, list_line ):
+    def get_line_data( str_tag_name, list_line, list_of_tags ):
+        output_list = list()
+
+        data_factory = TagDataFactory()
+
+        if str_tag_name in list_of_tags:
+            new_tag = data_factory.create_tag( str_tag_name )
+            new_tag.process( list_line )
+
+            output_list.append( new_tag )
+
+
+class TagDataFactory:
+    SPACE      = ' '
+    SEMICOLON  = ';'
+    PERIOD     = '.'
+    COMMA      = ','
+    
+    delimiters = {
+                      'AC': SEMICOLON,
+                      'DE': SEMICOLON,
+                      'DR': PERIOD,
+                      'DT': PERIOD,
+                      'FT': SPACE,
+                      'GN': SEMICOLON,
+                      'ID': SPACE,
+                      'KW': SEMICOLON,
+                      'OC': SEMICOLON,
+                      'OH': SEMICOLON,
+                      'OS': PERIOD,
+                      'OX': SEMICOLON,
+                      'PE': SEMICOLON,
+                      'RA': COMMA,
+                      'RC': SEMICOLON,
+                      'RG': '',
+                      'RL': PERIOD,
+                      'RN': '',
+                      'RP': PERIOD,
+                      'RT': SEMICOLON
+                 }
+    def __init__( self ):
         pass
+
+    def create_tag( self, tag_name ):
+        return_data = TagData( tag_name, delimiters[ tag_name ) )
+        return return_data
+
 
 if __name__ == '__main__':
     main()
