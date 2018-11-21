@@ -186,6 +186,8 @@ class TagDataFactory:
     def create_tag( self, tag_name ):
         if is_tax_tag( tag_name ):
             return_data = TaxTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+        elif tag_name == 'ID':
+            return_data = IDTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         else:
             return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         return return_data
@@ -212,6 +214,13 @@ class TagData:
         for item in self.data:
             out_str += '%s=%s' % ( self.tag_type, item )
         return out_str
+
+class IDTagData( TagData ):
+    def __init__( self, tag_name, delimiter ):
+        super().__init__( tag_name, delimiter )
+
+    def process( self, line ):
+        self.data.append( line.split()[ 0 ] )
 
 class TaxTagData( TagData ):
     def __init__( self, tag_name, delimiter ):
