@@ -72,6 +72,39 @@ class DBParser:
 
             seqs = list()
 
+            for line in open_file:
+                split_line = line.split()
+                tag_name = split_line[ 0 ]
+
+                if tag_name != '//':
+                    if seq_flag:
+                        current_seq.add_seq_data( ''.join( split_line ) )
+                    elif tag_name == 'ID':
+                        current_seq = Sequence()
+                        seqs.append( current_seq )
+
+                        new_tag = DBParser.get_line_data(
+                            tag_name,
+                            split_line[ 1:: ],
+                            self._tags_list
+                        )
+
+                        current_seq.add_tag( new_tag )
+
+                    elif tag_name != 'SQ':
+                        new_tag = DBParser.get_line_data(
+                            tag_name,
+                            split_line[ 1:: ],
+                            self._tags_list
+                        )
+
+                        current_seq.add_tag( new_tag )
+                    elif tag_name == 'SQ':
+                        seq_flag = True
+
+                else:
+                    seq_flag = False
+
         return seqs
                             
 
