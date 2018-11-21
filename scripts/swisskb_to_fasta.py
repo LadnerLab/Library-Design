@@ -24,7 +24,7 @@ def main():
                                     "be formatted in the FASTA format."
                            )
     parser.add_argument( '-t', '--tags', action = 'append',
-                             default = [ 'id' ],
+                             default = [ 'ID' ],
                              help = "Tags that will be included in each sequence name, "
                                     "note that id will always be collected and used for "
                                     "sequence names."
@@ -41,7 +41,7 @@ def main():
     # parse the swisskb file
     db_parser = DBParser( args.swiss, args.output, args.tags )
 
-    db_parser.parse()
+    sequences = db_parser.parse()
 
     # convert the swisskb file to the FASTA format
 
@@ -59,35 +59,67 @@ class DBParser:
                             'PE', 'RA', 'RC', 
                             'RL', 'RN', 'RP', 'RT'
                           ]
-        self._tags = {}
-                            
         self._db_filename  = db_filename
         self._out_filename = out_filename
         self._tags_list    = tags_list
 
+        self._sequences    = list()
+
     def parse( self ):
 
-        tag_dict = self._tags
-
         with open( self._db_filename, 'r' ) as open_file:
-            for line in open_file:
-                split_line = line.split()
-                tag_name = split_line[ 0 ]
-                get_line_data( tag_name, split_line[ 1:: ], tags_list )
+            seq_flag = False
+
+            seqs = list()
+
+        return seqs
+                            
+
 
     @staticmethod
     def get_line_data( str_tag_name, list_line, list_of_tags ):
-        output_list = list()
+        output_tag = None
 
         data_factory = TagDataFactory()
 
         if str_tag_name in list_of_tags:
             new_tag = data_factory.create_tag( str_tag_name )
-            new_tag.process( list_line )
+            new_tag.process( ' '.join( list_line ) )
 
-            output_list.append( new_tag )
+            output_tag = new_tag
+
+        return output_tag
 
 
+
+class Sequence:
+    def __init__( self ):
+        self.tags     = {}
+        self.seq_data = ''
+
+    def add_tag( self, new_tag ):
+        if new_tag:
+            if new_tag.tag_type not in self.tags:
+                self.tags[ new_tag.tag_type ] = list()
+            self.tags[ new_tag.tag_type ].extend( new_tag.data )
+
+    def add_seq_data( self, data ):
+        self.seq_data += data.strip()
+            
+    def __str__( self ):
+        out_str = '>'
+        out_str += str( self.tags[ 'ID' ][ 0 ] )
+
+        for tag in self.tags:
+            if 'ID' not in tag:
+                for val in tag:
+                   out_str += ' %s=%s ' % ( tag, val )  
+        out_str += "\n%s\n" % ( self.seq_data )
+
+        return out_str
+
+        
+    
 class TagDataFactory:
     SPACE      = ' '
     SEMICOLON  = ';'
@@ -120,7 +152,7 @@ class TagDataFactory:
         pass
 
     def create_tag( self, tag_name ):
-        return_data = TagData( tag_name, delimiters[ tag_name ) )
+        return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         return return_data
 
 
@@ -134,8 +166,7 @@ class TagData:
         split_line = line.split( self.delimiter )
 
         for current_item in split_line:
-            self.data.append( current_item.strip()
-
+            self.data.append( current_item.strip() )
 
 if __name__ == '__main__':
     main()
