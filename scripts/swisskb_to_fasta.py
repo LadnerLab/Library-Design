@@ -184,14 +184,15 @@ class TagDataFactory:
         pass
 
     def create_tag( self, tag_name ):
-        if tag_name == 'OX':
-            return_data = OXTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
-        # elif tag_name == 'OH':
-            # return_data = OHTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+        if is_tax_tag( tag_name ):
+            return_data = TaxTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         else:
             return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         return return_data
 
+
+def is_tax_tag( name ):
+    return name == 'OH' or name == 'OX' 
 
 class TagData:
     def __init__( self, tag_type, delimiter ):
@@ -212,7 +213,7 @@ class TagData:
             out_str += '%s=%s' % ( self.tag_type, item )
         return out_str
 
-class OXTagData( TagData ):
+class TaxTagData( TagData ):
     def __init__( self, tag_name, delimiter ):
         super().__init__( tag_name, delimiter )
 
