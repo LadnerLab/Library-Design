@@ -152,8 +152,6 @@ class Sequence:
 
         return out_str
 
-        
-    
 class TagDataFactory:
     SPACE      = ' '
     SEMICOLON  = ';'
@@ -186,7 +184,12 @@ class TagDataFactory:
         pass
 
     def create_tag( self, tag_name ):
-        return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+        if tag_name == 'OX':
+            return_data = OXTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+        # elif tag_name == 'OH':
+            # return_data = OHTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+        else:
+            return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         return return_data
 
 
@@ -208,6 +211,17 @@ class TagData:
         for item in self.data:
             out_str += '%s=%s' % ( self.tag_type, item )
         return out_str
+
+class OXTagData( TagData ):
+    def __init__( self, tag_name, delimiter ):
+        super().__init__( tag_name, delimiter )
+
+    def process( self, line ):
+        self.delimiter = 'NCBI_TaxID='
+        split_line = line.split( self.delimiter )
+
+        if len( split_line[ 1 ] ) > 0:
+            self.data.append( split_line[ 1 ][ :-1: ].strip() )
 
 def write_outputs( outfile_name, seq_list ):
     with open( outfile_name, 'w' ) as out_file:
