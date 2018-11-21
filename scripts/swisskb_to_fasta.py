@@ -146,8 +146,7 @@ class Sequence:
 
         for tag in self.tags:
             if 'ID' not in tag:
-                for val in tag:
-                   out_str += ' %s=%s ' % ( tag, val )  
+                for val in self.tags[ tag ]:
         out_str += "\n%s\n" % ( self.seq_data )
 
         return out_str
@@ -170,7 +169,7 @@ class TagDataFactory:
                       'ID': SPACE,
                       'KW': SEMICOLON,
                       'OC': SEMICOLON,
-                      'OH': SEMICOLON,
+                      'OH': PERIOD,
                       'OS': PERIOD,
                       'OX': SEMICOLON,
                       'PE': SEMICOLON,
@@ -200,7 +199,8 @@ class TagData:
         split_line = line.split( self.delimiter )
 
         for current_item in split_line:
-            self.data.append( current_item.strip() )
+            if len( current_item ) > 0:
+                self.data.append( current_item.strip() )
 
 def write_outputs( outfile_name, seq_list ):
     with open( outfile_name, 'w' ) as out_file:
