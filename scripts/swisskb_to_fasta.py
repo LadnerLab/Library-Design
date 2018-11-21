@@ -218,11 +218,12 @@ class TaxTagData( TagData ):
         super().__init__( tag_name, delimiter )
 
     def process( self, line ):
-        self.delimiter = 'NCBI_TaxID='
-        split_line = line.split( self.delimiter )
+        tax_delimiter = 'NCBI_TaxID='
+        split_line = line.split( tax_delimiter )
 
         if len( split_line[ 1 ] ) > 0:
-            self.data.append( split_line[ 1 ][ :-1: ].strip() )
+            id_only = split_line[ 1 ].split( ';' )
+            self.data.append( id_only[ 0 ] )
 
 def write_outputs( outfile_name, seq_list ):
     with open( outfile_name, 'w' ) as out_file:
