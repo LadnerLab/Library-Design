@@ -65,11 +65,14 @@ def main():
         
     tags = [ item.upper() for item in args.tags ]
 
-    taxdata_from_cl = get_taxdata_from_file( args.ranked_lineage )
-    rank_map        = get_rank_map_from_file( args.rank_map )
+    taxdata_from_cl         = get_taxdata_from_file( args.ranked_lineage )
+    rank_map_from_cl        = get_rank_map_from_file( args.rank_map )
 
     # parse the swisskb file
-    db_parser = DBParser( args.swiss, args.output, tags, taxdata = taxdata_from_cl )
+    db_parser = DBParser( args.swiss, args.output,
+                          tags, taxdata = taxdata_from_cl,
+                          rank_map = rank_map_from_cl
+    )
 
     # convert the swisskb file to the FASTA format
     sequences = db_parser.parse()
@@ -82,7 +85,7 @@ def main():
 
 
 class DBParser:
-    def __init__( self, db_filename, out_filename, tags_list, taxdata = None ):
+    def __init__( self, db_filename, out_filename, tags_list, taxdata = None, rank_map = None ):
         self._tag_names = [ 'AC', 'DE', 'DR', 'DT',
                             'FT', 'GN', 'ID', 'KW',
                             'OC', 'OH', 'OS', 'OX',
@@ -94,7 +97,8 @@ class DBParser:
         self._tags_list    = tags_list
 
         self._sequences    = list()
-        self._taxdata     = taxdata
+        self._taxdata      = taxdata
+        self._rank_map     = rank_map
 
     def parse( self ):
 
@@ -118,7 +122,8 @@ class DBParser:
                             tag_name,
                             split_line[ 1:: ],
                             self._tags_list,
-                            self._taxdata
+                            self._taxdata,
+                            self._rank_map
                         )
 
                         current_seq.add_tag( new_tag )
@@ -128,7 +133,8 @@ class DBParser:
                             tag_name,
                             split_line[ 1:: ],
                             self._tags_list,
-                            self._taxdata
+                            self._taxdata,
+                            self._rank_map
                         )
 
                         current_seq.add_tag( new_tag )
@@ -143,10 +149,10 @@ class DBParser:
 
 
     @staticmethod
-    def get_line_data( str_tag_name, list_line, list_of_tags, taxdata = None ):
+    def get_line_data( str_tag_name, list_line, list_of_tags, taxdata = None, rank_map = None ):
         output_tag = None
 
-        data_factory = TagDataFactory( taxdata )
+        data_factory = TagDataFactory( taxdata, rank_map )
 
         if str_tag_name in list_of_tags:
             new_tag = data_factory.create_tag( str_tag_name )
@@ -212,8 +218,9 @@ class TagDataFactory:
                       'RP': PERIOD,
                       'RT': SEMICOLON
                  }
-    def __init__( self, taxdata ):
-        self.taxdata = taxdata
+    def __init__( self, taxdata, rank_map ):
+        self.taxdata  = taxdata
+        self.rank_map = rank_map
 
     def create_tag( self, tag_name ):
         if is_tax_tag( tag_name ):
@@ -221,7 +228,7 @@ class TagDataFactory:
         elif tag_name == 'ID':
             return_data = IDTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         elif tag_name == 'OC':
-            return_data = OCTagData( tag_name, TagDataFactory.delimiters[ tag_name ], self.taxdata )
+            return_data = OCTagData( tag_name, TagDataFactory.delimiters[ tag_name ], self.taxdata, self.rank_map )
         else:
             return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         return return_data
@@ -269,9 +276,10 @@ class TaxTagData( TagData ):
             self.data.append( id_only[ 0 ] )
 
 class OCTagData( TagData ):
-    def __init__( self, tag_name, delimiter, taxdata ):
+    def __init__( self, tag_name, delimiter, taxdata, tax_rank = None ):
         super().__init__( tag_name, delimiter )
-        self.taxdata = taxdata
+        self.taxdata  = taxdata
+        self.tax_rank = tax_rank
 
     def process( self, line ):
         split_line = line.split( self.delimiter )
@@ -283,7 +291,13 @@ class OCTagData( TagData ):
                     item = item.replace( '.', '' )
 
                 try:
-                    self.data.append( self.taxdata[ item ] )
+                    if self.tax_rank:
+                        new_item = "%s,%s" % ( self.taxdata[ item ],
+                                               self.tax_rank[ self.taxdata[ item ] ]
+                                             )
+                    else:
+                        new_item = self.taxdata[ item ]
+                    self.data.append( new_item )
                 except KeyError:
                     pass # empty string
 
@@ -332,7 +346,7 @@ def get_rank_map_from_file( filename ):
             for line in open_file:
                 split_line = line.split( '|' )
                 new_key = split_line[ 0 ].strip()
-                new_val = split_line[ 1 ].strip()
+                new_val = split_line[ 1 ].strip()[ 0 ]
                 rank_data[ new_key ] = new_val 
 
         return rank_data
