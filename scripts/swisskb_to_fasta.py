@@ -55,8 +55,10 @@ def main():
         
     tags = [ item.upper() for item in args.tags ]
 
+    rank_map_from_cl = parse_rank_map( args.rank_map )
+
     # parse the swisskb file
-    db_parser = DBParser( args.swiss, args.output, tags )
+    db_parser = DBParser( args.swiss, args.output, tags, rank_map = rank_map_from_cl )
 
     # convert the swisskb file to the FASTA format
     sequences = db_parser.parse()
@@ -69,7 +71,7 @@ def main():
 
 
 class DBParser:
-    def __init__( self, db_filename, out_filename, tags_list ):
+    def __init__( self, db_filename, out_filename, tags_list, rank_map = None ):
         self._tag_names = [ 'AC', 'DE', 'DR', 'DT',
                             'FT', 'GN', 'ID', 'KW',
                             'OC', 'OH', 'OS', 'OX',
@@ -271,6 +273,14 @@ class ArgResults( Enum ):
     BLANK                = 0,
     NO_ERR               = 1,
     MISSING_RANK_MAP_TAG = 2
+
+def parse_rank_map( rank_map_filename ):
+
+    import protein_oligo_library as oligo # for parsing rank map data
+
+    if rank_map_filename:
+        return oligo.parse_rank_map( rank_map_filename )
+    return None
 
 if __name__ == '__main__':
     main()
