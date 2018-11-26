@@ -55,7 +55,7 @@ def main():
         
     tags = [ item.upper() for item in args.tags ]
 
-    taxdata_from_cl = parse_taxdata( args.ranked_lineage )
+    taxdata_from_cl = get_taxdata_from_file( args.ranked_lineage )
 
     # parse the swisskb file
     db_parser = DBParser( args.swiss, args.output, tags, taxdata = taxdata_from_cl )
@@ -168,7 +168,7 @@ class Sequence:
         for tag in self.tags:
             if 'ID' not in tag:
                 for current in self.tags[ tag ]:
-                    out_str += ' %s ' % str( current )
+                    out_str += '%s' % str( current )
         out_str += "\n%s\n" % ( self.seq_data )
 
         return out_str
@@ -209,6 +209,8 @@ class TagDataFactory:
             return_data = TaxTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         elif tag_name == 'ID':
             return_data = IDTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+        elif tag_name == 'OC':
+            return_data = OCTagData( tag_name, TagDataFactory.delimiters[ tag_name ], self.taxdata )
         else:
             return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         return return_data
@@ -233,7 +235,7 @@ class TagData:
     def __str__( self ):
         out_str = '' 
         for item in self.data:
-            out_str += '%s=%s' % ( self.tag_type, item )
+            out_str += ' %s=%s ' % ( self.tag_type, item )
         return out_str
 
 class IDTagData( TagData ):
@@ -261,15 +263,18 @@ class OCTagData( TagData ):
         self.taxdata = taxdata
 
     def process( self, line ):
-        split_line = line.split( delimiter )
+        split_line = line.split( self.delimiter )
 
-        if len( split_line > 0 ):
+        if len( split_line ) > 0: 
             for item in split_line:
+                item = item.strip().lower()
+                if '.' in item:
+                    item = item.replace( '.', '' )
+
                 try:
                     self.data.append( self.taxdata[ item ] )
                 except KeyError:
-                    print( "No id found for: %s" % ( item ) )
-            
+                    pass # empty string
 
 def write_outputs( outfile_name, seq_list ):
     with open( outfile_name, 'w' ) as out_file:
@@ -277,7 +282,7 @@ def write_outputs( outfile_name, seq_list ):
             out_file.write( str( current_seq ) )
 
 def validate_args( args_obj ):
-    if 'OC' in args_obj.tags and args_obj.taxdata is None:
+    if 'OC' in args_obj.tags and args_obj.ranked_lineage is None:
         return ArgResults.MISSING_TAXDATA_TAG.value
     return ArgResults.NO_ERR.value
 
@@ -293,13 +298,22 @@ class ArgResults( Enum ):
     NO_ERR               = 1,
     MISSING_TAXDATA_TAG = 2
 
-def get_taxdata_from_file( ):
+def get_taxdata_from_file( filename ):
+    return_data = {}
+    if filename:
+        with open( filename, 'r' ) as ranked_lineage:
+            for current_line in ranked_lineage:
+                key, value = process_line( current_line )
+                return_data[ key ] = value
 
-    import protein_oligo_library as oligo # for parsing rank map data
-
-    if taxdata_filename:
-        return oligo.parse_taxdata( taxdata_filename )
+        return return_data
     return None
+
+def process_line( str_line ):
+    split_line = str_line.split( '|' )
+
+    return split_line[ 1 ].strip().lower(), split_line[ 0 ].strip().lower()
+    
 
 if __name__ == '__main__':
     main()
