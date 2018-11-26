@@ -49,7 +49,7 @@ def main():
 
     args_result = validate_args( args )
 
-    if args_result != ArgResults.NO_ERR:
+    if args_result != ArgResults.NO_ERR.value:
         report_error( args_result )
         sys.exit( 1 )
         
@@ -256,11 +256,21 @@ def write_outputs( outfile_name, seq_list ):
             out_file.write( str( current_seq ) )
 
 def validate_args( args_obj ):
-    pass
+    if 'OS' in args_obj.tags and args_obj.rank_map is None:
+        return ArgResults.MISSING_RANK_MAP_TAG.value
+    return ArgResults.NO_ERR.value
+
+def report_error( int_err_code ):
+    err_codes = { 1: 'No Error',
+                  2: 'OS tag was provided by command '
+                     'line, but no rank_map file was provided'
+                }
+    print( "ERROR: %s, program will exit..." % err_codes[ int_err_code ] )
 
 class ArgResults( Enum ):
-    NO_ERR               = 0,
-    MISSING_RANK_MAP_TAG = 1
+    BLANK                = 0,
+    NO_ERR               = 1,
+    MISSING_RANK_MAP_TAG = 2
 
 if __name__ == '__main__':
     main()
