@@ -30,19 +30,19 @@ def main():
                                     "To include multiple tags, provide this argument multiple times, "
                                     "each time providing a tag to include. "
                                     "Note that if 'OC' is provided, then the "
-                                    "rank_map flag must also be provided. "
+                                    "taxdata flag must also be provided. "
                                     "Possible values for tags include: "
                                     "AC, DE, DR, DT, FT, GN, ID (always included), "
                                     "KW, OC, OH, OS, OX, PE, RA, RC, RG, RL, RN, RP, RT, "
                                     "RX, SQ. "
                            )
-    parser.add_argument( '-m', '--rank_map', default = None, type = str,
-                         help = "Map containing taxid|rank_level pairings "
-                                "which can be used to create OS tags. "
-                                "Note that is the OS tag is provided from "
+    parser.add_argument( '-l', '--ranked_lineage', default = None, type = str,
+                         help = "Map containing taxid|tax_info pairings "
+                                "which can be used to create OC tags. "
+                                "Note that is the OC tag is provided from "
                                 "the command line, then this tag must be provided "
                                 "as well. Inclusion of this argument without "
-                                "the OS tag will be ignored."
+                                "the OC tag will be ignored."
                        )
 
     args = parser.parse_args()
@@ -55,10 +55,10 @@ def main():
         
     tags = [ item.upper() for item in args.tags ]
 
-    rank_map_from_cl = parse_rank_map( args.rank_map )
+    taxdata_from_cl = parse_taxdata( args.ranked_lineage )
 
     # parse the swisskb file
-    db_parser = DBParser( args.swiss, args.output, tags, rank_map = rank_map_from_cl )
+    db_parser = DBParser( args.swiss, args.output, tags, taxdata = taxdata_from_cl )
 
     # convert the swisskb file to the FASTA format
     sequences = db_parser.parse()
@@ -71,7 +71,7 @@ def main():
 
 
 class DBParser:
-    def __init__( self, db_filename, out_filename, tags_list, rank_map = None ):
+    def __init__( self, db_filename, out_filename, tags_list, taxdata = None ):
         self._tag_names = [ 'AC', 'DE', 'DR', 'DT',
                             'FT', 'GN', 'ID', 'KW',
                             'OC', 'OH', 'OS', 'OX',
@@ -83,7 +83,7 @@ class DBParser:
         self._tags_list    = tags_list
 
         self._sequences    = list()
-        self._rank_map     = rank_map
+        self._taxdata     = taxdata
 
     def parse( self ):
 
@@ -107,7 +107,7 @@ class DBParser:
                             tag_name,
                             split_line[ 1:: ],
                             self._tags_list,
-                            self._rank_map
+                            self._taxdata
                         )
 
                         current_seq.add_tag( new_tag )
@@ -117,7 +117,7 @@ class DBParser:
                             tag_name,
                             split_line[ 1:: ],
                             self._tags_list,
-                            self._rank_map
+                            self._taxdata
                         )
 
                         current_seq.add_tag( new_tag )
@@ -132,10 +132,10 @@ class DBParser:
 
 
     @staticmethod
-    def get_line_data( str_tag_name, list_line, list_of_tags, rank_map = None ):
+    def get_line_data( str_tag_name, list_line, list_of_tags, taxdata = None ):
         output_tag = None
 
-        data_factory = TagDataFactory( rank_map )
+        data_factory = TagDataFactory( taxdata )
 
         if str_tag_name in list_of_tags:
             new_tag = data_factory.create_tag( str_tag_name )
@@ -201,8 +201,8 @@ class TagDataFactory:
                       'RP': PERIOD,
                       'RT': SEMICOLON
                  }
-    def __init__( self, rank_map ):
-        self.rank_map = rank_map
+    def __init__( self, taxdata ):
+        self.taxdata = taxdata
 
     def create_tag( self, tag_name ):
         if is_tax_tag( tag_name ):
@@ -256,9 +256,9 @@ class TaxTagData( TagData ):
             self.data.append( id_only[ 0 ] )
 
 class OCTagData( TagData ):
-    def __init__( self, tag_name, delimiter, rank_map ):
+    def __init__( self, tag_name, delimiter, taxdata ):
         super().__init__( tag_name, delimiter )
-        self.rank_map = rank_map
+        self.taxdata = taxdata
 
     def process( self, line ):
         split_line = line.split( delimiter )
@@ -266,7 +266,7 @@ class OCTagData( TagData ):
         if len( split_line > 0 ):
             for item in split_line:
                 try:
-                    self.data.append( self.rank_map[ item ] )
+                    self.data.append( self.taxdata[ item ] )
                 except KeyError:
                     print( "No id found for: %s" % ( item ) )
             
@@ -277,28 +277,28 @@ def write_outputs( outfile_name, seq_list ):
             out_file.write( str( current_seq ) )
 
 def validate_args( args_obj ):
-    if 'OC' in args_obj.tags and args_obj.rank_map is None:
-        return ArgResults.MISSING_RANK_MAP_TAG.value
+    if 'OC' in args_obj.tags and args_obj.taxdata is None:
+        return ArgResults.MISSING_TAXDATA_TAG.value
     return ArgResults.NO_ERR.value
 
 def report_error( int_err_code ):
     err_codes = { 1: 'No Error',
                   2: 'OC tag was provided by command '
-                     'line, but no rank_map file was provided'
+                     'line, but no taxdata file was provided'
                 }
     print( "ERROR: %s, program will exit..." % err_codes[ int_err_code ] )
 
 class ArgResults( Enum ):
     BLANK                = 0,
     NO_ERR               = 1,
-    MISSING_RANK_MAP_TAG = 2
+    MISSING_TAXDATA_TAG = 2
 
-def parse_rank_map( rank_map_filename ):
+def get_taxdata_from_file( ):
 
     import protein_oligo_library as oligo # for parsing rank map data
 
-    if rank_map_filename:
-        return oligo.parse_rank_map( rank_map_filename )
+    if taxdata_filename:
+        return oligo.parse_taxdata( taxdata_filename )
     return None
 
 if __name__ == '__main__':
