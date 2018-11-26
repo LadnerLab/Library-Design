@@ -28,11 +28,21 @@ def main():
                                     "sequence names."
                                     "To include multiple tags, provide this argument multiple times, "
                                     "each time providing a tag to include. "
+                                    "Note that if 'OS' is provided, then the "
+                                    "rank_map flag must also be provided. "
                                     "Possible values for tags include: "
                                     "AC, DE, DR, DT, FT, GN, ID (always included), "
                                     "KW, OC, OH, OS, OX, PE, RA, RC, RG, RL, RN, RP, RT, "
                                     "RX, SQ. "
                            )
+    parser.add_argument( '-m', '--rank_map', default = None, type = str,
+                         help = "Map containing taxid|rank_level pairings "
+                                "which can be used to create OS tags. "
+                                "Note that is the OS tag is provided from "
+                                "the command line, then this tag must be provided "
+                                "as well. Inclusion of this argument without "
+                                "the OS tag will be ignored."
+                       )
 
     args = parser.parse_args()
     tags = [ item.upper() for item in args.tags ]
