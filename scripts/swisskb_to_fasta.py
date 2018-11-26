@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse                       # for parsing command-line arguments
 import sys                            # for exiting upon failure
+from enum import Enum                 # for handling errors
 
 
 
@@ -45,6 +46,13 @@ def main():
                        )
 
     args = parser.parse_args()
+
+    args_result = validate_args( args )
+
+    if args_result != ArgResults.NO_ERR:
+        report_error( args_result )
+        sys.exit( 1 )
+        
     tags = [ item.upper() for item in args.tags ]
 
     # parse the swisskb file
@@ -246,6 +254,13 @@ def write_outputs( outfile_name, seq_list ):
     with open( outfile_name, 'w' ) as out_file:
         for current_seq in seq_list:
             out_file.write( str( current_seq ) )
+
+def validate_args( args_obj ):
+    pass
+
+class ArgResults( Enum ):
+    NO_ERR               = 0,
+    MISSING_RANK_MAP_TAG = 1
 
 if __name__ == '__main__':
     main()
