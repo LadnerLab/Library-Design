@@ -163,7 +163,7 @@ class Sequence:
             
     def __str__( self ):
         out_str = '>'
-        out_str += str( self.tags[ 'ID' ][ 0 ] )
+        out_str += str( self.tags[ 'ID' ][ 0 ] ).strip()
 
         for tag in self.tags:
             if 'ID' not in tag:
@@ -235,7 +235,7 @@ class TagData:
     def __str__( self ):
         out_str = '' 
         for item in self.data:
-            out_str += ' %s=%s ' % ( self.tag_type, item )
+            out_str += ' %s=%s' % ( self.tag_type, item )
         return out_str
 
 class IDTagData( TagData ):
