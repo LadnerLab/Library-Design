@@ -66,6 +66,7 @@ def main():
     tags = [ item.upper() for item in args.tags ]
 
     taxdata_from_cl = get_taxdata_from_file( args.ranked_lineage )
+    rank_map        = get_rank_map_from_file( args.rank_map )
 
     # parse the swisskb file
     db_parser = DBParser( args.swiss, args.output, tags, taxdata = taxdata_from_cl )
@@ -323,7 +324,19 @@ def process_line( str_line ):
     split_line = str_line.split( '|' )
 
     return split_line[ 1 ].strip().lower(), split_line[ 0 ].strip().lower()
-    
+
+def get_rank_map_from_file( filename ):
+    rank_data = {}
+    if filename:
+        with open( filename, 'r' ) as open_file :
+            for line in open_file:
+                split_line = line.split( '|' )
+                new_key = split_line[ 0 ].strip()
+                new_val = split_line[ 1 ].strip()
+                rank_data[ new_key ] = new_val 
+
+        return rank_data
+    return None
 
 if __name__ == '__main__':
     main()
