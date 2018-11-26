@@ -255,6 +255,22 @@ class TaxTagData( TagData ):
             id_only = split_line[ 1 ].split( ';' )
             self.data.append( id_only[ 0 ] )
 
+class OCTagData( TagData ):
+    def __init__( self, tag_name, delimiter, rank_map ):
+        super().__init__( tag_name, delimiter )
+        self.rank_map = rank_map
+
+    def process( self, line ):
+        split_line = line.split( delimiter )
+
+        if len( split_line > 0 ):
+            for item in split_line:
+                try:
+                    self.data.append( self.rank_map[ item ] )
+                except KeyError:
+                    print( "No id found for: %s" % ( item ) )
+            
+
 def write_outputs( outfile_name, seq_list ):
     with open( outfile_name, 'w' ) as out_file:
         for current_seq in seq_list:
