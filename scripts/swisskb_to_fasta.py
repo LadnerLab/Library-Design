@@ -44,6 +44,16 @@ def main():
                                 "as well. Inclusion of this argument without "
                                 "the OC tag will be ignored."
                        )
+    parser.add_argument( '-m', '--rank_map', default = None, type = str,
+                         help = "Map containing taxid|tax_rank pairings, which will be "
+                                "be used to annotate taxid taxonomic rank info. "
+                                "Note that this argument is optional when combined with "
+                                "the 'OC' tag. Note that this argument will be ignored "
+                                "if 'OC' and '--ranked_lineage' are not also "
+                                "provided. If provided, each OC tag will be "
+                                "formatted 'OC=12345,F', where 'F' is the taxonomic "
+                                "rank identifier for the id."
+                       )
 
     args = parser.parse_args()
 
