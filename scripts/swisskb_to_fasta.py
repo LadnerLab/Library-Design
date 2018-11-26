@@ -83,6 +83,7 @@ class DBParser:
         self._tags_list    = tags_list
 
         self._sequences    = list()
+        self._rank_map     = rank_map
 
     def parse( self ):
 
@@ -105,7 +106,8 @@ class DBParser:
                         new_tag = DBParser.get_line_data(
                             tag_name,
                             split_line[ 1:: ],
-                            self._tags_list
+                            self._tags_list,
+                            self._rank_map
                         )
 
                         current_seq.add_tag( new_tag )
@@ -114,7 +116,8 @@ class DBParser:
                         new_tag = DBParser.get_line_data(
                             tag_name,
                             split_line[ 1:: ],
-                            self._tags_list
+                            self._tags_list,
+                            self._rank_map
                         )
 
                         current_seq.add_tag( new_tag )
@@ -129,10 +132,10 @@ class DBParser:
 
 
     @staticmethod
-    def get_line_data( str_tag_name, list_line, list_of_tags ):
+    def get_line_data( str_tag_name, list_line, list_of_tags, rank_map = None ):
         output_tag = None
 
-        data_factory = TagDataFactory()
+        data_factory = TagDataFactory( rank_map )
 
         if str_tag_name in list_of_tags:
             new_tag = data_factory.create_tag( str_tag_name )
@@ -198,8 +201,8 @@ class TagDataFactory:
                       'RP': PERIOD,
                       'RT': SEMICOLON
                  }
-    def __init__( self ):
-        pass
+    def __init__( self, rank_map ):
+        self.rank_map = rank_map
 
     def create_tag( self, tag_name ):
         if is_tax_tag( tag_name ):
