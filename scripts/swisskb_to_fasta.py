@@ -29,7 +29,7 @@ def main():
                                     "sequence names."
                                     "To include multiple tags, provide this argument multiple times, "
                                     "each time providing a tag to include. "
-                                    "Note that if 'OS' is provided, then the "
+                                    "Note that if 'OC' is provided, then the "
                                     "rank_map flag must also be provided. "
                                     "Possible values for tags include: "
                                     "AC, DE, DR, DT, FT, GN, ID (always included), "
@@ -277,13 +277,13 @@ def write_outputs( outfile_name, seq_list ):
             out_file.write( str( current_seq ) )
 
 def validate_args( args_obj ):
-    if 'OS' in args_obj.tags and args_obj.rank_map is None:
+    if 'OC' in args_obj.tags and args_obj.rank_map is None:
         return ArgResults.MISSING_RANK_MAP_TAG.value
     return ArgResults.NO_ERR.value
 
 def report_error( int_err_code ):
     err_codes = { 1: 'No Error',
-                  2: 'OS tag was provided by command '
+                  2: 'OC tag was provided by command '
                      'line, but no rank_map file was provided'
                 }
     print( "ERROR: %s, program will exit..." % err_codes[ int_err_code ] )
