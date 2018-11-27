@@ -51,7 +51,8 @@ def main():
                                 "the 'OC' tag. Note that this argument will be ignored "
                                 "if 'OC' and '--ranked_lineage' are not also "
                                 "provided. If provided, each OC tag will be "
-                                "formatted 'OC=12345,F', where 'F' is the taxonomic "
+                                "formatted 'OC=12345,FAMILY', where 'FAMILY' "
+                                "is the taxonomic "
                                 "rank identifier for the id."
                        )
 
@@ -292,8 +293,8 @@ class OCTagData( TagData ):
         if len( split_line ) > 0: 
             for item in split_line:
                 item = item.strip().lower()
-                if '.' in item:
-                    item = item.replace( '.', '' )
+
+                item = item.replace( '.', '' )
 
                 try:
                     if self.tax_rank:
@@ -380,7 +381,7 @@ def get_rank_map_from_file( filename ):
             for line in open_file:
                 split_line = line.split( '|' )
                 new_key = split_line[ 0 ].strip()
-                new_val = split_line[ 1 ].strip()[ 0 ]
+                new_val = split_line[ 1 ].strip()
                 rank_data[ new_key ] = new_val 
 
         return rank_data
