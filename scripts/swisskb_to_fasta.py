@@ -205,20 +205,19 @@ class Sequence:
     def add_tag( self, new_tag ):
         if new_tag:
             if new_tag.tag_type not in self.tags:
-                self.tags[ new_tag.tag_type ] = list()
-            self.tags[ new_tag.tag_type ].append( new_tag )
+                self.tags[ new_tag.tag_type ] = new_tag
+            else:
+                self.tags[ new_tag.tag_type ].data.extend( new_tag.data )
 
     def add_seq_data( self, data ):
         self.seq_data += data.strip()
             
     def __str__( self ):
-        out_str = '>'
-        out_str += str( self.tags[ 'ID' ][ 0 ] ).strip()
+        out_str = '>%s ' % ( str( self.tags[ 'ID' ] ).strip() )
 
         for tag in self.tags:
             if 'ID' not in tag:
-                for current in self.tags[ tag ]:
-                    out_str += '%s' % str( current )
+                out_str += '%s' % str( self.tags[ tag ] )
         out_str += "\n%s\n" % ( self.seq_data )
 
         return out_str
@@ -290,9 +289,8 @@ class TagData:
                 self.data.append( current_item.strip() )
 
     def __str__( self ):
-        out_str = '' 
-        for item in self.data:
-            out_str += ' %s=%s' % ( self.tag_type, item )
+        out_str = '%s=%s ' % ( self.tag_type, self.delimiter.join( self.data ) )
+
         return out_str
 
 class IDTagData( TagData ):
