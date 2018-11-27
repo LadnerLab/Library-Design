@@ -243,7 +243,7 @@ class TagDataFactory:
         elif tag_name == 'ID':
             return_data = IDTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         elif tag_name == 'OC':
-            return_data = OCTagData( tag_name, TagDataFactory.delimiters[ tag_name ], self.taxdata, self.rank_map )
+            return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         else:
             return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
         return return_data
