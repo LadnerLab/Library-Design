@@ -31,10 +31,18 @@ def main():
                                     "each time providing a tag to include. "
                                     "Note that if 'OC' is provided, then the "
                                     "taxdata flag must also be provided. "
+                                    "Note that the OXX tag is not part of the "
+                                    "uniprot standard, and both OXX/OX may be "
+                                    "included. When OXX is included, each entry in the "
+                                    "output will include the following information: "
+                                    "OXX=original_id,species_id,genus_id,family_id. "
+                                    "Note that if OXX is included, both the "
+                                    "ranked_lineage and rank_map flags will need "
+                                    "to be included. "
                                     "Possible values for tags include: "
                                     "AC, DE, DR, DT, FT, GN, ID (always included), "
                                     "KW, OC, OH, OS, OX, PE, RA, RC, RG, RL, RN, RP, RT, "
-                                    "RX, SQ. "
+                                    "RX, SQ, OXX. "
                            )
     parser.add_argument( '-l', '--ranked_lineage', default = None, type = str,
                          help = "Map containing taxid|tax_info pairings "
@@ -96,7 +104,8 @@ class DBParser:
                             'FT', 'GN', 'ID', 'KW',
                             'OC', 'OH', 'OS', 'OX',
                             'PE', 'RA', 'RC', 
-                            'RL', 'RN', 'RP', 'RT'
+                            'RL', 'RN', 'RP', 'RT',
+                            'OXX'
                           ]
         self._db_filename  = db_filename
         self._out_filename = out_filename
