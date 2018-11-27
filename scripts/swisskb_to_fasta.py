@@ -65,8 +65,13 @@ def main():
         
     tags = [ item.upper() for item in args.tags ]
 
-    taxdata_from_cl         = get_taxdata_from_file( args.ranked_lineage )
-    rank_map_from_cl        = get_rank_map_from_file( args.rank_map )
+    
+    infile_parsers = Parser.create_parsers( [ ( get_taxdata_from_file, args.ranked_lineage ),
+                                              ( get_rank_map_from_file, args.rank_map )
+                                            ]
+                                          )
+
+    taxdata_from_cl, rank_map_from_cl = Parser.parse_list( infile_parsers )
 
     # parse the swisskb file
     db_parser = DBParser( args.swiss, args.output,
@@ -333,6 +338,35 @@ def get_taxdata_from_file( filename ):
 
         return return_data
     return None
+
+class Parser:
+    def __init__( self, parse_method, filename ):
+        self.filename     = filename
+        self.parse_method = parse_method
+
+    def parse( self ):
+        return self.parse_method( self.filename )
+
+    @staticmethod
+    def create_parser( parse_method, filename ):
+        return Parser( parse_method, filename )
+
+    @staticmethod
+    def create_parsers( list_to_create ):
+        out_parsers = list()
+        for current_tuple in list_to_create:
+            new_item = Parser.create_parser( current_tuple[ 0 ], current_tuple[ 1 ] )
+            out_parsers.append( new_item )
+        return out_parsers
+
+    @staticmethod
+    def parse_list( parser_list ):
+        outputs_list = list()
+
+        for item in parser_list:
+            if item:
+                outputs_list.append( item.parse() )
+        return outputs_list
 
 def process_line( str_line ):
     split_line = str_line.split( '|' )
