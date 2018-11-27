@@ -82,7 +82,6 @@ def main():
                                           )
 
     taxdata_from_cl, rank_map_from_cl = Parser.parse_list( infile_parsers )
-    taxdata_from_cl = oligo.fill_tax_gaps( taxdata_from_cl, rank_map_from_cl )
 
     # parse the swisskb file
     db_parser = DBParser( args.swiss, args.output,
@@ -116,6 +115,9 @@ class DBParser:
         self._sequences    = list()
         self._taxdata      = taxdata
         self._rank_map     = rank_map
+
+        if taxdata and rank_map:
+            self._taxdata = oligo.fill_tax_gaps( taxdata, rank_map )
 
     def parse( self ):
 
@@ -345,12 +347,7 @@ class ArgResults( Enum ):
 def get_taxdata_from_file( filename ):
     return_data = {}
     if filename:
-        with open( filename, 'r' ) as ranked_lineage:
-            for current_line in ranked_lineage:
-                key, value = process_line( current_line )
-                return_data[ key ] = value
-
-        return return_data
+        return oligo.get_taxdata_from_file( filename )
     return None
 
 class Parser:
