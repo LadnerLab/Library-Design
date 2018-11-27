@@ -313,13 +313,28 @@ class TaxTagData( TagData ):
             self.data.append( id_only[ 0 ] )
 
 class OXXTagData( TagData ):
+    reversed_table = None
+
     def __init__( self, tag_name, delimiter, taxdata, fixed_tax_data ):
         super().__init( tag_name, delimiter )
         self.taxdata = taxdata
         self.fixed_tax_data = fixed_tax_map
 
+        if OXXTagData.reversed_table is None:
+            OXXTagData.reversed_table = OXXTagData.reverse_table( taxdata )
+
     def process( self, line ):
         split_line = line.split( self.delimiter )
+
+    @staticmethod
+    def reverse_table( to_reverse ):
+        out_table = {}
+        for key, value in to_reverse.items():
+            new_key   = value[ 0 ].strip()
+            new_value = key.strip()
+            out_table[ new_key ] = new_value 
+
+        return out_table
         
 class OCTagData( TagData ):
     def __init__( self, tag_name, delimiter, taxdata, tax_rank = None ):
@@ -374,7 +389,9 @@ class ArgResults( Enum ):
 def get_taxdata_from_file( filename ):
     return_data = {}
     if filename:
-        return oligo.get_taxdata_from_file( filename )
+        for key, value in oligo.get_taxdata_from_file( filename ).items():
+            return_data[ str( key ) ] = value
+        return return_data
     return None
 
 class Parser:
