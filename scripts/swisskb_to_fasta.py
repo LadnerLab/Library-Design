@@ -4,8 +4,6 @@ import sys                            # for exiting upon failure
 from enum import Enum                 # for handling errors
 import protein_oligo_library as oligo # for filling tax gaps
 
-
-
 def main():
 
     parser = argparse.ArgumentParser( description = "Script to convert UniprotKB/Swiss-Prot "
@@ -117,7 +115,9 @@ class DBParser:
         self._rank_map     = rank_map
 
         if taxdata and rank_map:
-            self._taxdata = oligo.fill_tax_gaps( taxdata, rank_map )
+            self._fixed_tax_data = oligo.fill_tax_gaps( taxdata, rank_map )
+        else:
+            self._fixed_tax_data = None
 
     def parse( self ):
 
@@ -157,6 +157,18 @@ class DBParser:
                         )
 
                         current_seq.add_tag( new_tag )
+
+                        if tag_name == 'OX' and 'OXX' in self._tags_list:
+                            new_tag = DBParser.get_line_data(
+                                'OXX',
+                                split_line[ 1:: ],
+                                self._tags_list,
+                                self._taxdata,
+                                self._rank_map
+                            )
+
+                            current_seq.add_tag( new_tag )
+                            
                     elif tag_name == 'SQ':
                         seq_flag = True
 
@@ -168,10 +180,11 @@ class DBParser:
 
 
     @staticmethod
-    def get_line_data( str_tag_name, list_line, list_of_tags, taxdata = None, rank_map = None ):
+    def get_line_data( str_tag_name, list_line, list_of_tags,
+                       taxdata = None, rank_map = None, fixed_tax_data = None ):
         output_tag = None
 
-        data_factory = TagDataFactory( taxdata, rank_map )
+        data_factory = TagDataFactory( taxdata, rank_map, fixed_tax_data )
 
         if str_tag_name in list_of_tags:
             new_tag = data_factory.create_tag( str_tag_name )
@@ -237,19 +250,24 @@ class TagDataFactory:
                       'RP': PERIOD,
                       'RT': SEMICOLON
                  }
-    def __init__( self, taxdata, rank_map ):
-        self.taxdata  = taxdata
-        self.rank_map = rank_map
+    def __init__( self, taxdata, rank_map, fixed_tax_data = None ):
+        self.taxdata        = taxdata
+        self.rank_map       = rank_map
+        self.fixed_tax_data = fixed_tax_data
 
     def create_tag( self, tag_name ):
+        delimiters = TagDataFactory.delimiters
+
         if is_tax_tag( tag_name ):
-            return_data = TaxTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+            return_data = TaxTagData( tag_name, delimiters[ tag_name ] )
         elif tag_name == 'ID':
-            return_data = IDTagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+            return_data = IDTagData( tag_name, delimiters[ tag_name ] )
         elif tag_name == 'OC':
-            return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+            return_data = TagData( tag_name, delimiters[ tag_name ] )
+        elif tag_name == 'OXX':
+            return_data = OXXTagData( tag_name, delimiters[ tag_name ], self.rank_map, self.fixed_tax_data )
         else:
-            return_data = TagData( tag_name, TagDataFactory.delimiters[ tag_name ] )
+            return_data = TagData( tag_name, delimiters[ tag_name ] )
         return return_data
 
 
@@ -294,6 +312,15 @@ class TaxTagData( TagData ):
             id_only = split_line[ 1 ].split( ';' )
             self.data.append( id_only[ 0 ] )
 
+class OXXTagData( TagData ):
+    def __init__( self, tag_name, delimiter, taxdata, fixed_tax_data ):
+        super().__init( tag_name, delimiter )
+        self.taxdata = taxdata
+        self.fixed_tax_data = fixed_tax_map
+
+    def process( self, line ):
+        split_line = line.split( self.delimiter )
+        
 class OCTagData( TagData ):
     def __init__( self, tag_name, delimiter, taxdata, tax_rank = None ):
         super().__init__( tag_name, delimiter )
