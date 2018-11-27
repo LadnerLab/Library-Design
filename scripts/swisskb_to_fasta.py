@@ -164,7 +164,8 @@ class DBParser:
                                 split_line[ 1:: ],
                                 self._tags_list,
                                 self._taxdata,
-                                self._rank_map
+                                self._rank_map,
+                                self._fixed_tax_data
                             )
 
                             current_seq.add_tag( new_tag )
@@ -241,6 +242,7 @@ class TagDataFactory:
                       'OH': PERIOD,
                       'OS': PERIOD,
                       'OX': SEMICOLON,
+                      'OXX': SEMICOLON,
                       'PE': SEMICOLON,
                       'RA': COMMA,
                       'RC': SEMICOLON,
@@ -265,7 +267,7 @@ class TagDataFactory:
         elif tag_name == 'OC':
             return_data = TagData( tag_name, delimiters[ tag_name ] )
         elif tag_name == 'OXX':
-            return_data = OXXTagData( tag_name, delimiters[ tag_name ], self.rank_map, self.fixed_tax_data )
+            return_data = OXXTagData( tag_name, delimiters[ tag_name ], self.taxdata, self.fixed_tax_data )
         else:
             return_data = TagData( tag_name, delimiters[ tag_name ] )
         return return_data
@@ -310,22 +312,41 @@ class TaxTagData( TagData ):
 
         if len( split_line[ 1 ] ) > 0:
             id_only = split_line[ 1 ].split( ';' )
-            self.data.append( id_only[ 0 ] )
 
-class OXXTagData( TagData ):
+            # sometimes there is garbage after the id
+            self.data.append( id_only[ 0 ].split()[ 0 ] ) 
+
+class OXXTagData( TaxTagData ):
     reversed_table = None
 
     def __init__( self, tag_name, delimiter, taxdata, fixed_tax_data ):
-        super().__init( tag_name, delimiter )
+        super().__init__( tag_name, delimiter )
         self.taxdata = taxdata
-        self.fixed_tax_data = fixed_tax_map
+        self.fixed_tax_data = fixed_tax_data
 
         if OXXTagData.reversed_table is None:
             OXXTagData.reversed_table = OXXTagData.reverse_table( taxdata )
 
     def process( self, line ):
-        split_line = line.split( self.delimiter )
+        super().process( line )
+        new_data = list()
+        new_entry = ""
+        reversed_table = OXXTagData.reversed_table
 
+        ranks = { 'SPECIES': 1, 'GENUS': 2, 'FAMILY': 3 }
+
+        for current in self.data:
+            new_entry = current
+            current_val = self.fixed_tax_data[ current ]
+
+            for key, current_rank in ranks.items():
+                new_id = ''
+                if current_val[ current_rank ]:
+                    new_id = reversed_table[ current_val[ current_rank ] ]
+                new_entry += ',%s' % new_id
+        new_data.append( new_entry )
+        self.data = new_data
+            
     @staticmethod
     def reverse_table( to_reverse ):
         out_table = {}
@@ -382,9 +403,9 @@ def report_error( int_err_code ):
     print( "ERROR: %s, program will exit..." % err_codes[ int_err_code ] )
 
 class ArgResults( Enum ):
-    BLANK                = 0,
+    BLANK                = 0, # 0'th item in enum tends to be of type tuple, not int
     NO_ERR               = 1,
-    MISSING_TAXDATA_TAG = 2
+    MISSING_TAXDATA_TAG  = 2
 
 def get_taxdata_from_file( filename ):
     return_data = {}
