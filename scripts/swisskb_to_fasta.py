@@ -207,7 +207,7 @@ class Sequence:
             if new_tag.tag_type not in self.tags:
                 self.tags[ new_tag.tag_type ] = new_tag
             else:
-                self.tags[ new_tag.tag_type ].data.extend( new_tag.data )
+                self.tags[ new_tag.tag_type ].combine( new_tag )
 
     def add_seq_data( self, data ):
         self.seq_data += data.strip()
@@ -287,6 +287,9 @@ class TagData:
         for current_item in split_line:
             if len( current_item ) > 0:
                 self.data.append( current_item.strip() )
+
+    def combine( self, new_tag ):
+        self.data.extend( new_tag.data )
 
     def __str__( self ):
         out_str = '%s=%s ' % ( self.tag_type, self.delimiter.join( self.data ) )
