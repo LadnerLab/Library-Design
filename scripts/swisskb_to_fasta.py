@@ -28,8 +28,6 @@ def main():
                                     "sequence names."
                                     "To include multiple tags, provide this argument multiple times, "
                                     "each time providing a tag to include. "
-                                    "Note that if 'OC' is provided, then the "
-                                    "taxdata flag must also be provided. "
                                     "Note that the OXX tag is not part of the "
                                     "uniprot standard, and both OXX/OX may be "
                                     "included. When OXX is included, each entry in the "
@@ -359,30 +357,18 @@ class OXXTagData( TaxTagData ):
         return out_table
         
 class OCTagData( TagData ):
-    def __init__( self, tag_name, delimiter, taxdata, tax_rank = None ):
+    def __init__( self, tag_name, delimiter ):
         super().__init__( tag_name, delimiter )
-        self.taxdata  = taxdata
-        self.tax_rank = tax_rank
-
     def process( self, line ):
         split_line = line.split( self.delimiter )
 
         if len( split_line ) > 0: 
             for item in split_line:
-                item = item.strip().lower()
+                item = item.strip()
 
-                item = item.replace( '.', '' )
+                new_item = item.replace( '.', '' )
 
-                try:
-                    if self.tax_rank:
-                        new_item = "%s,%s" % ( self.taxdata[ item ],
-                                               self.tax_rank[ self.taxdata[ item ] ]
-                                             )
-                    else:
-                        new_item = self.taxdata[ item ]
-                    self.data.append( new_item )
-                except KeyError:
-                    pass # empty string
+                self.data.append( new_item )
 
 def write_outputs( outfile_name, seq_list ):
     with open( outfile_name, 'w' ) as out_file:
