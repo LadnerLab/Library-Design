@@ -368,7 +368,7 @@ def write_outputs( outfile_name, seq_list ):
             out_file.write( str( current_seq ) )
 
 def validate_args( args_obj ):
-    if 'OXX' in args_obj.tags and ( args_obj.ranked_lineage or \
+    if 'OXX' in args_obj.tags and ( args_obj.ranked_lineage is None or \
                                     args_obj.rank_map is None ):
         return ArgResults.MISSING_TAXDATA_TAG.value
     return ArgResults.NO_ERR.value
