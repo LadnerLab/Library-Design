@@ -2,6 +2,7 @@
 import argparse                       # for parsing command-line arguments
 import sys                            # for exiting upon failure
 from enum import Enum                 # for handling errors
+import protein_oligo_library as oligo # for filling tax gaps
 
 
 
@@ -81,6 +82,7 @@ def main():
                                           )
 
     taxdata_from_cl, rank_map_from_cl = Parser.parse_list( infile_parsers )
+    taxdata_from_cl = oligo.fill_tax_gaps( taxdata_from_cl, rank_map_from_cl )
 
     # parse the swisskb file
     db_parser = DBParser( args.swiss, args.output,
@@ -322,14 +324,16 @@ def write_outputs( outfile_name, seq_list ):
             out_file.write( str( current_seq ) )
 
 def validate_args( args_obj ):
-    if 'OC' in args_obj.tags and args_obj.ranked_lineage is None:
+    if 'OXX' in args_obj.tags and ( args_obj.ranked_lineage or \
+                                    args_obj.rank_map is None ):
         return ArgResults.MISSING_TAXDATA_TAG.value
     return ArgResults.NO_ERR.value
 
 def report_error( int_err_code ):
     err_codes = { 1: 'No Error',
-                  2: 'OC tag was provided by command '
-                     'line, but no taxdata file was provided'
+                  2: 'OXX tag was provided by command '
+                     'line, but ranked_lineage and rank_map '
+                     'need to be provided.'
                 }
     print( "ERROR: %s, program will exit..." % err_codes[ int_err_code ] )
 
