@@ -4,6 +4,7 @@ import os                             # For creating directories
 import sys                            # for exiting upon failure
 import re                             # Regular expression functionality for extracting TaxIDs
 import random                         # To randomly subsample protein sequences
+import shutil                         # To copy files
 #from enum import Enum                 # for handling errors
 
 
@@ -28,6 +29,12 @@ def main():
                        )
     parser.add_argument( '-x', '--max', default = 5000, type = int,
                          help = "Default # of proteins to include per species. "
+                       )
+    parser.add_argument( '-k', '--kSize', default = 9, type = int,
+                         help = "Size of kmers to calculate. "
+                       )
+    parser.add_argument( '-m', '--maxKmers', default = 500000, type = int,
+                         help = "Max # kmers allowed in a cluster. "
                        )
 
     parser.add_argument( '-d', '--dir', type = str,
@@ -67,6 +74,7 @@ def main():
         os.mkdir("%s/species" % args.dir)    #Generate subdirectory for species clusters
         os.mkdir("%s/genus" % args.dir)      #Generate subdirectory for genus clusters
         os.mkdir("%s/family" % args.dir)     #Generate subdirectory for family clusters
+        os.mkdir("%s/design" % args.dir)     #Generate subdirectory for clusters to be used for design
     else: 
         print ("%s already exists!" % (args.dir))
         sys.exit(1)
@@ -117,7 +125,13 @@ def main():
     del(tSeqDict)      #Cleaning up
 
     print("Species\tGenus\tFamily\tSpeciesID\tGenusID\tFamilyID\t#Seqs\tSumSeqLen")
-#First, write family-level clusters
+    
+    fout = open("%s/design/design_cluster_info.txt" % args.dir, "w")    #To hold info on kmer #s in clusters
+    fout.write("ClusterFile\t#%dmers\n" % args.kSize)
+    
+    #First, write family-level clusters
+    tooBigFam={}
+    famClustNames={}
     for family,genera in toCluster.items():
         names=[]
         seqs=[]
@@ -126,9 +140,26 @@ def main():
                 names += sd['names']
                 seqs += sd['seqs']
                 print("%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d" % (return_taxname(s, taxmap), return_taxname(genus, taxmap), return_taxname(family, taxmap), s, genus, family, len(sd['seqs']), sum([len(x) for x in sd['seqs']])))
-        write_fasta(names,seqs,"%s/family/%s.fasta" % (args.dir,return_taxname(family, taxmap)))
+        if family:
+            thisout="%s/family/%s.fasta" % (args.dir,return_taxname(family, taxmap))
+            write_fasta(names,seqs,thisout)
+            famClustNames[family]=thisout
+        else: #If there is no family assignment, treat as if family is too big, this will lead this group to be clustered by genus
+            tooBigFam[family]=""
 
-#Then genus-level clusters
+    #Check whether a family cluster is too big (in terms of # of unique kmers)
+    for fam,each in famClustNames.items():
+        kmers = fasta_kmers(each, args.kSize)
+        if len(kmers)>args.maxKmers:
+            tooBigFam[fam]=""
+        else:
+            shutil.copy(each,"%s/design" % args.dir)
+#            print (each,len(kmers))
+            fout.write("%s\t%d\n" % (each.split("/")[-1], len(kmers)))
+
+    #Then genus-level clusters
+    tooBigGen={}
+    genClustNames={}
     for family,genera in toCluster.items():
         for genus,species in genera.items():
             names=[]
@@ -136,17 +167,52 @@ def main():
             for s,sd in species.items():
                 names += sd['names']
                 seqs += sd['seqs']
-            write_fasta(names,seqs,"%s/genus/%s.fasta" % (args.dir,return_taxname(genus, taxmap)))
+            if genus:
+                thisout="%s/genus/%s.fasta" % (args.dir,return_taxname(genus, taxmap))
+                write_fasta(names,seqs,thisout)
+            else:
+                tooBigGen[genus]=""
+            if family in tooBigFam:
+                genClustNames[genus]=thisout
 
-#Then species-level clusters
+    #Check whether a genus cluster is too big (in terms of # of unique kmers)
+
+    for gen,each in genClustNames.items():
+        kmers = fasta_kmers(each, args.kSize)
+        if len(kmers)>args.maxKmers:
+            tooBigGen[gen]=""
+        else:
+            shutil.copy(each,"%s/design" % args.dir)
+#            print (each,len(kmers))
+            fout.write("%s\t%d\n" % (each.split("/")[-1], len(kmers)))
+            
+
+    #Then species-level clusters
+    spClustNames={}
     for family,genera in toCluster.items():
         for genus,species in genera.items():
             for s,sd in species.items():
-                write_fasta(sd['names'],sd['seqs'],"%s/species/%s.fasta" % (args.dir,"_".join(return_taxname(s, taxmap).split())))
+                thisout="%s/species/%s.fasta" % (args.dir,"_".join(return_taxname(s, taxmap).split()))
+                write_fasta(sd['names'],sd['seqs'],thisout)
+                if genus in tooBigGen:
+                    spClustNames[s]=thisout
 
 #    sys.exit( 1 )
 
 ##########------------------------------------------------->>>>>>>>>
+
+def fasta_kmers(fasta, k):
+    seq_count=0
+    names, seqs = read_fasta_lists(fasta)
+    kmer_set = set()
+    del(names)
+    for s in seqs:
+        seq_count+=1
+        for i in range(0,len(s)-k,1):
+            this_kmer = s[i:i+k].upper()
+            if 'X' not in this_kmer:
+                kmer_set.add(this_kmer)
+    return kmer_set
 
 def return_taxname(id, dict):
     if id in dict:
@@ -244,6 +310,28 @@ def get_taxmap_from_file( filename ):
 def process_line( str_line ):
     split_line = str_line.split( '\t|\t' )
     return split_line[0], split_line[1]
+
+# Extracts data from a fasta sequence file. Returns two lists, the first holds the names of the seqs (excluding the '>' symbol), and the second holds the sequences
+def read_fasta_lists(file):
+    fin = open(file, 'r')
+    count=0
+    
+    names=[]
+    seqs=[]
+    seq=''
+    for line in fin:
+        line=line.strip()
+        if line and line[0] == '>':                #indicates the name of the sequence
+            count+=1
+            names.append(line[1:])
+            if count>1:
+                seqs.append(seq)
+            seq=''
+        else: seq +=line
+    seqs.append(seq)
+    
+    return names, seqs
+    
 
 ##########----------------------->>>>>>>>>
 
