@@ -336,13 +336,18 @@ class OXXTagData( TaxTagData ):
 
         for current in self.data:
             new_entry = current
-            current_val = self.fixed_tax_data[ current ]
+            try:
+                current_val = self.fixed_tax_data[ current ]
 
-            for key, current_rank in ranks.items():
-                new_id = ''
-                if current_val[ current_rank ]:
-                    new_id = reversed_table[ current_val[ current_rank ] ]
-                new_entry += ',%s' % new_id
+                for key, current_rank in ranks.items():
+                    new_id = ''
+                    if current_val[ current_rank ]:
+                        new_id = reversed_table[ current_val[ current_rank ] ]
+                    new_entry += ',%s' % new_id
+            except KeyError:
+                new_entry = "%s,,," % new_entry
+                break
+
         new_data.append( new_entry )
         self.data = new_data
             
