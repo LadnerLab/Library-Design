@@ -208,7 +208,7 @@ def fasta_kmers(fasta, k):
     del(names)
     for s in seqs:
         seq_count+=1
-        for i in range(0,len(s)-k,1):
+        for i in range(0,len(s)-k+1,1):
             this_kmer = s[i:i+k].upper()
             if 'X' not in this_kmer:
                 kmer_set.add(this_kmer)
