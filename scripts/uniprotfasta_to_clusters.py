@@ -192,7 +192,10 @@ def main():
     for family,genera in toCluster.items():
         for genus,species in genera.items():
             for s,sd in species.items():
-                thisout="%s/species/%s.fasta" % (args.dir,"_".join(return_taxname(s, taxmap).split()))
+                thisname=return_taxname(s, taxmap)
+                for badchar in [" ", "/"]:
+                    thisname="_".join(thisname.split(badchar))
+                thisout="%s/species/%s.fasta" % (args.dir,thisname)
                 write_fasta(sd['names'],sd['seqs'],thisout)
                 if genus in tooBigGen:
                     spClustNames[s]=thisout
