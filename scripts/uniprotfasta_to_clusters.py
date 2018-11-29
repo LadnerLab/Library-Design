@@ -146,6 +146,7 @@ def main():
             famClustNames[family]=thisout
         else: #If there is no family assignment, treat as if family is too big, this will lead this group to be clustered by genus
             tooBigFam[family]=""
+            thisout=""
 
     #Check whether a family cluster is too big (in terms of # of unique kmers)
     for fam,each in famClustNames.items():
@@ -154,9 +155,7 @@ def main():
             tooBigFam[fam]=""
         else:
             shutil.copy(each,"%s/design" % args.dir)
-#            print (each,len(kmers))
             fout.write("%s\t%d\n" % (each.split("/")[-1], len(kmers)))
-
     #Then genus-level clusters
     tooBigGen={}
     genClustNames={}
@@ -172,9 +171,9 @@ def main():
                 write_fasta(names,seqs,thisout)
             else:
                 tooBigGen[genus]=""
-            if family in tooBigFam:
+                thisout=""
+            if family in tooBigFam and thisout:
                 genClustNames[genus]=thisout
-
     #Check whether a genus cluster is too big (in terms of # of unique kmers)
 
     for gen,each in genClustNames.items():
