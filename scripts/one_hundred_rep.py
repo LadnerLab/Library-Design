@@ -12,6 +12,39 @@ def main():
 
     args = arg_parser.parse_args()
 
+    # TODO validate args
+
+
+    seqs_from_file = read_fasta( args.fasta )
+
+
+
 
 if __name__ == '__main__':
     main()
+
+
+class Sequence:
+    def __init__( self, name, seq ):
+        self.name = name
+        self.seq  = seq
+
+    def __len__( self ):
+        return( len( self.seq ) )
+
+    def __str__( self ):
+        return ">%s\n%s\n" % ( self.name, self.seq )
+
+    names, sequences = oligo.read_fasta_lists( args.fasta )
+
+class SequenceFactory:
+    def __init__( self ):
+        pass
+
+    def create_seq( self, name, sequence ):
+        return Sequence( name, sequence )
+    
+
+
+            
+
