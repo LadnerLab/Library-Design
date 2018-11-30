@@ -22,6 +22,8 @@ def main():
     # get the 100% reps for each sequence
     final_seqs, map_out = get_one_hundred_reps( input_seqs, indexer, args.map )
 
+    print( len( final_seqs ) )
+
     # write the output fasta and map file out
 
 class Sequence:
@@ -34,6 +36,9 @@ class Sequence:
 
     def __eq__( self, other ):
         return self.seq == other.seq
+
+    def __hash__( self ):
+        return hash( self.seq )
 
     def __str__( self ):
         return ">%s\n%s\n" % ( self.name, self.seq )
@@ -80,6 +85,38 @@ class SortIndexer( Indexer ):
     def index( self, in_list, reverse = False ):
         return( sorted( in_list, key = self.sort_key, reverse = reverse ) )
 
+def get_one_hundred_reps( seq_list, indexer, do_map = False ):
+    seqs_set     = set()
+    out_seqs     = list()
+
+    unique_seqs = get_unique_sequences( seq_list )
+
+    indexed_seqs = indexer.index( unique_seqs, reverse = True )
+    seqs_set     = set( indexed_seqs )
+
+    index = 0
+    while index < len( seqs_set ):
+        current_ref = indexed_seqs[ index ]
+        index += 1
+
+        for seq_index in range( len( indexed_seqs ) - index ):
+            current = indexed_seqs[ seq_index ]
+            if current.seq in current_ref.seq:
+                seqs_set.remove( current )
+
+        indexed_seqs = indexer.index( seqs_set, reverse = True )
+    return list( seqs_set ), None
+
+def get_unique_sequences( seq_list ):
+    seq_fact = SequenceFactory()
+
+    names_list = [ item.name for item in seq_list ]
+    seq_list   = [ item.seq for item in seq_list ]
+
+    new_names, new_seqs = oligo.get_unique_sequences( names_list, seq_list )
+
+    return seq_fact.create_seq_list( new_names, new_seqs )
+    
 if __name__ == '__main__':
     main()
 
