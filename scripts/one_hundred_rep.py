@@ -19,7 +19,10 @@ def main():
     input_seqs   = input_parser.parse()
     indexer      = SortIndexer( len )
 
-    indexed_seqs = indexer.index( input_seqs )
+    # get the 100% reps for each sequence
+    final_seqs, map_out = get_one_hundred_reps( input_seqs, indexer, args.map )
+
+    # write the output fasta and map file out
 
 class Sequence:
     def __init__( self, name, seq ):
@@ -68,9 +71,10 @@ class SortIndexer( Indexer ):
     def __init__( self, sort_key = len ):
         self.sort_key = sort_key
 
-    def index( self, in_list ):
-        return( sorted( in_list, key = self.sort_key ) )
+    def index( self, in_list, reverse = False ):
+        return( sorted( in_list, key = self.sort_key, reverse = reverse ) )
 
+    
 if __name__ == '__main__':
     main()
 
