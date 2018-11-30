@@ -42,6 +42,15 @@ class SequenceFactory:
 
     def create_seq( self, name, sequence ):
         return Sequence( name, sequence )
+    def create_seq_list( self, names, sequences ):
+        out_list = list()
+
+        for index in range( len( names ) ):
+            current_name     = names[ index ]
+            current_sequence = sequences[ index ]
+
+            out_list.append( self.create_seq( current_name, current_sequence ) )
+        return out_list
     
 
 class FastaParser:
@@ -50,16 +59,10 @@ class FastaParser:
         self.seq_factory = SequenceFactory()
 
     def parse( self ):
-        out_seqs = list()
 
         names, sequences = oligo.read_fasta_lists( self.filename )
 
-        for index in range( len( names ) ):
-            new_name = names[ index ]
-            new_seq  = sequences[ index ]
-            out_seqs.append( self.seq_factory.create_seq( new_name, new_seq ) )
-
-        return out_seqs
+        return self.seq_factory.create_seq_list( names, sequences )
             
 class Indexer:
     def __init__( self ):
@@ -73,6 +76,7 @@ class SortIndexer( Indexer ):
 
     def index( self, in_list, reverse = False ):
         return( sorted( in_list, key = self.sort_key, reverse = reverse ) )
+
 
     
 if __name__ == '__main__':
