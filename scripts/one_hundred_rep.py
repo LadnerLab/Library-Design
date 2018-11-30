@@ -17,7 +17,9 @@ def main():
 
     input_parser = FastaParser( args.fasta )
     input_seqs   = input_parser.parse()
+    indexer      = SortIndexer( len )
 
+    indexed_seqs = indexer.index( input_seqs )
 
 class Sequence:
     def __init__( self, name, seq ):
@@ -56,7 +58,18 @@ class FastaParser:
 
         return out_seqs
             
+class Indexer:
+    def __init__( self ):
+        pass
+    def index( self ):
+        pass
 
+class SortIndexer( Indexer ):
+    def __init__( self, sort_key = len ):
+        self.sort_key = sort_key
+
+    def index( self, in_list ):
+        return( sorted( in_list, key = self.sort_key ) )
 
 if __name__ == '__main__':
     main()
