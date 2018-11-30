@@ -32,6 +32,9 @@ class Sequence:
     def __len__( self ):
         return( len( self.seq ) )
 
+    def __eq__( self, other ):
+        return self.seq == other.seq
+
     def __str__( self ):
         return ">%s\n%s\n" % ( self.name, self.seq )
 
@@ -77,8 +80,6 @@ class SortIndexer( Indexer ):
     def index( self, in_list, reverse = False ):
         return( sorted( in_list, key = self.sort_key, reverse = reverse ) )
 
-
-    
 if __name__ == '__main__':
     main()
 
