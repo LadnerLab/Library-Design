@@ -15,13 +15,8 @@ def main():
     # TODO validate args
 
 
-    seqs_from_file = read_fasta( args.fasta )
-
-
-
-
-if __name__ == '__main__':
-    main()
+    input_parser = FastaParser( args.fasta )
+    input_seqs   = input_parser.parse()
 
 
 class Sequence:
@@ -35,7 +30,6 @@ class Sequence:
     def __str__( self ):
         return ">%s\n%s\n" % ( self.name, self.seq )
 
-    names, sequences = oligo.read_fasta_lists( args.fasta )
 
 class SequenceFactory:
     def __init__( self ):
@@ -45,6 +39,26 @@ class SequenceFactory:
         return Sequence( name, sequence )
     
 
+class FastaParser:
+    def __init__( self, filename ):
+        self.filename    = filename
+        self.seq_factory = SequenceFactory()
 
+    def parse( self ):
+        out_seqs = list()
+
+        names, sequences = oligo.read_fasta_lists( self.filename )
+
+        for index in range( len( names ) ):
+            new_name = names[ index ]
+            new_seq  = sequences[ index ]
+            out_seqs.append( self.seq_factory.create_seq( new_name, new_seq ) )
+
+        return out_seqs
             
+
+
+if __name__ == '__main__':
+    main()
+
 
