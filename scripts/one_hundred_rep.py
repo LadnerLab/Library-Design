@@ -6,7 +6,7 @@ def main():
 
     arg_parser.add_argument( '-f', '--fasta', help = "Fasta file to read input from" )
     arg_parser.add_argument( '-r', '--representatives', help = "Output file to write representatives to" )
-    arg_parser.add_argument( '-m', '--map', help = "(Optional) Name of map to write the map of what "
+    arg_parser.add_argument( '-m', '--map_file', help = "(Optional) Name of map to write the map of what "
                                                    "sequences were collapsed under what sequences."
                            )
 
@@ -20,13 +20,13 @@ def main():
     indexer      = SortIndexer( len )
 
     # get the 100% reps for each sequence
-    final_seqs, map_out = get_one_hundred_reps( input_seqs, indexer, args.map )
+    final_seqs, map_out = get_one_hundred_reps( input_seqs, indexer, args.map_file != None )
 
     print( "Number of seqs in original: %d" % len( input_seqs ) )
     print( "Number of seqs in output:   %d" % len( final_seqs ) )
 
     # write the output fasta and map file out
-    write_outputs( args.representatives, final_seqs )
+    write_outputs( args.representatives, final_seqs, args.map_file, map_out )
 
 class Sequence:
     def __init__( self, name, seq ):
@@ -91,6 +91,11 @@ def get_one_hundred_reps( seq_list, indexer, do_map = False ):
     seqs_set     = set()
     out_seqs     = list()
 
+    out_map      = None
+
+    if do_map:
+        out_map = {}
+
     unique_seqs = get_unique_sequences( seq_list )
 
     indexed_seqs = indexer.index( unique_seqs, reverse = True )
@@ -101,13 +106,20 @@ def get_one_hundred_reps( seq_list, indexer, do_map = False ):
         current_ref = indexed_seqs[ index ]
         index += 1
 
+        if do_map:
+            out_map[ current_ref ] = [ current_ref ]
+
         for seq_index in range( index, len( indexed_seqs ) ):
             current = indexed_seqs[ seq_index ]
             if current.seq in current_ref.seq:
                 seqs_set.remove( current )
 
+                if do_map:
+                    out_map[ current_ref ].append( current )
+                    
+
         indexed_seqs = indexer.index( seqs_set, reverse = True )
-    return list( seqs_set ), None
+    return list( seqs_set ), out_map
 
 def get_unique_sequences( seq_list ):
     seq_fact = SequenceFactory()
@@ -119,11 +131,17 @@ def get_unique_sequences( seq_list ):
 
     return seq_fact.create_seq_list( new_names, new_seqs )
 
-def write_outputs( filename, seq_list ):
-    if filename:
-        with open( filename, 'w' ) as open_file:
+def write_outputs( seq_file, seq_list, map_file, out_map ):
+    if seq_file:
+        with open( seq_file, 'w' ) as open_file:
             for current_seq in seq_list:
                 open_file.write( str( current_seq ) )
+    if map_file:
+        with open( map_file, 'w' ) as open_file:
+            for seq, values in out_map.items():
+                out_str = "%s\t%s\n" % ( seq.name, ','.join( [ item.name for item in values ] ) )
+                open_file.write( out_str )
+        
 
 if __name__ == '__main__':
     main()
