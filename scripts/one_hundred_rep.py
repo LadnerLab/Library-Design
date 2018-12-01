@@ -26,6 +26,7 @@ def main():
     print( "Number of seqs in output:   %d" % len( final_seqs ) )
 
     # write the output fasta and map file out
+    write_outputs( args.representatives, final_seqs )
 
 class Sequence:
     def __init__( self, name, seq ):
@@ -100,7 +101,7 @@ def get_one_hundred_reps( seq_list, indexer, do_map = False ):
         current_ref = indexed_seqs[ index ]
         index += 1
 
-        for seq_index in range( len( indexed_seqs ) - index ):
+        for seq_index in range( index, len( indexed_seqs ) ):
             current = indexed_seqs[ seq_index ]
             if current.seq in current_ref.seq:
                 seqs_set.remove( current )
@@ -117,6 +118,12 @@ def get_unique_sequences( seq_list ):
     new_names, new_seqs = oligo.get_unique_sequences( names_list, seq_list )
 
     return seq_fact.create_seq_list( new_names, new_seqs )
+
+def write_outputs( filename, seq_list ):
+    if filename:
+        with open( filename, 'w' ) as open_file:
+            for current_seq in seq_list:
+                open_file.write( str( current_seq ) )
 
 if __name__ == '__main__':
     main()
