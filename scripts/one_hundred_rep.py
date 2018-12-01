@@ -98,28 +98,23 @@ def get_one_hundred_reps( seq_list, indexer, do_map = False ):
 
     unique_seqs = get_unique_sequences( seq_list )
 
-    indexed_seqs = indexer.index( unique_seqs, reverse = True )
+    indexed_seqs = indexer.index( unique_seqs, reverse = False )
     seqs_set     = set( indexed_seqs )
+    seqs_str_set = set( [ item.seq for item in indexed_seqs ] )
+    out_seqs     = set()
 
     index = 0
-    while index < len( seqs_set ):
-        current_ref = indexed_seqs[ index ]
-        index += 1
+    combined_string = ''.join( seqs_str_set )
 
-        if do_map:
-            out_map[ current_ref ] = [ current_ref ]
+    for current_seq in indexed_seqs:
+        seqs_str_set.remove( current_seq.seq )
+        combined_string = ''.join( seqs_str_set )
 
-        for seq_index in range( index, len( indexed_seqs ) ):
-            current = indexed_seqs[ seq_index ]
-            if current.seq in current_ref.seq:
-                seqs_set.remove( current )
+        if current_seq.seq not in combined_string:
+            out_seqs.add( current_seq )
 
-                if do_map:
-                    out_map[ current_ref ].append( current )
-                    
 
-        indexed_seqs = indexer.index( seqs_set, reverse = True )
-    return list( seqs_set ), out_map
+    return list( out_seqs ), out_map
 
 def get_unique_sequences( seq_list ):
     seq_fact = SequenceFactory()
