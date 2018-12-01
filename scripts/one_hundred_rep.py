@@ -88,32 +88,29 @@ class SortIndexer( Indexer ):
         return( sorted( in_list, key = self.sort_key, reverse = reverse ) )
 
 def get_one_hundred_reps( seq_list, indexer, do_map = False ):
-    seqs_set     = set()
-    out_seqs     = list()
-
     out_map      = None
+    out_dict = {}
+    added = False
 
     if do_map:
-        out_map = {}
+        out_map = out_dict
 
     unique_seqs = get_unique_sequences( seq_list )
 
-    indexed_seqs = indexer.index( unique_seqs, reverse = False )
-    seqs_set     = set( indexed_seqs )
-    seqs_str_set = set( [ item.seq for item in indexed_seqs ] )
+    indexed_seqs = indexer.index( unique_seqs, reverse = True )
     out_seqs     = set()
 
-    index = 0
-    combined_string = ''.join( seqs_str_set )
-
     for current_seq in indexed_seqs:
-        seqs_str_set.remove( current_seq.seq )
-        combined_string = ''.join( seqs_str_set )
-
-        if current_seq.seq not in combined_string:
+        for seq, value in out_dict.items():
+            if current_seq.seq in seq.seq:
+                out_dict[ seq ].append( current_seq )
+                added = True
+                break
+        if not added:
+            out_dict[ current_seq ] = list()
             out_seqs.add( current_seq )
-
-
+        added = False
+            
     return list( out_seqs ), out_map
 
 def get_unique_sequences( seq_list ):
