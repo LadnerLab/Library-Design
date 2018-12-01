@@ -22,7 +22,8 @@ def main():
     # get the 100% reps for each sequence
     final_seqs, map_out = get_one_hundred_reps( input_seqs, indexer, args.map )
 
-    print( len( final_seqs ) )
+    print( "Number of seqs in original: %d" % len( input_seqs ) )
+    print( "Number of seqs in output:   %d" % len( final_seqs ) )
 
     # write the output fasta and map file out
 
@@ -116,7 +117,7 @@ def get_unique_sequences( seq_list ):
     new_names, new_seqs = oligo.get_unique_sequences( names_list, seq_list )
 
     return seq_fact.create_seq_list( new_names, new_seqs )
-    
+
 if __name__ == '__main__':
     main()
 
