@@ -3,6 +3,7 @@
 #include <omp.h>
 #include <getopt.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "protein_oligo_library.h"
 #include "array_list.h"
@@ -27,8 +28,15 @@ int main( int argc, char **argv )
 
     FILE *file = NULL;
 
+    bool found = false;
+
     sequence_t **in_seqs;
-    sequence_t **out_seqs;
+
+    array_list_t *out_seqs = NULL;
+
+    out_seqs = malloc( sizeof( array_list_t ) );
+
+    ar_init( out_seqs );
 
     while( ( option = getopt( argc, argv, ARGS ) ) != -1 )
         {
@@ -59,7 +67,6 @@ int main( int argc, char **argv )
     printf( "Num Seqs: %d\n", num_seqs );
 
     in_seqs  = malloc( sizeof( sequence_t * ) * num_seqs );
-    out_seqs = malloc( sizeof( sequence_t * ) * num_seqs );
 
     read_sequences( file, in_seqs );
 
@@ -78,13 +85,33 @@ int main( int argc, char **argv )
         {
             in_seqs[ index ] = &copy_seqs[ index ];
         }
-    free( copy_seqs );
 
+    for( outer_index = 1; outer_index < num_seqs; outer_index ++ )
+        {
+            found = false;
+            for( inner_index = 0; inner_index < outer_index; inner_index++ )
+                {
+                    if( strstr( in_seqs[ outer_index ]->sequence->data,
+                                in_seqs[ inner_index ]->sequence->data
+                              )
+                      )
+                        {
+                            found = true;
+                            break;
+                        }
+                }
+            if( !found )
+                {
+                    ar_add( out_seqs, in_seqs[ outer_index ] );
+                }
+                 
+        }
+
+    printf( "Output seqs: %d\n", out_seqs->size );
     for( index = 0; index < num_seqs; index++ )
         {
             ds_clear( in_seqs[ index ]->sequence );
             free( in_seqs[ index ]->sequence );
-            free( in_seqs[ index ] );
         }
 
     free( in_seqs );
