@@ -84,7 +84,6 @@ void ds_add( dynamic_string_t* input, char string[] )
 void ds_clear( dynamic_string_t* input )
 {
     free( input->data );
-    free( input );
 }
 
 
