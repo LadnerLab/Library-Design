@@ -11,11 +11,15 @@ const int NUM_THREADS   = 4;
 const int MAX_NUM_CHARS = 256;
 const char *ARGS        = "f:n:";
 
+int seq_compare( const void *a, const void *b );
+
 int main( int argc, char **argv )
 {
     int num_threads = NUM_THREADS;
     int option      = 0;
     int index       = 0;
+    int inner_index = 0;
+    int outer_index = 0;
     int num_seqs    = 0;
 
     char in_file[ MAX_NUM_CHARS ];
@@ -61,6 +65,21 @@ int main( int argc, char **argv )
 
     fclose( file );
 
+    sequence_t *copy_seqs = malloc( sizeof( sequence_t ) * num_seqs );
+
+    for( index = 0; index < num_seqs; index++ )
+        {
+            copy_seqs[ index ] = *in_seqs[ index ];
+        }
+
+    qsort( copy_seqs, num_seqs, sizeof( sequence_t ), seq_compare );
+
+    for( index = 0; index < num_seqs; index++ )
+        {
+            in_seqs[ index ] = &copy_seqs[ index ];
+        }
+    free( copy_seqs );
+
     for( index = 0; index < num_seqs; index++ )
         {
             ds_clear( in_seqs[ index ]->sequence );
@@ -72,4 +91,12 @@ int main( int argc, char **argv )
     free( out_seqs );
 
     return EXIT_SUCCESS;
+}
+
+int seq_compare( const void *a, const void *b )
+{
+    const sequence_t *first  = a;
+    const sequence_t *second = b;
+
+    return first->sequence->size - second->sequence->size;
 }
