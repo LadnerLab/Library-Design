@@ -61,6 +61,15 @@ int main( int argc, char **argv )
 
     fclose( file );
 
+    for( index = 0; index < num_seqs; index++ )
+        {
+            ds_clear( in_seqs[ index ]->sequence );
+            free( in_seqs[ index ]->sequence );
+            free( in_seqs[ index ] );
+        }
+
+    free( in_seqs );
+    free( out_seqs );
 
     return EXIT_SUCCESS;
 }
