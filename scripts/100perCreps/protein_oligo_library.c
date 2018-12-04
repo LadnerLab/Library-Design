@@ -49,8 +49,10 @@ void read_sequences( FILE* file_to_read, sequence_t** in_sequence )
     int has_line;
     int index = 0;
 
-    dynamic_string_t* line = (dynamic_string_t*) malloc( sizeof( dynamic_string_t ) );
-    dynamic_string_t* sequence = malloc( sizeof( dynamic_string_t ) );
+    dynamic_string_t* line     = (dynamic_string_t*) malloc( sizeof( dynamic_string_t ) );
+    dynamic_string_t* sequence = NULL;
+
+    ds_init( line );
 
     has_line = get_a_line( file_to_read, line );
     while( has_line )
@@ -62,19 +64,22 @@ void read_sequences( FILE* file_to_read, sequence_t** in_sequence )
                     sequence = malloc( sizeof( dynamic_string_t ) );
                     ds_init( sequence );
 
-                    in_sequence[ index ]->name = line->data;
+                    in_sequence[ index ]->name     = line->data;
                     in_sequence[ index ]->sequence = sequence; 
                     index++;
+
                 }
             else
                 {
                     ds_add( sequence, line->data );
                 }
+            ds_clear( line );
             ds_init( line );
             has_line = get_a_line( file_to_read, line );
         }
 
     ds_clear( line );
+    free( line );
 }
 
 void write_fastas( sequence_t** in_seqs, int num_seqs, char* output )
@@ -129,7 +134,6 @@ int get_a_line( FILE* stream, dynamic_string_t* to_read )
 {
     char current_char[ 256 ] ;
 
-    ds_init( to_read );
     if( fgets( current_char, 256, stream ) ) 
         {
             ds_add( to_read, current_char );
