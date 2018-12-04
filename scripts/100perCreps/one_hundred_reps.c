@@ -23,6 +23,8 @@ int main( int argc, char **argv )
 
     FILE *file = NULL;
 
+    sequence_t **in_seqs;
+    sequence_t **out_seqs;
 
     while( ( option = getopt( argc, argv, ARGS ) ) != -1 )
         {
@@ -51,6 +53,14 @@ int main( int argc, char **argv )
     num_seqs = count_seqs_in_file( file );
 
     printf( "Num Seqs: %d\n", num_seqs );
+
+    in_seqs  = malloc( sizeof( sequence_t * ) * num_seqs );
+    out_seqs = malloc( sizeof( sequence_t * ) * num_seqs );
+
+    read_sequences( file, in_seqs );
+
+    fclose( file );
+
 
     return EXIT_SUCCESS;
 }
