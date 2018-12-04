@@ -3,28 +3,12 @@
 
 #include "dynamic_string.h"
 #include "array_list.h"
-#include "hash_table.h"
-#include "set.h"
 
 typedef struct sequence_t
 {
     char* name;
     dynamic_string_t* sequence;
 } sequence_t;
-
-typedef struct subset_data_t
-{
-    unsigned int start;
-    unsigned int end;
-} subset_data_t;
-
-typedef struct blosum_data_t
-{
-    char* letter_data;
-    hash_table_t* blosum_table;
-    
-} blosum_data_t;
-
 
 
 /**
@@ -94,91 +78,6 @@ void write_fastas( sequence_t** in_seqs, int num_seqs, char* output );
  **/
 void remove_char_from_string( char* test_string, char to_remove );
 
-/**
- * Determines whether a given sequence is or is not valid
- * @param sequence String sequence to be tested
- * @param minimum length of non dash characters needed to be present
-          in order for the string to count
- * @param percent_valid Percentage of characters needed to be non-dash in order
-          for the string to count
-**/
-int is_valid_sequence( char* sequence, int min_length, float percent_valid );
-/**
- * Appends all valid xmers within a sequence to a hashtable
- * @param in_hash pointer to hash_table to add the valid xmers to
- * @param in_seq pointer to string to create a subset of 
- * @param window_size integer number of characters to capture with each iteration
- * @param step_size integer number of characters to move over after each iteration
- * @returns pointer to hash table containing all of the subsets of the sequence, 
- *          as key, and an array list of subset_data_t as key containing start/end
- **/ 
-hash_table_t* create_xmers_with_locs( hash_table_t* in_hash, char* name,
-                                      char* in_seq,
-                                      int window_size, int step_size );
-
-/**
- * Break a ymer down into into the unique locations of its xmers
- * @param in_ymer_name string name of the ymer input to method
- * @param in_ymer string ymer
- * @param in_xmer_table pointer to xmer table containing xmers to search
- * @param window_size integer size of each xmer
- * @param step_size integer amount to move over after each ymer capture
- * @param permute boolean option to permute xmer functional groups
- * @param blosum_data pointer to blosum_data_t containing the data found from a blosum
-          matrix file
- *         Note: if the -b flag is not used, this will be NULL
- * @param blosum_cutoff integer cutoff score that means a change
- *        will be made
-
- * @returns set of strings containing the locations of in_ymer's xmers
- **/
-set_t* component_xmer_locs( char* in_ymer_name, char* in_ymer,
-                            set_t* out_ymer,
-                            hash_table_t* in_xmer_table,
-                            int window_size, int step_size,
-                            blosum_data_t* blosum_data,
-                            int blosum_cutoff,
-                            int permute
-                          );
-/**
- * Break a ymer down into its xmers, the value of each xmer is NULL
- * @param in_hash pointer to hash_table to add the valid xmers to
- * @param in_seq pointer to string to create a subset of 
- * @param window_size integer number of characters to capture with each iteration
- * @param step_size integer number of characters to move over after each iteration
- * @param permute boolean option whether or not xmer permutation should be done
- * @param blosum_data pointer to blosum_data_t containing the data found from a blosum
- *         matrix file
- *         Note: if the -b flag is not used, this will be NULL
- * @param blosum_cutoff integer cutoff score that means a change
- *        will be made
-
- * @returns pointer to hash table containing all of the subsets of the sequence, 
- *          as key, and an array list of subset_data_t as key containing start/end
- **/
-hash_table_t* subset_lists( hash_table_t* in_hash,
-                            char* in_seq,
-                            int window_size, int step_size,
-                            blosum_data_t* blosum_data,
-                            int blosum_cutoff,
-                            int permute
-                          );
-
-
-/**
- *  Frees all of the pointers found in in_data array_list
- *  @param in_data array_list of pointers to be free'd
- **/
-void free_data( array_list_t* in_data );
-
-/**
- * allocates num_bytes of memory, stores the pointer in an array list
- * and returns the pointer given by malloc
- * @param data pointer to array_list to hold pointers
- * @param num_bytes number of bytes to allocate
- * @returns integer boolean success of operation 
-**/
-void *malloc_track( array_list_t* data, int num_bytes );
 
 /**
  * Calculates the number of subsequences created, using
@@ -190,32 +89,5 @@ void *malloc_track( array_list_t* data, int num_bytes );
  * */
 int calc_num_subseqs( int length, int window_size );
 
-
-/**
- * Creates each 1-permutation of an kmer, based on the functional groupings of 
- * amino acids.
- * @param str_to_change kmer to change
- * @param permutations pointer to array_list_t in which to store a kmer's permutations
- * @param blosum_data pointer to blosum_data_t containing the data found from a blosum
- *         matrix file
- *         Note: if the -b flag is not used, this will be NULL
- * @param blosum_cutoff integer cutoff score that means a change
- *        will be made
- **/
-void permute_xmer_functional_groups( char* str_to_change,
-                                     array_list_t* permutations,
-                                     blosum_data_t* blosum_data,
-                                     int blosum_cutoff
-                                   );
-
-/**
- * Parses a blosum file containing a blosum substitution
- * matrix
- * @param file_name string name of file to open and parse
- * @returns blosum_data_t* pointer to struct containing
- *          an array of character amino acids found in the file,
- *          and integer array of distances between these amino acids
- **/
-blosum_data_t* parse_blosum_file( FILE* file_name );
 
 #endif
