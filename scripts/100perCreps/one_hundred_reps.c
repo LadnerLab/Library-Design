@@ -86,28 +86,28 @@ int main( int argc, char **argv )
             in_seqs[ index ] = &copy_seqs[ index ];
         }
 
-    for( outer_index = 1; outer_index < num_seqs; outer_index ++ )
+    for( outer_index = 0; outer_index < num_seqs; outer_index++ )
         {
             found = false;
-            for( inner_index = 0; inner_index < outer_index; inner_index++ )
+            for( inner_index = outer_index + 1; inner_index < num_seqs; inner_index++ )
                 {
-                    if( strstr( in_seqs[ outer_index ]->sequence->data,
-                                in_seqs[ inner_index ]->sequence->data
+                    if( strstr( in_seqs[ inner_index]->sequence->data,
+                                in_seqs[ outer_index ]->sequence->data
                               )
                       )
                         {
                             found = true;
                             break;
                         }
+
                 }
             if( !found )
-                {
-                    ar_add( out_seqs, in_seqs[ outer_index ] );
-                }
-                 
+                ar_add( out_seqs, in_seqs[ outer_index ] );
         }
 
     printf( "Output seqs: %d\n", out_seqs->size );
+
+    write_fastas( (sequence_t**)out_seqs->array_data, out_seqs->size, out_file );
     for( index = 0; index < num_seqs; index++ )
         {
             ds_clear( in_seqs[ index ]->sequence );
