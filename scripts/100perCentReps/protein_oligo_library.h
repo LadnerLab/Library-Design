@@ -8,6 +8,7 @@ typedef struct sequence_t
 {
     char* name;
     dynamic_string_t* sequence;
+    char collapsed;
 } sequence_t;
 
 
