@@ -7,10 +7,11 @@
 
 #include "protein_oligo_library.h"
 #include "array_list.h"
+#include "hash_table.h"
 
 const int NUM_THREADS   = 4;
 const int MAX_NUM_CHARS = 256;
-const char *ARGS        = "f:n:";
+const char *ARGS        = "f:n:m:";
 
 int seq_compare( const void *a, const void *b );
 
@@ -33,8 +34,15 @@ int main( int argc, char **argv )
     sequence_t **in_seqs;
 
     array_list_t *out_seqs = NULL;
+    array_list_t *new_list = NULL;
 
     sequence_t **intermed_seqs = NULL;
+    hash_table_t *map_table    = NULL;
+    HT_Entry *items = NULL;
+    char map_file[ MAX_NUM_CHARS ];
+    int TABLE_SIZE = 0;
+
+    bool map_file_included = false;
 
     out_seqs = malloc( sizeof( array_list_t ) );
 
@@ -52,6 +60,9 @@ int main( int argc, char **argv )
                     case 'n':
                         num_threads = atoi( optarg );
                         break;
+                    case 'm':
+                        map_file_included = true;
+                        break;
                     default:
                         printf( "Incorrect argument supplied!\n" );
 
@@ -62,6 +73,8 @@ int main( int argc, char **argv )
 
     file = fopen( in_file, "r" );
 
+
+
     omp_set_num_threads( num_threads );
 
     if( !file )
@@ -71,8 +84,15 @@ int main( int argc, char **argv )
         }
 
     num_seqs = count_seqs_in_file( file );
+    TABLE_SIZE = num_seqs;
 
     printf( "Num Seqs: %d\n", num_seqs );
+
+    if( map_file_included )
+        {
+            map_table = malloc( sizeof( hash_table_t ) );
+            ht_init( map_table, TABLE_SIZE );
+        }
 
     in_seqs  = malloc( sizeof( sequence_t * ) * num_seqs );
     intermed_seqs = calloc( num_seqs, sizeof( sequence_t *) );
@@ -107,6 +127,30 @@ int main( int argc, char **argv )
                       )
                         {
                             found = true;
+
+
+                            if( map_table )
+                                {
+
+                                    #pragma omp critical
+                                    {
+                                        in_seqs[ outer_index ]->collapsed = 1;
+
+                                        if( in_seqs[ inner_index ]->collapsed == 0 )
+                                            {
+                                                new_list = ht_find( map_table, in_seqs[ inner_index ]->name );
+                                                if( !new_list )
+                                                    {
+                                                        new_list = malloc( sizeof( array_list_t ) );
+                                                        ar_init( new_list );
+                                                        ht_add( map_table, in_seqs[ inner_index ]->name, new_list );
+
+                                                    }
+                                                ar_add( new_list, in_seqs[ outer_index ] );
+                                            }
+
+                                    }
+                                }
                             break;
                         }
 
@@ -133,6 +177,20 @@ int main( int argc, char **argv )
 
     free( in_seqs );
     free( out_seqs );
+
+    if( map_file_included )
+        {
+            items = ht_get_items( map_table );
+            uint32_t table_index = 0;
+
+            for( table_index = 0; table_index < map_table->size; table_index++ )
+                {
+                    ar_clear( items[ table_index ].value );
+                }
+            ht_clear( map_table );
+            free( items );
+            free( map_table );
+        }
 
     return EXIT_SUCCESS;
 }
