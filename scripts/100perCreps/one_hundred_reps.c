@@ -34,6 +34,8 @@ int main( int argc, char **argv )
 
     array_list_t *out_seqs = NULL;
 
+    sequence_t **intermed_seqs = NULL;
+
     out_seqs = malloc( sizeof( array_list_t ) );
 
     ar_init( out_seqs );
@@ -56,6 +58,8 @@ int main( int argc, char **argv )
 
     file = fopen( in_file, "r" );
 
+    omp_set_num_threads( num_threads );
+
     if( !file )
         {
             printf( "ERROR: %s could not be found, program will exit...\n", in_file );
@@ -67,6 +71,7 @@ int main( int argc, char **argv )
     printf( "Num Seqs: %d\n", num_seqs );
 
     in_seqs  = malloc( sizeof( sequence_t * ) * num_seqs );
+    intermed_seqs = calloc( num_seqs, sizeof( sequence_t *) );
 
     read_sequences( file, in_seqs );
 
@@ -86,6 +91,7 @@ int main( int argc, char **argv )
             in_seqs[ index ] = &copy_seqs[ index ];
         }
 
+    #pragma omp parallel for private( outer_index, inner_index, found ) shared( intermed_seqs, in_seqs, num_seqs ) schedule( dynamic )
     for( outer_index = 0; outer_index < num_seqs; outer_index++ )
         {
             found = false;
@@ -102,9 +108,16 @@ int main( int argc, char **argv )
 
                 }
             if( !found )
-                ar_add( out_seqs, in_seqs[ outer_index ] );
+                intermed_seqs[ outer_index ] = in_seqs[ outer_index ];
         }
 
+    for( index = 0; index < num_seqs; index++ )
+        {
+            if( intermed_seqs[ index ] )
+                {
+                    ar_add( out_seqs, intermed_seqs[ index ] );
+                }
+        }
     printf( "Output seqs: %d\n", out_seqs->size );
 
     write_fastas( (sequence_t**)out_seqs->array_data, out_seqs->size, out_file );
