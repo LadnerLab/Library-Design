@@ -67,7 +67,7 @@ void read_sequences( FILE* file_to_read, sequence_t** in_sequence )
                     ds_init( sequence );
 
                     strcpy( new_name, line->data );
-                    in_sequence[ index ]->name     = new_name;
+                    in_sequence[ index ]->name = new_name;
                     in_sequence[ index ]->sequence = sequence; 
                     index++;
 
@@ -135,7 +135,7 @@ int count_seqs_in_file( FILE* data_file )
 
 int get_a_line( FILE* stream, dynamic_string_t* to_read )
 {
-    char current_char[ 1024 ] ;
+    char current_char[ 1024 ];
 
     if( fgets( current_char, 1024, stream ) ) 
         {
