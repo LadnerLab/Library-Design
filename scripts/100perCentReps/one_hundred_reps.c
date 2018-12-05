@@ -52,6 +52,10 @@ int main( int argc, char **argv )
                     case 'n':
                         num_threads = atoi( optarg );
                         break;
+                    default:
+                        printf( "Incorrect argument supplied!\n" );
+
+                        return EXIT_FAILURE;
                     
                 }
         }
