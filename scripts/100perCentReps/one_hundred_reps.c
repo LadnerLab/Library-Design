@@ -14,6 +14,7 @@ const int MAX_NUM_CHARS = 256;
 const char *ARGS        = "f:n:m:";
 
 int seq_compare( const void *a, const void *b );
+void write_map( hash_table_t *table, char *filename );
 
 int main( int argc, char **argv )
 {
@@ -61,6 +62,7 @@ int main( int argc, char **argv )
                         num_threads = atoi( optarg );
                         break;
                     case 'm':
+                        strcpy( map_file, optarg );
                         map_file_included = true;
                         break;
                     default:
@@ -144,9 +146,10 @@ int main( int argc, char **argv )
                                                         new_list = malloc( sizeof( array_list_t ) );
                                                         ar_init( new_list );
                                                         ht_add( map_table, in_seqs[ inner_index ]->name, new_list );
+                                                        ar_add( new_list, in_seqs[ inner_index ]->name );
 
                                                     }
-                                                ar_add( new_list, in_seqs[ outer_index ] );
+                                                ar_add( new_list, in_seqs[ outer_index ]->name );
                                             }
 
                                     }
@@ -167,6 +170,11 @@ int main( int argc, char **argv )
                 }
         }
     printf( "Output seqs: %d\n", out_seqs->size );
+
+    if( map_file_included )
+        {
+            write_map( map_table, map_file );
+        }
 
     write_fastas( (sequence_t**)out_seqs->array_data, out_seqs->size, out_file );
     for( index = 0; index < num_seqs; index++ )
@@ -201,4 +209,33 @@ int seq_compare( const void *a, const void *b )
     const sequence_t *second = b;
 
     return first->sequence->size - second->sequence->size;
+}
+
+void write_map( hash_table_t *table, char *filename )
+{
+    HT_Entry *ht_items        = NULL;
+    array_list_t *current_arr = NULL;
+    FILE *out_file            = NULL;
+
+    uint32_t index       = 0;
+    uint32_t inner_index = 0;
+
+    out_file = fopen( filename, "w" );
+
+    if( out_file )
+        {
+            ht_items = ht_get_items( table );
+            for( index = 0; index < table->size; index++ )
+                {
+                    current_arr = ht_items[ index ].value;
+
+                    for( inner_index = 0; inner_index < current_arr->size; inner_index++ )
+                        {
+                            fprintf( out_file, "%s\t", (char*)( current_arr->array_data[ inner_index ] ) );
+                        }
+                    fprintf( out_file, "\n" );
+                }
+            free( ht_items );
+            fclose( out_file );
+        }
 }
