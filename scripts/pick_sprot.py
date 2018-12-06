@@ -47,7 +47,7 @@ def main():
                 out_sprot_seqs[ inner ] = in_sprot_seqs[ inner ]
                 break
         if not added:
-            out_trembl_seqs[ current[ 0 ] ] = in_trembl_seqs[ current[ 0 ] ]
+            out_trembl_seqs[ current[ 0 ].strip() ] = in_trembl_seqs[ current[ 0 ].strip() ]
 
                 
     out_sprot_names = list()
@@ -73,7 +73,7 @@ def parse_map( in_file ):
     with open( in_file, 'r' ) as open_file:
         for line in open_file:
             split_line = line.strip().split( '\t' )
-            out_list.append( split_line )
+            out_list.append( [ item.replace( '>', '') for item in split_line ] )
     return out_list 
             
 
