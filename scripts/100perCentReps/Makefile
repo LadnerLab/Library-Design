@@ -1,4 +1,4 @@
-CFLAGS= -O0 -Wall -Wextra -std=c99 -fopenmp
+CFLAGS= -O0 -Wall -Wextra -std=c99 
 
 one_hundred_reps: one_hundred_reps.o array_list.o dynamic_string.o protein_oligo_library.o hash_table.o
 	gcc $(CFLAGS) one_hundred_reps.o array_list.o dynamic_string.o protein_oligo_library.o hash_table.o -lpthread -o one_hundred_reps

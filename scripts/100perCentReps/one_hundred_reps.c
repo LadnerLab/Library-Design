@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <omp.h>
 #include <getopt.h>
 #include <string.h>
 #include <stdbool.h>
@@ -11,14 +10,13 @@
 
 const int NUM_THREADS   = 4;
 const int MAX_NUM_CHARS = 256;
-const char *ARGS        = "f:n:m:";
+const char *ARGS        = "f:m:";
 
 int seq_compare( const void *a, const void *b );
 void write_map( hash_table_t *table, char *filename );
 
 int main( int argc, char **argv )
 {
-    int num_threads = NUM_THREADS;
     int option      = 0;
     int index       = 0;
     int inner_index = 0;
@@ -58,9 +56,6 @@ int main( int argc, char **argv )
                         strcpy( out_file, optarg );
                         strcat( out_file, "_out" );
                         break;
-                    case 'n':
-                        num_threads = atoi( optarg );
-                        break;
                     case 'm':
                         strcpy( map_file, optarg );
                         map_file_included = true;
@@ -74,10 +69,6 @@ int main( int argc, char **argv )
         }
 
     file = fopen( in_file, "r" );
-
-
-
-    omp_set_num_threads( num_threads );
 
     if( !file )
         {
@@ -117,7 +108,6 @@ int main( int argc, char **argv )
             in_seqs[ index ] = &copy_seqs[ index ];
         }
 
-    #pragma omp parallel for private( outer_index, inner_index, found ) shared( intermed_seqs, in_seqs, num_seqs ) schedule( dynamic )
     for( outer_index = 0; outer_index < num_seqs; outer_index++ )
         {
             found = false;
@@ -134,8 +124,6 @@ int main( int argc, char **argv )
                             if( map_table )
                                 {
 
-                                    #pragma omp critical
-                                    {
                                         in_seqs[ outer_index ]->collapsed = 1;
 
                                         if( in_seqs[ inner_index ]->collapsed == 0 )
@@ -152,7 +140,6 @@ int main( int argc, char **argv )
                                                 ar_add( new_list, in_seqs[ outer_index ]->name );
                                             }
 
-                                    }
                                 }
                             break;
                         }
