@@ -63,7 +63,7 @@ void read_sequences( FILE* file_to_read, sequence_t** in_sequence )
                 {
                     *( in_sequence + index ) = malloc( sizeof( sequence_t ) );
                     sequence = malloc( sizeof( dynamic_string_t ) );
-                    new_name = malloc( line->size );
+                    new_name = malloc( line->size + 1 );
                     ds_init( sequence );
 
                     strcpy( new_name, line->data );
