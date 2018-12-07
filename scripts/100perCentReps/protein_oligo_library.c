@@ -136,9 +136,9 @@ int count_seqs_in_file( FILE* data_file )
 
 int get_a_line( FILE* stream, dynamic_string_t* to_read )
 {
-    char current_char[ 3096 ];
+    char current_char[ 16384 ];
 
-    if( fgets( current_char, 3096, stream ) ) 
+    if( fgets( current_char, 16384, stream ) ) 
         {
             ds_add( to_read, current_char );
             return true;
