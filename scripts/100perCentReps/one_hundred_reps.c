@@ -90,11 +90,6 @@ int main( int argc, char **argv )
 
     printf( "Num Seqs: %d\n", num_seqs );
 
-    if( map_file_included )
-        {
-            map_table = malloc( sizeof( hash_table_t ) );
-            ht_init( map_table, TABLE_SIZE );
-        }
 
     in_seqs  = malloc( sizeof( sequence_t * ) * num_seqs );
     intermed_seqs = calloc( num_seqs, sizeof( sequence_t *) );
@@ -117,7 +112,22 @@ int main( int argc, char **argv )
             in_seqs[ index ] = &copy_seqs[ index ];
         }
 
-    #pragma omp parallel for private( outer_index, inner_index, found ) shared( intermed_seqs, in_seqs, num_seqs ) schedule( dynamic )
+
+    if( map_file_included )
+        {
+            map_table = malloc( sizeof( hash_table_t ) );
+            ht_init( map_table, TABLE_SIZE );
+
+            for( index = 0; index < num_seqs; index++ )
+                {
+                    new_list = malloc( sizeof( array_list_t ) );
+                    ar_init( new_list );
+                    ar_add( new_list, in_seqs[ index ] );
+                    ht_add( map_table, in_seqs[ index ]->name, new_list );
+                }
+        }
+
+    #pragma omp parallel for private( outer_index, inner_index, found, new_list ) shared( intermed_seqs, in_seqs, num_seqs, map_table ) schedule( dynamic )
     for( outer_index = 0; outer_index < num_seqs; outer_index++ )
         {
             found = false;
@@ -131,6 +141,8 @@ int main( int argc, char **argv )
                             found = true;
 
 
+
+
                             if( map_table )
                                 {
 
@@ -140,16 +152,17 @@ int main( int argc, char **argv )
 
                                         if( in_seqs[ inner_index ]->collapsed == 0 )
                                             {
+                                                ht_delete( map_table, in_seqs[ outer_index ]->name );
                                                 new_list = ht_find( map_table, in_seqs[ inner_index ]->name );
-                                                if( !new_list )
-                                                    {
-                                                        new_list = malloc( sizeof( array_list_t ) );
-                                                        ar_init( new_list );
-                                                        ht_add( map_table, in_seqs[ inner_index ]->name, new_list );
-                                                        ar_add( new_list, in_seqs[ inner_index ]->name );
+                                                /* if( !new_list ) */
+                                                /*     { */
+                                                /*         new_list = malloc( sizeof( array_list_t ) ); */
+                                                /*         ar_init( new_list ); */
+                                                /*         ht_add( map_table, in_seqs[ outer_index ]->name, new_list ); */
+                                                /*         ar_add( new_list, in_seqs[ inner_index ]->name ); */
 
-                                                    }
-                                                ar_add( new_list, in_seqs[ outer_index ]->name );
+                                                /*     } */
+                                                ar_add( new_list, in_seqs[ outer_index ] );
                                             }
 
                                     }
@@ -220,6 +233,8 @@ void write_map( hash_table_t *table, char *filename )
     uint32_t index       = 0;
     uint32_t inner_index = 0;
 
+    sequence_t *current_data = NULL;
+
     out_file = fopen( filename, "w" );
 
     if( out_file )
@@ -228,12 +243,20 @@ void write_map( hash_table_t *table, char *filename )
             for( index = 0; index < table->size; index++ )
                 {
                     current_arr = ht_items[ index ].value;
+                    current_data = current_arr->array_data[ 0 ];
 
-                    for( inner_index = 0; inner_index < current_arr->size; inner_index++ )
+                    if( current_arr->size > 0 && current_data->collapsed == 0 )
                         {
-                            fprintf( out_file, "%s\t", (char*)( current_arr->array_data[ inner_index ] ) );
+                            for( inner_index = 0; inner_index < current_arr->size; inner_index++ )
+                                {
+                                    current_data = ar_get( current_arr, inner_index );
+                                    if( current_data->collapsed == 0 )
+                                        {
+                                            fprintf( out_file, "%s\t", current_data->name );
+                                        }
+                                }
+                            fprintf( out_file, "\n" );
                         }
-                    fprintf( out_file, "\n" );
                 }
             free( ht_items );
             fclose( out_file );
