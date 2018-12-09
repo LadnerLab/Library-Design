@@ -95,6 +95,8 @@ def main():
             toCluster[family][genus]={}
             for s,sd in species.items():
                 toCluster[family][genus][s]={}
+                if len(sd['names']) != len(sd['seqs']):
+                    print (family,genus,s)
                 if len(sd['names'])<=args.max:
                     toCluster[family][genus][s]=sd
                     num2fill[(family,genus,s)]=args.max-len(sd['names'])
@@ -111,6 +113,8 @@ def main():
         for genus,species in genera.items():
             if genus not in toCluster[family]: toCluster[family][genus]={}
             for s,sd in species.items():
+                if len(sd['names']) != len(sd['seqs']):
+                    print (family,genus,s)
                 if s not in toCluster[family][genus]: 
                     toCluster[family][genus][s]={"names":[], "seqs":[]}
                     num2fill[(family,genus,s)]=args.max
@@ -140,6 +144,10 @@ def main():
                 names += sd['names']
                 seqs += sd['seqs']
                 print("%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d" % (return_taxname(s, taxmap), return_taxname(genus, taxmap), return_taxname(family, taxmap), s, genus, family, len(sd['seqs']), sum([len(x) for x in sd['seqs']])))
+                if len(sd['names']) != len(sd['seqs']):
+                    print (len(sd['names']),len(sd['seqs']))
+                    print ("\n".join(names))
+                    print ("\n".join(seqs))
         if family:
             thisout="%s/family/%s.fasta" % (args.dir,return_taxname(family, taxmap))
             write_fasta(names,seqs,thisout)
@@ -228,20 +236,20 @@ def choose_random(seqDict,num):
 
 # Extracts data from a fasta sequence file. Returns two lists, the first holds the names of the seqs (excluding the '>' symbol), and the second holds the sequences
 def read_fasta_select(file, IDict):
-    count=0
     #oxpat = re.compile("OX=(\d+)")         #Initialize pattern for parsing OX TaxID from name
     oxxpat = re.compile("OXX=(\d+),(\d*),(\d*),(\d*)")         #Initialize pattern for parsing OXX TaxID from name
 
     seq_dict={}
 
+    count=0
     include=0
+    seq=''
     with open(file, 'r') as fin:
-        seq=''
         for line in fin:
             line=line.strip()
             if line and line[0] == '>':                #indicates the name of the sequence
-
-                if count>1 and include:
+                #If a prior sequence has been encountered that matches a species of interest, write it to the dict
+                if count>=1 and include:
                     # Only grab the first item in the line,
                     # protects against SEQ followed by anything else
                     seq_dict[fam][gen][sp]["seqs"].append(seq.strip().split()[0])
