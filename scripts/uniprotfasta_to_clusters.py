@@ -96,7 +96,7 @@ def main():
             for s,sd in species.items():
                 toCluster[family][genus][s]={}
                 if len(sd['names']) != len(sd['seqs']):
-                    print (family,genus,s)
+                    print ("# names doesn't match # seqs for Sprot for this species:%s,%s,%s" % (family,genus,s))
                 if len(sd['names'])<=args.max:
                     toCluster[family][genus][s]=sd
                     num2fill[(family,genus,s)]=args.max-len(sd['names'])
@@ -114,7 +114,7 @@ def main():
             if genus not in toCluster[family]: toCluster[family][genus]={}
             for s,sd in species.items():
                 if len(sd['names']) != len(sd['seqs']):
-                    print (family,genus,s)
+                    print ("# names doesn't match # seqs in Trembl for this species:%s,%s,%s" % (family,genus,s))
                 if s not in toCluster[family][genus]: 
                     toCluster[family][genus][s]={"names":[], "seqs":[]}
                     num2fill[(family,genus,s)]=args.max
@@ -144,10 +144,6 @@ def main():
                 names += sd['names']
                 seqs += sd['seqs']
                 print("%s\t%s\t%s\t%s\t%s\t%s\t%d\t%d" % (return_taxname(s, taxmap), return_taxname(genus, taxmap), return_taxname(family, taxmap), s, genus, family, len(sd['seqs']), sum([len(x) for x in sd['seqs']])))
-                if len(sd['names']) != len(sd['seqs']):
-                    print (len(sd['names']),len(sd['seqs']))
-                    print ("\n".join(names))
-                    print ("\n".join(seqs))
         if family:
             thisout="%s/family/%s.fasta" % (args.dir,return_taxname(family, taxmap))
             write_fasta(names,seqs,thisout)
