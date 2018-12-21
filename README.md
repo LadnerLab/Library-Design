@@ -22,9 +22,11 @@ Set of scripts to aid design of synthetic Oligonucleotide libraries using a Slur
     A set of k-mer oligonucleotides that can be synthesized for use in serological detection of viral exposure history.
 
 ### Step 1: Grouping Clusters of Similar Kmer-Sizes
+    ~~~
     **Note** This step can be skipped if desired, you will however make your cluster administrator
     happier if you group clusters, as resource demands of large clusters ( > 200,000 k-mer epitopes ) are far greater than the
     demands of smaller clusters (0-50,000 k-mer epitopes).
+    ~~~
 
     Also note that cluster size bounds take the form [ a, b ), a < b.
     Experimentally, the following cluster groupings have been successful in
@@ -45,10 +47,12 @@ Set of scripts to aid design of synthetic Oligonucleotide libraries using a Slur
     of the form clusters_a_b.
 
 ### Step 2: Create the Oligos
-    **Note** for questions concerning to the usage of this script, please see the README found at
+    ~~~
+    **Note** for information concerning to the usage of this script, please see the README found at
     [this link.](https://github.com/LadnerLab/C-KmerOligo)
+    ~~~
 
-    Edit the 'srun' line in [do_clust.sh](scripts/monsoon_scripts/do_clust.sh) with the parameters
+    Edit the `srun` line in [do_clust.sh](scripts/monsoon_scripts/do_clust.sh) with the parameters
     you prefer. 
 
     For each of the directories containing groups of clusters, do the following:
