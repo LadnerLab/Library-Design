@@ -37,7 +37,7 @@ Set of scripts to aid design of synthetic Oligonucleotide libraries using a Slur
 
     For each of the above thresholds, run the following command from the directory outside
     of your clusters:
-    ```
+    ```bash
     ./copy_clusters.sh a b 
     ```
     where a is the lower bound (inclusive), and b is the upper bound (exclusive).
@@ -55,7 +55,7 @@ Set of scripts to aid design of synthetic Oligonucleotide libraries using a Slur
     For each of the directories containing groups of clusters, do the following:
     - Obtain the number of clusters are contained in the grouped directory:
 
-    ```
+    ```bash
     ls base_dir/clusters_a_b/*.fasta | wc -l
     ```
     - Update the #SBATCH lines in [do_clust.sh](scripts/monsoon_scripts/do_clust.sh) with the
@@ -63,20 +63,20 @@ Set of scripts to aid design of synthetic Oligonucleotide libraries using a Slur
       reflect the number of fasta files in the directory.
 
     - Run the script:
-    ```
+    ```bash
         sbatch do_clust.sh base_dir/clusters_a_b logfile_name.txt
     ```
 
 
 ### Step 3: Combine output files and remove duplicated Oligos
     - Combine the output files:
-    ```
+    ```bash
     awk 1 base_dir/clusters_*/*_out_R_1 >> combined_file.fasta
     ```
 
     Often times there will be a few oligos that are not unique in this combined file,
     remove them with:
-    ```
+    ```bash
     remove_duplicate_oligos.py combined_file.fasta
     ```
     This will produce the file combined_file.fasta_unique 
@@ -85,7 +85,7 @@ Set of scripts to aid design of synthetic Oligonucleotide libraries using a Slur
     A map file contains entries that pair every produced oligonucleotide
     with every sequence from the input containing a shared 7-mer.
 
-    ```
+    ```bash
     sbatch validate_maponly.sh combined_file.fasta_unique unclustered_complete_input.fasta
     ```
 
