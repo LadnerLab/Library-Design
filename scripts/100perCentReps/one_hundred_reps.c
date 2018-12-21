@@ -154,14 +154,6 @@ int main( int argc, char **argv )
                                             {
                                                 ht_delete( map_table, in_seqs[ outer_index ]->name );
                                                 new_list = ht_find( map_table, in_seqs[ inner_index ]->name );
-                                                /* if( !new_list ) */
-                                                /*     { */
-                                                /*         new_list = malloc( sizeof( array_list_t ) ); */
-                                                /*         ar_init( new_list ); */
-                                                /*         ht_add( map_table, in_seqs[ outer_index ]->name, new_list ); */
-                                                /*         ar_add( new_list, in_seqs[ inner_index ]->name ); */
-
-                                                /*     } */
                                                 ar_add( new_list, in_seqs[ outer_index ] );
                                             }
 
