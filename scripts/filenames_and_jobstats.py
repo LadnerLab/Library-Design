@@ -71,7 +71,6 @@ def main():
     # initialize variables 
     runner_obj   = SubprocessRunner()
     stats_parser = JobstatsParser()
-    data_parser  = DataParser()
     kmer_parser  = KmerFileParser()
     command      = [ "jobstats", "-p", "-S %s" % args.since ]
 
@@ -85,17 +84,16 @@ def main():
 
     # otherwise, set the data of the parser
     stats_parser.set_data( command_result )
-    data_parser.set_data( args.job_data )
-    kmer_parser.set_data( args.fasta_dir )
+    kmer_parser.set_data( args.job_data )
 
     # parse the data
-    data_info     = DataInfo( data_parser.parse() )
+    kmer_data     = kmer_parser.parse()
     kmer_info     = KmerInfo( args.fasta_dir,
                               args.kmer_size, dir_name = args.fasta_dir
                             )
     jobstats_info = JobstatsInfo( stats_parser.parse() )
 
-    jobstats_info.replace_job_name_with_filename( kmer_info.get_data() )
+    jobstats_info.replace_job_name_with_filename( kmer_data )
 
     # write to output file
     kmer_info.write( args.kmer_output )
@@ -166,7 +164,6 @@ class DataInfo( InfoClass ):
    
 class JobstatsInfo( InfoClass ):
     class JobstatsData( Enum ):
-
         JOB_ID         = 0
         JOB_NAME       = 1
         JOB_REQ_MEM    = 2
@@ -183,8 +180,11 @@ class JobstatsInfo( InfoClass ):
     def replace_job_name_with_filename( self, kmer_dict ):
         stats_data = JobstatsInfo.JobstatsData
         for item in self._data:
-            new_name = kmer_dict[ item[ stats_data.JOB_ID.value ] ]
-            item[ stats_data.JOB_NAME.value ] = new_name
+            try:
+                new_name = kmer_dict[ item[ stats_data.JOB_ID.value ] ]
+                item[ stats_data.JOB_NAME.value ] = new_name
+            except KeyError:
+                pass
 
     def write( self, filename ):
         with open( filename, 'w' ) as open_file:
@@ -203,7 +203,7 @@ class KmerInfo( InfoClass ):
     def _count_kmers( self ):
         out_dict = {}
         filenames = [ item for item in \
-                      os.listdir( self._dir_name ) if item.endswith( '.fasta ' )
+                      os.listdir( self._dir_name ) if '.fasta' in item
                     ]
         for current_file in filenames:
             out_dict[ current_file ] = self._count_kmers_in_file( current_file )
@@ -211,7 +211,7 @@ class KmerInfo( InfoClass ):
 
     def _count_kmers_in_file( self, filename ):
         oligo_set = set()
-        names, sequences = oligo.read_fasta_lists( filename )
+        names, sequences = oligo.read_fasta_lists( self._dir_name + '/' + filename )
 
         for item in sequences:
             oligo_set |= oligo.subset_lists_iter( item, self._kmer_size, 1 )
@@ -238,7 +238,7 @@ class JobstatsParser( Parser ):
 
     def _parse_data( self, str_data ):
         split_data = str_data.split( '\n' )
-        split_data = [ item.strip().split( '|' ) for item in split_data if len( item ) > 0 ]
+        split_data = [ item.strip().split( '|' ) for item in split_data[ 1:: ] if len( item ) > 0 ]
         return split_data
     
 class Runner( ABC ):
