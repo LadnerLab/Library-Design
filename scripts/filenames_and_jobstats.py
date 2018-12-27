@@ -2,6 +2,9 @@
 import argparse                       # for parsing command-line arguments
 import subprocess                     # for getting jobstats data
 from abc import ABC, abstractmethod   # for abstract base class
+import datetime                       # for getting the date and verifying date format
+from enum import Enum                 # for error handling
+import sys                            # for exiting on abnormal execution
 import protein_oligo_library as oligo # for getting kmer-counts
 
 
@@ -53,8 +56,12 @@ def main():
     args = arg_parser.parse_args()
 
     # verify supplied arguments
+    valid_args = verify_arguments( args )
 
     # if incorrect arguments were supplied, inform user and exit
+    if valid_args != ErrorCodes.NO_ERROR:
+        report_argument_error( valid_args )
+        sys.exit( 1 )
 
     # initialize variables 
 
@@ -103,6 +110,29 @@ class SubprocessRunner( Runner ):
 
     def get_last_command( self ):
         return self._last_command
+
+class ErrorCodes( Enum ):
+    DUMMY                       = 0, # first value of an enum is a tuple for some reason
+    NO_ERROR                    = 1,
+    JOB_DATA_FILE_NOT_SUPPLIED  = 2,
+    JOB_DATA_FORMATTING_ERROR   = 3,
+    FASTA_DIR_NOT_FOUND         = 4
+    
+def verify_arguments( args ):
+    if not args.job_data:
+        return ErrorCodes.JOB_DATA_FILE_NOT_SUPPLIED
+    return ErrorCodes.NO_ERROR
+
+def report_argument_error( error_code ):
+    errors = [ "Dummy", "No Error Found",
+               "Job Data file not supplied",
+               "Job Data file is formatted incorrectly",
+               "Directory containing Fasta files either not found "
+               "or is invalid"
+             ]
+
+    print( "ERROR: %s. Program will exit..." % errors[ error_code.value[0] ] )
+
 
 if __name__ == '__main__':
     main()
