@@ -68,9 +68,11 @@ def main():
         sys.exit( 1 )
 
     # initialize variables 
-    runner_obj       = SubprocessRunner()
-    stats_parser     = JobstatsParser()
-    command          = [ "jobstats", "-p", "-S %s" % args.since ]
+    runner_obj   = SubprocessRunner()
+    stats_parser = JobstatsParser()
+    data_parser  = DataParser()
+    kmer_parser  = KmerFileParser()
+    command      = [ "jobstats", "-p", "-S %s" % args.since ]
 
     # call the command of the runner object
     command_result = runner_obj.invoke( command )
@@ -82,9 +84,15 @@ def main():
 
     # otherwise, set the data of the parser
     stats_parser.set_data( command_result )
+    data_parser.set_data( args.job_data )
+    kmer_parser.set_data( args.fasta_dir )
 
     # parse the data
-    job_info = JobstatsInfo( stats_parser.parse() )
+    data_info     = DataInfo( data_parser.parse() )
+    kmer_info     = KmerInfo( kmer_parser.parse(), dir_name = args.fasta_dir )
+    jobstats_info = JobstatsInfo( stats_parser.parse() )
+
+    jobstats_info.replace_job_name_with_filename( kmer_info.get_data() )
 
     # write to output file
 
@@ -101,12 +109,59 @@ class Parser( ABC ):
     def set_data( self, new_data ):
         pass
 
-class FileParser( Parser, ABC ):
+class FileParser( Parser ):
     def __init__( self, filename = None ):
         self._filename = filename 
 
-class JobstatsInfo:
+    def set_data( self, new_data ):
+        self._filename = new_data 
+
+class DataParser( FileParser ):
+    def __init__( self, filename = None ):
+        super().__init__( filename )
+
+    def parse( self ):
+        pass
+
+class KmerFileParser( FileParser ):
+    def __init__( self, filename = None ):
+        super().__init__( filename )
+
+    def parse( self ):
+        with open( self._filename, 'r' ) as open_file:
+            return self._parse_data( open_file )
+
+    def _parse_data( self, file_obj ):
+        out_dict = {}
+        for line in file_obj:
+            split_line = line.strip().split( '|' )
+            cluster_name = split_line[ 0 ]
+            job_id       = split_line[ 1 ]
+
+            out_dict[ job_id ] = cluster_name 
+        return out_dict
+            
+                           
+class InfoClass:
+    def __init__( self, data ):
+        self._data = data
+
+    def get_data( self ):
+        return self._data 
+
+    def write_to( self, filename ):
+        with open( filename, 'w' ) as open_file:
+            for item in self._data:
+                open_file.write( str( item ) + '\n' )
+        
+
+class DataInfo( InfoClass ):
+    def __init__( self, data ):
+        super().__init__( data )
+   
+class JobstatsInfo( InfoClass ):
     class JobstatsData( Enum ):
+
         JOB_ID         = 0
         JOB_NAME       = 1
         JOB_REQ_MEM    = 2
@@ -118,11 +173,21 @@ class JobstatsInfo:
         JOB_STATE      = 8
 
     def __init__( self, data ):
-        self._data = data
+        super().__init__( data )
 
-    def get_data( self ):
-        return self._data
+    def replace_job_name_with_filename( self, kmer_dict ):
+        stats_data = JobstatsInfo.JobstatsData
+        for item in self._data:
+            new_name = kmer_dict[ item[ stats_data.JOB_ID.value ] ]
+            item[ stats_data.JOB_NAME.value ] = new_name
+        print( self._data )
 
+class KmerInfo( InfoClass ):
+    def __init__( self, data, dir_name = None ):
+        super().__init__( data )
+        self._dir_name = dir_name
+        
+    
 class JobstatsParser( Parser ):
     def __init__( self, data = None ):
         self._data = data
@@ -136,7 +201,6 @@ class JobstatsParser( Parser ):
 
     def set_data( self, new_data ):
         self._data = new_data
-        
 
     def _parse_data( self, str_data ):
         split_data = str_data.split( '\n' )
