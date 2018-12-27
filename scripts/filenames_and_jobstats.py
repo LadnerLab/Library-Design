@@ -89,12 +89,15 @@ def main():
 
     # parse the data
     data_info     = DataInfo( data_parser.parse() )
-    kmer_info     = KmerInfo( kmer_parser.parse(), dir_name = args.fasta_dir )
+    kmer_info     = KmerInfo( kmer_parser.parse(),
+                              args.kmer_size, dir_name = args.fasta_dir
+                            )
     jobstats_info = JobstatsInfo( stats_parser.parse() )
 
     jobstats_info.replace_job_name_with_filename( kmer_info.get_data() )
 
     # write to output file
+    kmer_info.write( kmer_output )
 
 
 class Parser( ABC ):
@@ -183,11 +186,36 @@ class JobstatsInfo( InfoClass ):
         print( self._data )
 
 class KmerInfo( InfoClass ):
-    def __init__( self, data, dir_name = None ):
+    def __init__( self, data, kmer_size, dir_name = None ):
         super().__init__( data )
         self._dir_name = dir_name
+        self._kmer_size = kmer_size
+
+        self._size_data = self._count_kmers()
         
-    
+
+    def _count_kmers( self ):
+        out_dict = {}
+        filenames = [ item for item in \
+                      os.listdir( self._dir_name ) if item.endswith( '.fasta ' )
+                    ]
+        for current_file in filenames:
+            out_dict[ current_file ] = self._count_kmers_in_file( current_file )
+        return out_dict
+
+    def _count_kmers_in_file( self, filename ):
+        oligo_set = set()
+        names, sequences = oligo.read_fasta_lists( filename )
+
+        for item in sequences:
+            oligo_set |= oligo.subset_lists_iter( item, self._kmer_size, 1 )
+        return len( oligo_set )
+
+    def write( self, outfile_name ):
+        with open( outfile_name, 'w' ) as open_file:
+            for key, value in self._size_data.items():
+                open_file.write( "%s|%s\n" % ( key, value ) )
+        
 class JobstatsParser( Parser ):
     def __init__( self, data = None ):
         self._data = data
