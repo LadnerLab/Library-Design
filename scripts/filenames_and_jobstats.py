@@ -55,6 +55,10 @@ def main():
     # parse arguments
     args = arg_parser.parse_args()
 
+    # Use today as the default date
+    if not args.since:
+        args.since = str( datetime.date.today() )
+
     # verify supplied arguments
     valid_args = verify_arguments( args )
 
@@ -112,26 +116,32 @@ class SubprocessRunner( Runner ):
         return self._last_command
 
 class ErrorCodes( Enum ):
-    DUMMY                       = 0, # first value of an enum is a tuple for some reason
-    NO_ERROR                    = 1,
-    JOB_DATA_FILE_NOT_SUPPLIED  = 2,
-    JOB_DATA_FORMATTING_ERROR   = 3,
-    FASTA_DIR_NOT_FOUND         = 4
+    NO_ERROR                    = 0
+    JOB_DATA_FILE_NOT_SUPPLIED  = 1
+    JOB_DATA_FORMATTING_ERROR   = 2
+    FASTA_DIR_NOT_FOUND         = 3
+    INVALID_DATE_FORMAT         = 4
     
 def verify_arguments( args ):
+    DATE_FORMAT = '%Y-%m-%d'
     if not args.job_data:
         return ErrorCodes.JOB_DATA_FILE_NOT_SUPPLIED
+    try:
+        datetime.datetime.strptime( args.since, DATE_FORMAT )
+    except ValueError:
+        return ErrorCodes.INVALID_DATE_FORMAT
     return ErrorCodes.NO_ERROR
 
 def report_argument_error( error_code ):
-    errors = [ "Dummy", "No Error Found",
+    errors = [ "No Error Found",
                "Job Data file not supplied",
                "Job Data file is formatted incorrectly",
                "Directory containing Fasta files either not found "
-               "or is invalid"
+               "or is invalid",
+               "Date supplied is not formatted correctly"
              ]
 
-    print( "ERROR: %s. Program will exit..." % errors[ error_code.value[0] ] )
+    print( "ERROR: %s. Program will exit..." % errors[ error_code.value ] )
 
 
 if __name__ == '__main__':
