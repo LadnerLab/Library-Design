@@ -64,15 +64,21 @@ def main():
 
     # if incorrect arguments were supplied, inform user and exit
     if valid_args != ErrorCodes.NO_ERROR:
-        report_argument_error( valid_args )
+        report_error( valid_args )
         sys.exit( 1 )
 
     # initialize variables 
+    runner_obj = SubprocessRunner()
+    # parser     = JobstatsParser()
+    command    = [ "jobstats", "-S %s" % args.since ]
 
     # call the command of the runner object
+    command_result = runner_obj.invoke( command )
 
     # if the return is null, report that the return was non-zero, exit program
-
+    if not command_result:
+        report_error( ErrorCodes.NON_ZERO_EXIT_STATUS )
+        sys.exit( 1 )
 
     # otherwise, set the data of the parser
 
@@ -97,7 +103,7 @@ class Runner( ABC ):
 
 class SubprocessRunner( Runner ):
     def __init__( self ):
-        super.__init__( subprocess.check_output )
+        super().__init__( runner = subprocess.check_output )
 
     def invoke( self, command_arg_list ):
         self._last_command = command_arg_list
@@ -108,7 +114,7 @@ class SubprocessRunner( Runner ):
             self._error = False
             return value
 
-        except subprocess.CalledProcessError:
+        except:
             self._error = True
             return None
 
@@ -121,6 +127,7 @@ class ErrorCodes( Enum ):
     JOB_DATA_FORMATTING_ERROR   = 2
     FASTA_DIR_NOT_FOUND         = 3
     INVALID_DATE_FORMAT         = 4
+    NON_ZERO_EXIT_STATUS        = 5
     
 def verify_arguments( args ):
     DATE_FORMAT = '%Y-%m-%d'
@@ -132,13 +139,14 @@ def verify_arguments( args ):
         return ErrorCodes.INVALID_DATE_FORMAT
     return ErrorCodes.NO_ERROR
 
-def report_argument_error( error_code ):
+def report_error( error_code ):
     errors = [ "No Error Found",
                "Job Data file not supplied",
                "Job Data file is formatted incorrectly",
                "Directory containing Fasta files either not found "
                "or is invalid",
-               "Date supplied is not formatted correctly"
+               "Date supplied is not formatted correctly",
+               "Jobstats returned non-zero exit status"
              ]
 
     print( "ERROR: %s. Program will exit..." % errors[ error_code.value ] )
