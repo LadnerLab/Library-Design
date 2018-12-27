@@ -6,12 +6,51 @@ import protein_oligo_library as oligo # for getting kmer-counts
 
 
 def main():
-    pass
     # create parser object
+    arg_parser = argparse.ArgumentParser( description = "Turn a list of jobid_arrayid|Filename entries into a "
+                                                        "list of items containing parseable runtime stats and kmer counts."
+                                        )
 
     # add program options and arguments
+    arg_parser.add_argument( '-j', '--job_data', type = str,
+                             help = "File containing entries that take the form: "
+                                    "filename|'$SLURM_ARRAY_JOB_ID'_'$SLURM_ARRAY_TASK_ID' "
+                                    "entries, one per line."
+                           )
+
+    arg_parser.add_argument( '-f', '--fasta_dir', type = str,
+                             help = "Directory containing fasta files, "
+                                    "each filename found in the job_data argument "
+                                    "should be found in this directory."
+                                    "Note that if this argument is not provided, "
+                                    "a kmer_count file will not be produced."
+                           )
+
+    arg_parser.add_argument( '-o', '--job_output', type = str, default = 'job_output.txt',
+                             help = "Name of file to write output job data to, each entry "
+                                    "will take the form: job_id|$data, where data is the jobstats "
+                                    "entry for job_id."
+                           )
+
+    arg_parser.add_argument( '-k', '--kmer_output', type = str, default = "kmer_count.txt",
+                             help = "Name of file to write kmer counts to, "
+                                    "one entry will be written per file found in "
+                                    "fasta dir, each entry takes the form: "
+                                    "filename|num_kmers"
+                           )
+
+    arg_parser.add_argument( '-s', '--kmer_size', type = int, default = 9,
+                             help = "Size of kmers to use when counting the number "
+                                    "of kmers in a file."
+                           )
+    arg_parser.add_argument( '-d', '--since', type = str,
+                             help = "Beginning date to gather jobstats data from, "
+                                    "if this argument is not provided, the current day will "
+                                    "be used instead."
+                           )
 
     # parse arguments
+    args = arg_parser.parse_args()
 
     # verify supplied arguments
 
