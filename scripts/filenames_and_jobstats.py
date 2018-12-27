@@ -84,7 +84,7 @@ def main():
     stats_parser.set_data( command_result )
 
     # parse the data
-    print( stats_parser.parse() )
+    job_info = JobstatsInfo( stats_parser.parse() )
 
     # write to output file
 
@@ -104,6 +104,24 @@ class Parser( ABC ):
 class FileParser( Parser, ABC ):
     def __init__( self, filename = None ):
         self._filename = filename 
+
+class JobstatsInfo:
+    class JobstatsData( Enum ):
+        JOB_ID         = 0
+        JOB_NAME       = 1
+        JOB_REQ_MEM    = 2
+        JOB_USED_MEM   = 3
+        JOB_REQ_CPU    = 4
+        JOB_USED_CPU   = 5
+        JOB_TIME_LIMIT = 6
+        JOB_ELAPSED    = 7
+        JOB_STATE      = 8
+
+    def __init__( self, data ):
+        self._data = data
+
+    def get_data( self ):
+        return self._data
 
 class JobstatsParser( Parser ):
     def __init__( self, data = None ):
