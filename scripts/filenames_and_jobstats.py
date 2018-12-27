@@ -179,12 +179,15 @@ class JobstatsInfo( InfoClass ):
 
     def replace_job_name_with_filename( self, kmer_dict ):
         stats_data = JobstatsInfo.JobstatsData
+        new_data = list()
         for item in self._data:
             try:
                 new_name = kmer_dict[ item[ stats_data.JOB_ID.value ] ]
                 item[ stats_data.JOB_NAME.value ] = new_name
+                new_data.append( item )
             except KeyError:
                 pass
+        self._data = new_data
 
     def write( self, filename ):
         with open( filename, 'w' ) as open_file:
