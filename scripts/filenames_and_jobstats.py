@@ -68,9 +68,9 @@ def main():
         sys.exit( 1 )
 
     # initialize variables 
-    runner_obj = SubprocessRunner()
-    # parser     = JobstatsParser()
-    command    = [ "jobstats", "-S %s" % args.since ]
+    runner_obj       = SubprocessRunner()
+    stats_parser     = JobstatsParser()
+    command          = [ "jobstats", "-p", "-S %s" % args.since ]
 
     # call the command of the runner object
     command_result = runner_obj.invoke( command )
@@ -81,11 +81,49 @@ def main():
         sys.exit( 1 )
 
     # otherwise, set the data of the parser
+    stats_parser.set_data( command_result )
 
     # parse the data
+    print( stats_parser.parse() )
 
     # write to output file
 
+
+class Parser( ABC ):
+    def __init__( self ):
+        pass
+
+    @abstractmethod
+    def parse( self ):
+        pass
+
+    @abstractmethod
+    def set_data( self, new_data ):
+        pass
+
+class FileParser( Parser, ABC ):
+    def __init__( self, filename = None ):
+        self._filename = filename 
+
+class JobstatsParser( Parser ):
+    def __init__( self, data = None ):
+        self._data = data
+
+    def parse( self ):
+        return_val = None
+
+        if self._data:
+            return_val = self._parse_data( self._data )
+        return return_val
+
+    def set_data( self, new_data ):
+        self._data = new_data
+        
+
+    def _parse_data( self, str_data ):
+        split_data = str_data.split( '\n' )
+        split_data = [ item.strip().split( '|' ) for item in split_data if len( item ) > 0 ]
+        return split_data
     
 class Runner( ABC ):
     def __init__( self, runner = None ):
@@ -109,7 +147,7 @@ class SubprocessRunner( Runner ):
         self._last_command = command_arg_list
 
         try:
-            value = self._runner( command_arg_list )
+            value = self._runner( command_arg_list ).decode()
             # If we reach this point, runner returned exit status of zero
             self._error = False
             return value
