@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod   # for abstract base class
 import datetime                       # for getting the date and verifying date format
 from enum import Enum                 # for error handling
 import sys                            # for exiting on abnormal execution
+import os                             # for listdir
 import protein_oligo_library as oligo # for getting kmer-counts
 
 
@@ -89,7 +90,7 @@ def main():
 
     # parse the data
     data_info     = DataInfo( data_parser.parse() )
-    kmer_info     = KmerInfo( kmer_parser.parse(),
+    kmer_info     = KmerInfo( args.fasta_dir,
                               args.kmer_size, dir_name = args.fasta_dir
                             )
     jobstats_info = JobstatsInfo( stats_parser.parse() )
