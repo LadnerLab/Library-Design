@@ -97,7 +97,8 @@ def main():
     jobstats_info.replace_job_name_with_filename( kmer_info.get_data() )
 
     # write to output file
-    kmer_info.write( kmer_output )
+    kmer_info.write( args.kmer_output )
+    jobstats_info.write( args.job_output )
 
 
 class Parser( ABC ):
@@ -183,8 +184,12 @@ class JobstatsInfo( InfoClass ):
         for item in self._data:
             new_name = kmer_dict[ item[ stats_data.JOB_ID.value ] ]
             item[ stats_data.JOB_NAME.value ] = new_name
-        print( self._data )
 
+    def write( self, filename ):
+        with open( filename, 'w' ) as open_file:
+            for current in self._data:
+                open_file.write( "%s\n" % '|'.join( current ) )
+                
 class KmerInfo( InfoClass ):
     def __init__( self, data, kmer_size, dir_name = None ):
         super().__init__( data )
