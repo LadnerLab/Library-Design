@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse                       # for parsing command-line arguments
 import subprocess                     # for getting jobstats data
+from abc import ABC, abstractmethod   # for abstract base class
 import protein_oligo_library as oligo # for getting kmer-counts
 
 
@@ -30,14 +31,17 @@ def main():
     # write to output file
 
     
-class Runner:
+class Runner( ABC ):
     def __init__( self, runner = None ):
         self._runner       = runner
         self._error        = False
         self._last_command = ""
 
+    @abstractmethod
     def invoke( self, command, args ):
         pass
+
+    @abstractmethod
     def get_last_command( self ):
         pass
 
