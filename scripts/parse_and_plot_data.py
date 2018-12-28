@@ -19,6 +19,9 @@ def main():
     arg_parser.add_argument( '--max_yval', type = int, default = 9000 ) # multiple of 60
     arg_parser.add_argument( '--yaxis', help = "Data to show on yaxis", type = str, default = "elapsed" )
     arg_parser.add_argument( '--xaxis', help = "Data to show on xaxis", type = str, default = "kmers" )
+    arg_parser.add_argument( '-t', '--title', help = "Chart title to display in center of chart. "
+                                                     "The default will be Xaxis vs Yaxis."
+                           )
 
     args = arg_parser.parse_args()
 
@@ -71,6 +74,8 @@ def main():
     if len( y_axis ) > 0:
         y_tick_vals = get_yvals( y_axis, step_size )
 
+        plot_title = create_plot_title( args.title, args.xaxis, args.yaxis )
+
         ax = plt.subplot()
         ax.set_yticks( y_tick_vals )
         if "minutes" in y_axis_label.lower():
@@ -82,6 +87,7 @@ def main():
         ax.scatter( x_axis, y_axis )
         plt.xlabel( x_axis_label )
         plt.ylabel( y_axis_label )
+        plt.title( plot_title )
         plt.show()
     else:
         print( "No valid values were found to place on the y-axis" )
@@ -165,6 +171,13 @@ def round_to_minute( input_seconds ):
     rounded_time = input_seconds - remainder
 
     return rounded_time
+    
+def create_plot_title( title, xaxis_label, yaxis_label ):
+    if not title:
+        return "%s vs. %s" % ( xaxis_label.capitalize(), 
+                               yaxis_label.capitalize()
+                             )
+    return title
     
 
 class DataParser:
