@@ -15,7 +15,7 @@ def main():
     arg_parser.add_argument( '-s', '--stats', help = "File containing parseable jobstats output" )
     arg_parser.add_argument( '-k', '--kmers', help = "File containing kmer counts for each file run" )
     arg_parser.add_argument( '--num_yticks', default = 20, type = int )
-    arg_parser.add_argument( '--suffix', help = "Suffix to remove from each name" )
+    arg_parser.add_argument( '--suffix', help = "Suffix to remove from each name", default = "" )
     arg_parser.add_argument( '--max_yval', type = int, default = 9000 ) # multiple of 60
     arg_parser.add_argument( '--yaxis', help = "Data to show on yaxis", type = str, default = "elapsed" )
     arg_parser.add_argument( '--xaxis', help = "Data to show on xaxis", type = str, default = "kmers" )
@@ -34,7 +34,7 @@ def main():
 
     for line in sizes_file:
         line = line.split( '|' )
-        job_names[ line[ 0 ] ] = line[ 1 ]
+        job_names[ line[ 0 ].strip() ] = line[ 1 ].strip()
 
     job_array = list()
     if runtime_data_from_file:
@@ -42,8 +42,9 @@ def main():
         for current_data in runtime_data_from_file:
             data_job = SlurmJob( current_data )
 
-            if data_job.is_completed() and SUFFIX in data_job._name:
-                data_job.remove_suffix_from_name( SUFFIX )
+            if data_job.is_completed():
+                if SUFFIX in data_job._name:
+                    data_job.remove_suffix_from_name( SUFFIX )
                 if data_job._name in job_names:
                     
                     data_job._kmers = job_names[ data_job._name ]
@@ -180,7 +181,7 @@ class DataParser:
 
             for line in read_file:
                 if line[ 0 ] != '#':
-                    self._data.append( line.split( self._delimiter_char ) )
+                    self._data.append( line.strip().split( self._delimiter_char ) )
 
             read_file.close()
 
@@ -212,9 +213,10 @@ class SlurmJob:
         self._kmers = ""
 
     def remove_suffix_from_name( self, suffix_to_remove ):
-        new_name = self._name.split( suffix_to_remove )[ 0 ]
-        self._name = new_name
-        self._job_data[ 0 ] = new_name
+        if suffix_to_remove and suffix_to_remove in self._name:
+            new_name = self._name.split( suffix_to_remove )[ 0 ]
+            self._name = new_name
+            self._job_data[ 0 ] = new_name
     def is_completed( self ):
         return self._state == "COMPLETED"
        
