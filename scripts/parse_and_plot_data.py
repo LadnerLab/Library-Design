@@ -22,6 +22,9 @@ def main():
     arg_parser.add_argument( '-t', '--title', help = "Chart title to display in center of chart. "
                                                      "The default will be Xaxis vs Yaxis."
                            )
+    arg_parser.add_argument( '--tabular', help = "Include this flag with a filename to produce at tab-delimited "
+                                                 "version of the chart."
+                           )
 
     args = arg_parser.parse_args()
 
@@ -64,6 +67,23 @@ def main():
 
     y_axis_label = get_axis_label( args.yaxis )
     x_axis_label = get_axis_label( args.xaxis )
+
+    if args.tabular:
+        yaxis_for_table = y_axis
+        xaxis_for_table = x_axis
+        if "elapsed" in args.yaxis:
+            yaxis_for_table = [ from_seconds( item ) for item in y_axis ]
+            
+        if "elapsed" in args.xaxis:
+            xaxis_for_table = [ from_seconds( item ) for item in x_axis ]
+
+        create_table( args.tabular,
+                      xaxis_for_table,
+                      x_axis_label,
+                      yaxis_for_table,
+                      y_axis_label,
+                      [ item._name for item in job_array ]
+        )           
 
     step_size = calc_step_size( max( y_axis ), args.num_yticks )
 
@@ -178,7 +198,23 @@ def create_plot_title( title, xaxis_label, yaxis_label ):
                                yaxis_label.capitalize()
                              )
     return title
-    
+
+def create_table( filename, xaxis_vals,
+                  xaxis_label, yaxis_vals, yaxis_label,
+                  data_labels
+                ):
+
+    with open( filename, 'w' ) as open_file:
+        open_file.write( "%s\t%s\t%s\t\n" % ( "Name", xaxis_label,
+                                              yaxis_label
+                                            )
+                       ) 
+        for index, value in enumerate( data_labels ):
+            open_file.write( "%s\t%s\t%s\n" % ( value,
+                                                xaxis_vals[ index ],
+                                                yaxis_vals[ index ]
+                                              )
+                           )
 
 class DataParser:
     def __init__( self, input_file, delimiter_char = '|' ):
