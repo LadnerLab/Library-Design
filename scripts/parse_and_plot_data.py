@@ -115,16 +115,26 @@ def main():
 def to_seconds( string_time ):
     string_time = string_time.split( ':' )
     total = 0
+    days = 0
+
+    # days
+    if '-' in string_time[ 0 ] :
+        split_days = string_time[ 0 ].split( '-' )
+        string_time[ 0 ] = split_days[ 1 ]
+        days = int( split_days[ 0 ] )
+        
     hours = int( string_time[ 0 ] )
     minutes = int( string_time[ 1 ] )
     seconds = int( string_time[ 2 ] )
 
-    return ( 60 * hours * 60 ) + ( 60 * minutes ) + ( seconds )
+    return ( 24 * 60 * 60 * days ) + ( 60 * hours * 60 ) + ( 60 * minutes ) + ( seconds )
 
 def get_yvals( y_axis_vals, step_size ):
     return range( 0, int( max( y_axis_vals ) + 1 ), int( step_size ) )
 
 def from_seconds( int_seconds ):
+    days = int_seconds // ( 60 * 60 * 24 )
+    int_seconds %= ( 60 * 60 * 24 )
     hours = int_seconds // ( 60 * 60 )
     int_seconds %= ( 60 * 60 )
     minutes = int_seconds // 60
@@ -132,6 +142,9 @@ def from_seconds( int_seconds ):
     seconds = int_seconds
 
     date_time_obj = datetime.time( hour = hours, minute = minutes, second = seconds )
+
+    if days:
+        return str( days ) + '-' + str( date_time_obj )
     return str( date_time_obj )
 
 def to_datetime( string_time ):
