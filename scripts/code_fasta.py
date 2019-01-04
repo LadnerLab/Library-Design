@@ -6,12 +6,23 @@ import string, random, optparse
 #This script reads in a fasta file and creates two outputs
     # 1) A new version of the fasta with names replaces by codes
     # 2) A text file linking the original names to the new coded names
+# Additionally, this script can decode a supplied fasta (or fasta epitope map)
 
 def main():
     usage = '%prog [options]'
     p = optparse.OptionParser()
-    p.add_option('-f', '--fasta',  help='Fasta file. [None, REQ]')
-    p.add_option('-l', '--length',  help='Length of code to use. If not provided, an optimal length will be calculated based on # of seqs [None]')
+    p.add_option( '-f', '--fasta',  help='Fasta file. [None, REQ]' )
+    p.add_option( '-l', '--length',  help='Length of code to use. If not provided, an optimal length will be calculated based on # of seqs [None]' )
+    p.add_option( '-d', '--decode', help = "Use this flag if you wish to decode an already coded fasta ( or an epitope map ) "
+                                           "containing coded names. The inclusion of this flag means that '--fasta' arg will be "
+                                           "treated as either a coded epitope map, or a coded fasta file (this will be detected automatically). "
+                                           "If this flag is included, then the '--key' flag must also be included.",
+                  action = 'store_true'
+                )
+    p.add_option( '-k', '--key', help =  "Key mapping a coded name to its original name, this file is provided "
+                                         "as output when coding a fasta file using this script. Note that this "
+                                         "argument will only be considered when the '--decode' flag is also supplied."
+                )
 
     opts, args = p.parse_args()
     
