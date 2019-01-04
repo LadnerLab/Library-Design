@@ -106,15 +106,15 @@ def encode_fasta( opts ):
         write_code(names, codes, "coded_%s_key.txt" % (".".join(opts.fasta.split(".")[:-1])))
 
 def decode_fasta( opts ):
-    if is_fasta( opts.key ):
+    if is_fasta( opts.decode ):
         decoder = DecoderFactory().create_decoder( "fasta_decoder" )
     else:
         decoder = DecoderFactory().create_decoder( "map_decoder" )
 
-    decoder.set_file( opts.key )
+    decoder.set_key_file( opts.key )
     decoder.read_key()
     decoder.decode( opts.decode )
-    decoder.write_output( "%s_decoded" % opts.key )
+    decoder.write_output( "%s_decoded" % opts.decode )
 
 def is_fasta( filename ):
     looking_for_name = True
@@ -135,10 +135,6 @@ class FileDecoder( ABC ):
         self._data         = None
 
     @abstractmethod
-    def read_key( self ):
-        pass
-
-    @abstractmethod
     def decode( self, filename ):
         pass
 
@@ -149,19 +145,33 @@ class FileDecoder( ABC ):
     def set_key_file( self, filename ):
         self._key_file = filename
 
+    def read_key( self ):
+        if not self._key:
+            self._key = self._parse_key( self._key_file )
+        return self._key
+
+    def _parse_key( self, filename ):
+        parsed_dict = {}
+        with open( filename, 'r' ) as open_key:
+            for line in open_key:
+                split_line = line.split( '\t' )
+                coded_name   = split_line[ 1 ].strip()
+                uncoded_name = split_line[ 0 ].strip()
+
+                parsed_dict[ coded_name ] = uncoded_name
+        return parsed_dict
+
 class FastaDecoder( FileDecoder ):
     def __init__( self, filename = None ):
         super().__init__( filename = filename )
 
-    def read_key( self ):
-        self._key = self._parse_key( self._key_file )
-
     def decode( self, filename ):
-        coded_fasta  = self._fasta_to_dict( self, filename )
+        coded_fasta  = self._fasta_to_dict( filename )
+        key_dict     = self.read_key()
         decoded_data = {}
 
         for coded_name, sequence in coded_fasta.items():
-            decoded_data[ coded_name ] = sequence
+            decoded_data[ key_dict[ coded_name ] ] = sequence
 
         self._decoded_data = decoded_data
 
@@ -171,20 +181,25 @@ class FastaDecoder( FileDecoder ):
     def _write_fasta( self, outfile_name ):
         with open( outfile_name, 'w' ) as out_file:
             for name, sequence in self._decoded_data.items():
-                out_file.write( "%s\n%s\n" % ( name, sequence ) )
+                out_file.write( ">%s\n%s\n" % ( name, sequence ) )
 
         
     def _fasta_to_dict( self, filename ):
         out_dict = {}
-        current_seq = ( "", "" ) # Tuple containing ( name, sequence )
+        current_seq = [ "", "" ] # List containing ( name, sequence )
         with open( filename, 'r' ) as fasta:
             for line in fasta:
                 if line[ 0 ] == '>':
                     # Note that dict will contain an entry { "":""}
                     out_dict[ current_seq[ 0 ] ] = current_seq[ 1 ] 
-                    current_seq = ( line.strip(), "" )
+                    current_seq = [ line.strip().strip( ">" ), "" ]
                 else:
-                    current_seq[ 1 ].append( line.strip() )
+                    current_seq[ 1 ] += line.strip()
+
+        # Delete the { "": "" } entry
+        del out_dict[ '' ]
+
+        return out_dict
 
 class MapDecoder( FileDecoder ):
     def __init__( self, filename = None ):
@@ -193,7 +208,7 @@ class MapDecoder( FileDecoder ):
     def decode( self, filename ):
         pass
 
-    def read_key( self, filename ):
+    def read_key_file( self, filename ):
         self._key = self._parse_key( filename )
 
     def write_output( self, filename ):
@@ -202,14 +217,17 @@ class MapDecoder( FileDecoder ):
     def set_file( self, filename ):
         pass
 
+    def _parse_key( self, filename ):
+        pass
+
 class DecoderFactory:
     MAP_DECODER   = "map_decoder"
     FASTA_DECODER = "fasta_decoder"
 
     def create_decoder( self, decoder_type, filename = None ):
-        if string_type == DecoderFactory.MAP_DECODER:
+        if decoder_type == DecoderFactory.MAP_DECODER:
             return MapDecoder( filename )
-        elif string_type == DecoderFactory.FASTA_DECODER:
+        elif decoder_type == DecoderFactory.FASTA_DECODER:
             return FastaDecoder( filename )
 
 ###------------------------------------->>>>    
