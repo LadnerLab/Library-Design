@@ -16,7 +16,9 @@ def main():
     p.add_option( '-d', '--decode', help = "Use this flag if you wish to decode an already coded fasta ( or an epitope map ) "
                                            "containing coded names. The inclusion of this flag means that '--fasta' arg will be "
                                            "treated as either a coded epitope map, or a coded fasta file (this will be detected automatically). "
-                                           "If this flag is included, then the '--key' flag must also be included.",
+                                           "If this flag is included, then the '--key' flag must also be included."
+                                           "When this flag is included, the decoded file will be written to the base name "
+                                           "of '--key', with _decoded appended.",
                   action = 'store_true'
                 )
     p.add_option( '-k', '--key', help =  "Key mapping a coded name to its original name, this file is provided "
@@ -26,27 +28,11 @@ def main():
 
     opts, args = p.parse_args()
     
-    #Read in fasta file
-    names, seqs = read_fasta_lists(opts.fasta)
-    
-    #Characters to use in code
-    chars=string.ascii_letters + string.digits
-    
-    #Determine the size of code to use, if not provided
-    if not opts.length:
-        length=1
-        while len(chars)**length<(2*len(names)):
-            length+=1
-    
-    #Generate codes
-    codes = set()
-    while len(codes)<len(names):
-        codes.add(rand_code(chars,length))
-#        print len(codes)
-    codes=list(codes)
-    
-    write_fasta(codes, seqs, "coded_%s" % opts.fasta)
-    write_code(names, codes, "coded_%s_key.txt" % (".".join(opts.fasta.split(".")[:-1])))
+    if not opts.decode:
+        encode_fasta( opts )
+    else:
+        decode_fasta( opts )
+
 #----------------------End of main()
 
 def write_code(names, codes, outfile):
@@ -98,10 +84,33 @@ def write_fasta(names, seqs, new_filename):
         fout.write(">%s\n%s\n" % (names[i], seqs[i]))
     fout.close()
 
+def encode_fasta( opts ):
+        #Read in fasta file
+        names, seqs = read_fasta_lists(opts.fasta)
+        
+        #Characters to use in code
+        chars=string.ascii_letters + string.digits
+        
+        #Determine the size of code to use, if not provided
+        if not opts.length:
+            length=1
+            while len(chars)**length<(2*len(names)):
+                length+=1
+        
+        #Generate codes
+        codes = set()
+        while len(codes)<len(names):
+            codes.add(rand_code(chars,length))
+        codes=list(codes)
+        
+        write_fasta(codes, seqs, "coded_%s" % opts.fasta)
+        write_code(names, codes, "coded_%s_key.txt" % (".".join(opts.fasta.split(".")[:-1])))
+
+def decode_fasta( opts ):
+    pass
 
 
 ###------------------------------------->>>>    
-
 if __name__ == "__main__":
     main()
 
