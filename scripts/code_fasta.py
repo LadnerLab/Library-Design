@@ -14,12 +14,11 @@ def main():
     p.add_option( '-f', '--fasta',  help='Fasta file. [None, REQ]' )
     p.add_option( '-l', '--length',  help='Length of code to use. If not provided, an optimal length will be calculated based on # of seqs [None]' )
     p.add_option( '-d', '--decode', help = "Use this flag if you wish to decode an already coded fasta ( or an epitope map ) "
-                                           "containing coded names. The inclusion of this flag means that '--fasta' arg will be "
+                                           "containing coded names. Include with this flag the name of the coded file you want decoded, the file will be "
                                            "treated as either a coded epitope map, or a coded fasta file (this will be detected automatically). "
                                            "If this flag is included, then the '--key' flag must also be included."
                                            "When this flag is included, the decoded file will be written to the base name "
                                            "of '--key', with _decoded appended.",
-                  action = 'store_true'
                 )
     p.add_option( '-k', '--key', help =  "Key mapping a coded name to its original name, this file is provided "
                                          "as output when coding a fasta file using this script. Note that this "
@@ -113,8 +112,8 @@ def decode_fasta( opts ):
         decoder = DecoderFactory().create_decoder( "map_decoder" )
 
     decoder.set_file( opts.key )
-    decoder.read_file()
-    decoder.decode()
+    decoder.read_key()
+    decoder.decode( opts.decode )
     decoder.write_output( "%s_decoded" % opts.key )
 
 def is_fasta( filename ):
@@ -129,49 +128,73 @@ def is_fasta( filename ):
 class FileDecoder( ABC ):
 
     def __init__( self, filename = None ):
-        self._filename = filename
-        self._data     = None
+        self._key_file     = filename
+        self._key          = {}
+
+        self._decoded_data = None
+        self._data         = None
 
     @abstractmethod
-    def read_file( self, filename ):
+    def read_key( self ):
         pass
 
     @abstractmethod
-    def decode( self ):
+    def decode( self, filename ):
         pass
 
     @abstractmethod
     def write_output( self, filename ):
         pass
 
-    def set_file( self, filename ):
-        self._filename = filename
+    def set_key_file( self, filename ):
+        self._key_file = filename
 
 class FastaDecoder( FileDecoder ):
     def __init__( self, filename = None ):
         super().__init__( filename = filename )
 
-    def read_file( self, filename ):
-        pass
+    def read_key( self ):
+        self._key = self._parse_key( self._key_file )
 
-    def decode( self ):
-        pass
+    def decode( self, filename ):
+        coded_fasta  = self._fasta_to_dict( self, filename )
+        decoded_data = {}
+
+        for coded_name, sequence in coded_fasta.items():
+            decoded_data[ coded_name ] = sequence
+
+        self._decoded_data = decoded_data
 
     def write_output( self, filename ):
-        pass
+        self._write_fasta( filename )
 
-    def set_file( self, filename ):
-        pass
+    def _write_fasta( self, outfile_name ):
+        with open( outfile_name, 'w' ) as out_file:
+            for name, sequence in self._decoded_data.items():
+                out_file.write( "%s\n%s\n" % ( name, sequence ) )
+
+        
+    def _fasta_to_dict( self, filename ):
+        out_dict = {}
+        current_seq = ( "", "" ) # Tuple containing ( name, sequence )
+        with open( filename, 'r' ) as fasta:
+            for line in fasta:
+                if line[ 0 ] == '>':
+                    # Note that dict will contain an entry { "":""}
+                    out_dict[ current_seq[ 0 ] ] = current_seq[ 1 ] 
+                    current_seq = ( line.strip(), "" )
+                else:
+                    current_seq[ 1 ].append( line.strip() )
 
 class MapDecoder( FileDecoder ):
     def __init__( self, filename = None ):
         super().__init__( filename = filename )
 
-    def read_file( self, filename ):
+    def decode( self, filename ):
         pass
 
-    def decode( self ):
-        pass
+    def read_key( self, filename ):
+        self._key = self._parse_key( filename )
 
     def write_output( self, filename ):
         pass
