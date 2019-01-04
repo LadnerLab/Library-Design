@@ -204,21 +204,52 @@ class FastaDecoder( FileDecoder ):
 class MapDecoder( FileDecoder ):
     def __init__( self, filename = None ):
         super().__init__( filename = filename )
+        self._delimiter    = '~'
+        self._decoded_data = {}
+        self._open_decode_file = None
 
     def decode( self, filename ):
-        pass
+        self.read_key()
 
-    def read_key_file( self, filename ):
-        self._key = self._parse_key( filename )
+        if self._open_decode_file is None:
+            self._open_decode_file = open( filename, 'r' )
+                        
+    def _decode_line( self, line_data ):
+        DELIMITER = self._delimiter
+        out_data  = {}
+        split_data = line_data.split( '\t' )
+
+        key               = split_data[ 0 ].strip()
+        decoded_data_list = list()
+
+        split_data = split_data[ 1 ].split( DELIMITER )
+
+        for index, item in enumerate( split_data ):
+            # skip first item, as that is the key
+            if index:
+                item = self._decode_item( item.strip() )
+                decoded_data_list.append( item )
+        return [ key, decoded_data_list ]
+
+    def _get_decoded_data( self ):
+        # Decode more data, one line from the file at a time
+        while True:
+            current_data = self._open_decode_file.readline()
+            if current_data:
+                decoded_line = self._decode_line( current_data )
+                yield decoded_line
+            else:
+                break
+                    
+
+    def _decode_item( self, item ):
+        return self._key[ item ]
 
     def write_output( self, filename ):
-        pass
-
-    def set_file( self, filename ):
-        pass
-
-    def _parse_key( self, filename ):
-        pass
+        with open( filename, 'w' ) as open_file:
+            for item in self._get_decoded_data():
+                open_file.write( "%s\t%s\n" % ( item[ 0 ], self._delimiter.join( item[ 1 ] ) ) )
+            
 
 class DecoderFactory:
     MAP_DECODER   = "map_decoder"
