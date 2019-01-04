@@ -106,10 +106,31 @@ def encode_fasta( opts ):
         write_fasta(codes, seqs, "coded_%s" % opts.fasta)
         write_code(names, codes, "coded_%s_key.txt" % (".".join(opts.fasta.split(".")[:-1])))
 
+def decode_fasta( opts ):
+    if is_fasta( opts.key ):
+        decoder = DecoderFactory().create_decoder( "fasta_decoder" )
+    else:
+        decoder = DecoderFactory().create_decoder( "map_decoder" )
+
+    decoder.set_file( opts.key )
+    decoder.read_file()
+    decoder.decode()
+    decoder.write_output( "%s_decoded" % opts.key )
+
+def is_fasta( filename ):
+    looking_for_name = True
+    with open( filename, 'r' ) as open_file:
+        line = open_file.readline()
+        # In a fasta file, the first line should start with '>'
+        if line.strip()[ 0 ] != '>':
+            return False
+        return True
+    
 class FileDecoder( ABC ):
 
     def __init__( self, filename = None ):
         self._filename = filename
+        self._data     = None
 
     @abstractmethod
     def read_file( self, filename ):
