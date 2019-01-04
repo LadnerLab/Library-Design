@@ -30,7 +30,7 @@ def main():
     if not opts.decode:
         encode_fasta( opts )
     else:
-        decode_fasta( opts )
+        decode_file( opts )
 
 #----------------------End of main()
 
@@ -105,7 +105,7 @@ def encode_fasta( opts ):
         write_fasta(codes, seqs, "coded_%s" % opts.fasta)
         write_code(names, codes, "coded_%s_key.txt" % (".".join(opts.fasta.split(".")[:-1])))
 
-def decode_fasta( opts ):
+def decode_file( opts ):
     if is_fasta( opts.decode ):
         decoder = DecoderFactory().create_decoder( "fasta_decoder" )
     else:
