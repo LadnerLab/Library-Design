@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-from __future__ import division
 import string, random, optparse
+from abc import ABC, abstractmethod
 
 #This script reads in a fasta file and creates two outputs
     # 1) A new version of the fasta with names replaces by codes
@@ -109,6 +109,57 @@ def encode_fasta( opts ):
 def decode_fasta( opts ):
     pass
 
+class FileDecoder( ABC ):
+
+    def __init__( self, filename = None ):
+        self._filename = filename
+
+    @abstractmethod
+    def read_file( self, filename ):
+        pass
+
+    @abstractmethod
+    def decode( self ):
+        pass
+
+    @abstractmethod
+    def write_output( self, filename ):
+        pass
+
+    def set_file( self, filename ):
+        self._filename = filename
+
+class FastaDecoder( FileDecoder ):
+    def __init__( self, filename = None ):
+        super().__init__( filename = filename )
+
+    def read_file( self, filename ):
+        pass
+
+    def decode( self ):
+        pass
+
+    def write_output( self, filename ):
+        pass
+
+    def set_file( self, filename ):
+        pass
+
+class MapDecoder( FileDecoder ):
+    def __init__( self, filename = None ):
+        super().__init__( filename = filename )
+
+    def read_file( self, filename ):
+        pass
+
+    def decode( self ):
+        pass
+
+    def write_output( self, filename ):
+        pass
+
+    def set_file( self, filename ):
+        pass
 
 ###------------------------------------->>>>    
 if __name__ == "__main__":
