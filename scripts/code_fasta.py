@@ -106,9 +106,6 @@ def encode_fasta( opts ):
         write_fasta(codes, seqs, "coded_%s" % opts.fasta)
         write_code(names, codes, "coded_%s_key.txt" % (".".join(opts.fasta.split(".")[:-1])))
 
-def decode_fasta( opts ):
-    pass
-
 class FileDecoder( ABC ):
 
     def __init__( self, filename = None ):
@@ -160,6 +157,16 @@ class MapDecoder( FileDecoder ):
 
     def set_file( self, filename ):
         pass
+
+class DecoderFactory:
+    MAP_DECODER   = "map_decoder"
+    FASTA_DECODER = "fasta_decoder"
+
+    def create_decoder( self, decoder_type, filename = None ):
+        if string_type == DecoderFactory.MAP_DECODER:
+            return MapDecoder( filename )
+        elif string_type == DecoderFactory.FASTA_DECODER:
+            return FastaDecoder( filename )
 
 ###------------------------------------->>>>    
 if __name__ == "__main__":
