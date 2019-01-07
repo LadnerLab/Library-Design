@@ -25,9 +25,11 @@ def main():
 
 
     # verify command-line arguments
-
     # parse accession-taxId file
-
+    try:
+        accession_data = AccessionParser().parse( args.accession )
+    except Exception as e:
+        ErrorHandler.handle( e, exit = True )
 
 
 
@@ -64,8 +66,15 @@ class AccessionParser( FileParser ):
                     data_dict[ split_line[ 0 ] ].add( split_line[ 1 ] )
         return data_dict
                     
-                        
-            
+class Handler:
+    def handle( to_handle ):
+        pass
+
+class ErrorHandler( Handler ):
+    def handle( exception, exit = False ):
+        print( "An error has occurred: %s" % str( exception ) )
+        if exit:
+            sys.exit( 1 )
         
 
             
