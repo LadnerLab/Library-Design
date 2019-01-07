@@ -23,7 +23,6 @@ def main():
     # parse args
     args = arg_parser.parse_args()
 
-
     # verify command-line arguments
     try:
         verify_args( args )
@@ -93,8 +92,6 @@ class AccessionParser( FileParser ):
             return ( "Incorrectly formatted AccessionData: "
                     "%s on line: %d" % ( self._bad_data )
                    )
-            
-
                     
 class Handler:
     def handle( to_handle ):
@@ -110,19 +107,27 @@ class ErrorHandler( Handler ):
             sys.exit( 1 )
 
 class AccessionDataFactory:
-    def from_dict( self ):
-        pass
+    def from_dict( dict_to_get ):
+        collection = AccessionDataCollection()
+        for tax_id, accession_num in dict_to_get.items():
+            collection.add( AccessionData( tax_id, accession_num ) )
+        return collection
+
+class AccessionDataCollection:
+    def __init__( self ):
+        self._data = list()
+    def add( self, new_data ):
+        self._data.append( new_data )
 
 class AccessionData:
-
     def __init__( self, tax_id, accession_num ):
-        self._tax_id       = tax_id
-        self.accession_num = accession_num 
-
+        self._tax_id        = tax_id
+        self._accession_num = accession_num 
 
 def verify_args( args ):
     if args.accession is None:
         raise MissingAccessionArgumentException()
+
 class MissingAccessionArgumentException( Exception ):
     def __str__( self ):
         return "Accession/TaxID map was not " \
