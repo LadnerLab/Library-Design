@@ -25,6 +25,11 @@ def main():
 
 
     # verify command-line arguments
+    try:
+        verify_args( args )
+    except Exception as e:
+        ErrorHandler.handle( e, exit = True )
+        
     # parse accession-taxId file
     try:
         accession_data = AccessionParser().parse( args.accession )
@@ -75,8 +80,13 @@ class ErrorHandler( Handler ):
         print( "An error has occurred: %s" % str( exception ) )
         if exit:
             sys.exit( 1 )
-        
 
-            
+def verify_args( args ):
+    if args.accession is None:
+        raise MissingAccessionArgumentException()
+
+class MissingAccessionArgumentException( Exception ):
+    def __str__( self ):
+        return "Accession/TaxID map was not provided from command line"
 if __name__ == '__main__':
     main()
