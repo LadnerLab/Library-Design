@@ -36,6 +36,8 @@ def main():
     except Exception as e:
         ErrorHandler.handle( e, exit = True )
 
+    # download genome information 
+
 class FileParser:
     def __init__( self, filename = None ):
         self._filename    = filename
@@ -77,7 +79,7 @@ class AccessionParser( FileParser ):
         if split_line[ 0 ] not in data_dict:
             data_dict[ split_line[ 0 ] ] = set()
             
-            data_dict[ split_line[ 0 ] ].add( split_line[ 1 ] )
+        data_dict[ split_line[ 0 ] ].add( split_line[ 1 ] )
 
     def _validate_line_format( self, split_line ):
         if len( split_line ) != 2 \
