@@ -77,8 +77,11 @@ class Handler:
 
 class ErrorHandler( Handler ):
     def handle( exception, exit = False ):
-        print( "An error has occurred: %s" % str( exception ) )
+        print( "An error has occurred: %s." % str( exception ) )
         if exit:
+            print( "Program will exit, "
+                   "please fix the above error and restart script."
+                 )
             sys.exit( 1 )
 
 def verify_args( args ):
@@ -87,6 +90,7 @@ def verify_args( args ):
 
 class MissingAccessionArgumentException( Exception ):
     def __str__( self ):
-        return "Accession/TaxID map was not provided from command line"
+        return "Accession/TaxID map was not " \
+               "provided from command line"
 if __name__ == '__main__':
     main()
