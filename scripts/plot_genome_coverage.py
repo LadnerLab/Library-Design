@@ -33,10 +33,9 @@ def main():
     # parse accession-taxId file
     try:
         accession_data = AccessionParser().parse( args.accession )
+        accession_data = AccessionDataFactory.from_dict( accession_data )
     except Exception as e:
         ErrorHandler.handle( e, exit = True )
-
-
 
 class FileParser:
     def __init__( self, filename = None ):
@@ -64,12 +63,38 @@ class AccessionParser( FileParser ):
         with open( filename, 'r' ) as open_file:
             for lineno, line in enumerate( open_file ):
                 if lineno: # Skip first line
-                    split_line = line.strip().split( '\t' )
-                    if split_line[ 0 ] not in data_dict:
-                        data_dict[ split_line[ 0 ] ] = set()
-
-                    data_dict[ split_line[ 0 ] ].add( split_line[ 1 ] )
+                    try:
+                        line_data = self._parse_line( line )
+                    except Exception:
+                        # raise AccessionParser.FormatException( lineno, line )
+                        pass
+                        
         return data_dict
+
+    def _parse_line( self, string_line ):
+        split_line = line.strip().split( '\t' )
+        self._validate_line_format( split_line )
+
+        if split_line[ 0 ] not in data_dict:
+            data_dict[ split_line[ 0 ] ] = set()
+            
+            data_dict[ split_line[ 0 ] ].add( split_line[ 1 ] )
+
+    def _validate_line_format( self, split_line ):
+        if len( split_line ) != 2 \
+           or len( split_line[ 0 ] ) <= 0 \
+              or len( split_line[ 1 ] ) <= 0:
+              raise Exception()
+        
+    class FormatException( Exception ):
+        def __init__( self, line_number, line ):
+            self._bad_data = ( line, line_number )
+        def __str__( self ):
+            return ( "Incorrectly formatted AccessionData: "
+                    "%s on line: %d" % ( self._bad_data )
+                   )
+            
+
                     
 class Handler:
     def handle( to_handle ):
@@ -84,10 +109,20 @@ class ErrorHandler( Handler ):
                  )
             sys.exit( 1 )
 
+class AccessionDataFactory:
+    def from_dict( self ):
+        pass
+
+class AccessionData:
+
+    def __init__( self, tax_id, accession_num ):
+        self._tax_id       = tax_id
+        self.accession_num = accession_num 
+
+
 def verify_args( args ):
     if args.accession is None:
         raise MissingAccessionArgumentException()
-
 class MissingAccessionArgumentException( Exception ):
     def __str__( self ):
         return "Accession/TaxID map was not " \
