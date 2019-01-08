@@ -340,7 +340,19 @@ class EntrezConnection:
             self._requests_this_second = 1
 
         self._time = now
-        return function( **kwargs )
+        return_val = None
+
+        added = False
+
+        while not added:
+            try:
+                return_val = function( **kwargs )
+                added = True
+            except Exception:
+                time.sleep( self._sleep_time )
+                self._requests_this_second = 1
+            
+        return return_val
 
 class MissingArgumentException( Exception ):
     def __init__( self, str_reason ):
