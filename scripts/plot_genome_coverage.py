@@ -19,6 +19,10 @@ def main():
     arg_parser.add_argument( '-a', '--accession', help = "File containing mappings for TaxId's -> "
                                                          "Accession numbers."
                            )
+    arg_parser.add_argument( '-d', '--database', help = "Database from which to retrieve records. "
+                                                        "Must be a valid Entrez database name.",
+                             default = 'nuccore'
+                           )
 
     # parse args
     args = arg_parser.parse_args()
