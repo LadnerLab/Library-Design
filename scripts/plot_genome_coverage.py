@@ -54,6 +54,10 @@ def main():
     nucleotide_controller = EntrezController( database = args.database, rettype = 'fasta_cds_na', retmode = 'text' )
     protein_controller    = EntrezController( database = args.database, rettype = 'fasta_cds_aa', retmode = 'text' )
 
+    genome_writer         = RecordWriter( suffix = ".fasta", "genome_info" )
+    nucleotide_writer     = RecordWriter( suffix = ".fna",   "nucleotide_info" )
+    protein_writer        = RecordWriter( suffix = ".faa",   "protein_info" )
+
     controllers = Composite( genome_controller,
                              nucleotide_controller,
                              protein_controller
@@ -64,6 +68,7 @@ def main():
 
     # download genome information, if necessary. 
 
+
 class Composite:
     def __init__( self, *args ):
         self._items = list()
@@ -71,8 +76,10 @@ class Composite:
             self._items.append( current )
             
     def call( self, function, *args, **kwargs ):
+        results = list()
         for item in self._items:
-            function( item, *args, **kwargs )
+            results.append( function( item, *args, **kwargs ) )
+        return results
             
 class FileParser:
     def __init__( self, filename = None ):
@@ -175,12 +182,21 @@ class RecordWriter:
         self._suffix   = suffix
         self._prefix   = prefix
         self._work_dir = work_dir 
+        self._create_mode = 0755
 
         if not work_dir:
             self._work_dir = os.getcwd()
 
+    def _create_dir( self, dir_name, create_mode ):
+        if not os.path.exists( dir_name ):
+            os.mkdir( dir_name, create_mode )
+
     def write_file( self, filename, new_record, append = False ):
         open_mode = 'w+'
+
+        # Only creates the directory if it does not exist
+        self._create_dir( self._work_dir, self._create_mode )
+
         if append:
             open_mode = 'a+'
 
