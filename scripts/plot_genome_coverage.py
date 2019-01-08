@@ -49,8 +49,31 @@ def main():
     except Exception as e:
         ErrorHandler.handle( e, exit = True )
 
+    connection        = EntrezConnection( email = args.email, api_key = args.api_key )
+    genome_controller     = EntrezController( database = args.database, rettype = 'fasta', retmode = 'text' )
+    nucleotide_controller = EntrezController( database = args.database, rettype = 'fasta_cds_na', retmode = 'text' )
+    protein_controller    = EntrezController( database = args.database, rettype = 'fasta_cds_aa', retmode = 'text' )
+
+    controllers = Composite( genome_controller,
+                             nucleotide_controller,
+                             protein_controller
+    )
+
+    # Everyone shares a connection so request limit is not overriden
+    controllers.call( EntrezController.set_connection, connection )
+
     # download genome information, if necessary. 
 
+class Composite:
+    def __init__( self, *args ):
+        self._items = list()
+        for current in args:
+            self._items.append( current )
+            
+    def call( self, function, *args ):
+        for item in self._items:
+            function( item, *args )
+            
 class FileParser:
     def __init__( self, filename = None ):
         self._filename    = filename
