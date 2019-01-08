@@ -131,12 +131,18 @@ class AccessionData:
         self._accession_num = accession_num 
 
 def verify_args( args ):
-    if args.accession is None:
-        raise MissingAccessionArgumentException()
+    if not args.accession:
+        raise MissingArgumentException( "TaxID/Accession Map" )
+    if not args.database:
+        raise MissingArgumentException( "database" )
 
-class MissingAccessionArgumentException( Exception ):
+class MissingArgumentException( Exception ):
+    def __init__( self, str_reason ):
+        self._reason = str_reason
+        
     def __str__( self ):
-        return "Accession/TaxID map was not " \
-               "provided from command line"
+        return "%s was either not provided from the command line, " \
+               "or was provided with no argument" % self._reason
+
 if __name__ == '__main__':
     main()
