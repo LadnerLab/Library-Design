@@ -54,21 +54,35 @@ def main():
     nucleotide_controller = EntrezController( database = args.database, rettype = 'fasta_cds_na', retmode = 'text' )
     protein_controller    = EntrezController( database = args.database, rettype = 'fasta_cds_aa', retmode = 'text' )
 
-    genome_writer         = RecordWriter( suffix = ".fasta", "genome_info" )
-    nucleotide_writer     = RecordWriter( suffix = ".fna",   "nucleotide_info" )
-    protein_writer        = RecordWriter( suffix = ".faa",   "protein_info" )
+    genome_writer         = RecordWriter( suffix = ".fasta", work_dir = "genome_info" )
+    nucleotide_writer     = RecordWriter( suffix = ".fna",   work_dir = "nucleotide_info" )
+    protein_writer        = RecordWriter( suffix = ".faa",   work_dir = "protein_info" )
 
     controllers = Composite( genome_controller,
                              nucleotide_controller,
                              protein_controller
     )
+    writers    = Composite( genome_writer,
+                            nucleotide_writer,
+                            protein_writer
+                          )
 
     # Everyone shares a connection so request limit is not overriden
     controllers.call( EntrezController.set_connection, connection )
 
     # download genome information, if necessary. 
+    for record in accession_data.as_list():
+        filename = record.get_id()
+        accession = ','.join( record.get_accession_num() )
+        new_records = controllers.call( EntrezController.get_record,
+                                        accession
+                                      )
 
+        for index, record in enumerate( new_records ):
+            writer = writers.as_list()[ index ]
 
+            writer.write_file( filename, record, append = True)
+        
 class Composite:
     def __init__( self, *args ):
         self._items = list()
@@ -80,6 +94,19 @@ class Composite:
         for item in self._items:
             results.append( function( item, *args, **kwargs ) )
         return results
+
+    def call_positional( self, function, arg, **kwargs ):
+        results = list()
+
+        assert len( arg ) == len( self._items )
+
+        for index, item in enumerate( self._items ):
+            results.append( function( item, args[ index ], **kwargs ) )
+        return results
+
+    def as_list( self ):
+        return self._items
+            
             
 class FileParser:
     def __init__( self, filename = None ):
@@ -108,15 +135,14 @@ class AccessionParser( FileParser ):
             for lineno, line in enumerate( open_file ):
                 if lineno: # Skip first line
                     try:
-                        line_data = self._parse_line( line )
-                    except Exception:
-                        # raise AccessionParser.FormatException( lineno, line )
-                        pass
+                        line_data = self._parse_line( line, data_dict )
+                    except ValueError:
+                        raise AccessionParser.FormatException( lineno, line )
                         
         return data_dict
 
-    def _parse_line( self, string_line ):
-        split_line = line.strip().split( '\t' )
+    def _parse_line( self, string_line, data_dict ):
+        split_line = string_line.strip().split( '\t' )
         self._validate_line_format( split_line )
 
         if split_line[ 0 ] not in data_dict:
@@ -128,7 +154,7 @@ class AccessionParser( FileParser ):
         if len( split_line ) != 2 \
            or len( split_line[ 0 ] ) <= 0 \
               or len( split_line[ 1 ] ) <= 0:
-              raise Exception()
+              raise ValueError()
         
     class FormatException( Exception ):
         def __init__( self, line_number, line ):
@@ -171,6 +197,11 @@ class AccessionData:
         self._tax_id        = tax_id
         self._accession_num = accession_num 
 
+    def get_id( self ):
+        return self._tax_id
+    def get_accession_num( self ):
+        return self._accession_num
+
 def verify_args( args ):
     if not args.accession:
         raise MissingArgumentException( "TaxID/Accession Map" )
@@ -182,7 +213,7 @@ class RecordWriter:
         self._suffix   = suffix
         self._prefix   = prefix
         self._work_dir = work_dir 
-        self._create_mode = 0755
+        self._create_mode = 0o755
 
         if not work_dir:
             self._work_dir = os.getcwd()
@@ -203,7 +234,7 @@ class RecordWriter:
         start_dir = os.getcwd()
 
         os.chdir( self._work_dir )
-        openfile_name = "%s%s%s" % ( self._prefix, filename, self_suffix )
+        openfile_name = "%s%s%s" % ( self._prefix, filename, self._suffix )
 
         with open( openfile_name, open_mode ) as open_file:
             open_file.write( new_record.strip() + '\n' )
@@ -296,6 +327,8 @@ class EntrezConnection:
         if not self._email:
             raise EntrezConnection.EmailNotSuppliedException()
 
+        Entrez.email = self._email 
+        
         now = time.time()
         if now - self._time <= 1.0:
             self._requests_this_second += 1
