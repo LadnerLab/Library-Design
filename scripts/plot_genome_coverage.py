@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 from Bio import Entrez           # for efetch
 import argparse                  # for parsing command-line arguments
-from time import sleep           # For limiting requests
+import time                      # for tracking request frequency, sleeping
 import matplotlib                # for generating charts
 matplotlib.use( 'Agg' )          # Don't want to display charts
 import matplotlib.pyplot as plt  # For generating charts
@@ -137,11 +137,24 @@ def verify_args( args ):
         raise MissingArgumentException( "database" )
 
 class EntrezConnection:
-    def __init__( self, email = None, database = None ):
+    API_KEY_REQS_PER_SEC = 10
+    EMAIL_REQS_PER_SEC   = 3
+
+    def __init__( self, email = None, database = None, api_key = None ):
         self._email               = email
+        self._sleep_time          = 1
+        self._api_key             = api_key
+
         Entrez.email              = email
-        self._max_reqs_per_second = 3
-        self._database            = database
+        Entrez.api_key            = api_key 
+
+        self._requests_this_second = 0
+        self._time                 = time.time()
+
+        if email:
+            self._max_reqs_per_second = EntrezConnection.EMAIL_REQS_PER_SEC
+        elif api_key:
+            self._max_reqs_per_second = EntrezConnection.API_KEY_REQS_PER_SEC
 
     class EmailNotSuppliedException( Exception ):
         def __str__( self ):
@@ -150,16 +163,30 @@ class EntrezConnection:
     def set_email( self, new_email ):
         self._email = new_email
         Entrez.email = new_email
+
+    def set_key( self, new_key ):
+        self._api_key  = new_key
+        Entrez.api_key = new_key
+
     def set_max_requests_per_second( self, new_reqs ):
         self._max_reqs_per_second = new_reqs
-    def set_database( self, new_db ):
-        self._database = new_db
 
     def query( self, function, **kwargs ):
         if not self._email:
             raise EntrezConnection.EmailNotSuppliedException()
-        return function( **kwargs )
 
+        now = time.time()
+        if now - self._time <= 1.0:
+            self._requests_this_second += 1
+
+            if self._requests_this_second > \
+               self._max_reqs_per_second:
+                time.sleep( self._sleep_time )
+        else:
+            self._requests_this_second = 1
+
+        self._time = now
+        return function( **kwargs )
 
 class MissingArgumentException( Exception ):
     def __init__( self, str_reason ):
