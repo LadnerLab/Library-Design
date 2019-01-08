@@ -146,9 +146,9 @@ class RecordWriter:
             self._work_dir = os.getcwd()
 
     def write_file( self, filename, new_record, append = False ):
-        open_mode = 'w'
+        open_mode = 'w+'
         if append:
-            open_mode = 'a'
+            open_mode = 'a+'
 
         start_dir = os.getcwd()
 
@@ -156,10 +156,19 @@ class RecordWriter:
         openfile_name = "%s%s%s" % ( self._prefix, filename, self_suffix )
 
         with open( openfile_name, open_mode ) as open_file:
-            open_file.write( new_record.strip() )
+            open_file.write( new_record.strip() + '\n' )
 
         os.chdir( start_dir )
+
+    def set_work_dir( self, new_dir ):
+        self._work_dir = new_dir
+
+    def set_suffix( self, new_suffix ):
+        self._suffix = new_suffix
         
+    def set_prefix( self, new_prefix ):
+        self._prefix = new_prefix
+
 class EntrezController:
     def __init__( self, email = None, database = None, api_key = None,
                   rettype = None, retmode = None
