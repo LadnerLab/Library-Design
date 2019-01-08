@@ -136,6 +136,30 @@ def verify_args( args ):
     if not args.database:
         raise MissingArgumentException( "database" )
 
+class RecordWriter:
+    def __init__( self, suffix = "", prefix = "", work_dir = "" ):
+        self._suffix   = suffix
+        self._prefix   = prefix
+        self._work_dir = work_dir 
+
+        if not work_dir:
+            self._work_dir = os.getcwd()
+
+    def write_file( self, filename, new_record, append = False ):
+        open_mode = 'w'
+        if append:
+            open_mode = 'a'
+
+        start_dir = os.getcwd()
+
+        os.chdir( self._work_dir )
+        openfile_name = "%s%s%s" % ( self._prefix, filename, self_suffix )
+
+        with open( openfile_name, open_mode ) as open_file:
+            open_file.write( new_record.strip() )
+
+        os.chdir( start_dir )
+        
 class EntrezController:
     def __init__( self, email = None, database = None, api_key = None,
                   rettype = None, retmode = None
