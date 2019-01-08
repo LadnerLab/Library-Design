@@ -206,6 +206,7 @@ class EntrezConnection:
         self._email               = email
         self._sleep_time          = 1
         self._api_key             = api_key
+        self._max_reqs_per_second = 0
 
         Entrez.email              = email
         Entrez.api_key            = api_key 
