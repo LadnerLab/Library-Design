@@ -23,6 +23,15 @@ def main():
                                                         "Must be a valid Entrez database name.",
                              default = 'nuccore'
                            )
+    arg_parser.add_argument( '-e', '--email', help = "Email address to use for creating an Entrez connection, "
+                                                     "either this argument, or api_key must be supplied so that "
+                                                     "a connection can be made. With just an email, only 3 requests "
+                                                     "will be made per second."
+                           )
+    arg_parser.add_argument( '--api_key', help = "Api key to use for an Entrez connection. "
+                                                 "With a valid api key, 10 requests will be made "
+                                                 "per second."
+                           )
 
     # parse args
     args = arg_parser.parse_args()
@@ -40,7 +49,7 @@ def main():
     except Exception as e:
         ErrorHandler.handle( e, exit = True )
 
-    # download genome information 
+    # download genome information, if necessary. 
 
 class FileParser:
     def __init__( self, filename = None ):
@@ -124,6 +133,8 @@ class AccessionDataCollection:
         self._data = list()
     def add( self, new_data ):
         self._data.append( new_data )
+    def as_list( self ):
+        return self._data
 
 class AccessionData:
     def __init__( self, tax_id, accession_num ):
@@ -171,11 +182,16 @@ class RecordWriter:
 
 class EntrezController:
     def __init__( self, email = None, database = None, api_key = None,
-                  rettype = None, retmode = None
+                  rettype = None, retmode = None, create_conn = True
                 ):
-        self._conn = EntrezConnection( email = email,
-                                       api_key = api_key
-                                     )
+
+        if create_conn:
+            self._conn = EntrezConnection( email = email,
+                                           api_key = api_key
+                                         )
+        else:
+            self._conn = None
+        
         self._database = database
         self._rettype  = rettype
         self._retmode  = retmode
@@ -191,6 +207,9 @@ class EntrezController:
 
     def set_connection( self, new_connection ):
         self._conn = new_connection
+
+    def get_connection( self ):
+        return self._conn
 
     def get_record( self, id ):
         return self._conn.query( Entrez.efetch, db = self._database,
