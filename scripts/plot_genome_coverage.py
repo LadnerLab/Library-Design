@@ -70,9 +70,9 @@ class Composite:
         for current in args:
             self._items.append( current )
             
-    def call( self, function, *args ):
+    def call( self, function, *args, **kwargs ):
         for item in self._items:
-            function( item, *args )
+            function( item, *args, **kwargs )
             
 class FileParser:
     def __init__( self, filename = None ):
