@@ -136,6 +136,31 @@ def verify_args( args ):
     if not args.database:
         raise MissingArgumentException( "database" )
 
+class EntrezConnection:
+    def __init__( self, email = None, database = None ):
+        self._email               = email
+        Entrez.email              = email
+        self._max_reqs_per_second = 3
+        self._database            = database
+
+    class EmailNotSuppliedException( Exception ):
+        def __str__( self ):
+            return "Email address was not supplied for use with Entrez"
+
+    def set_email( self, new_email ):
+        self._email = new_email
+        Entrez.email = new_email
+    def set_max_requests_per_second( self, new_reqs ):
+        self._max_reqs_per_second = new_reqs
+    def set_database( self, new_db ):
+        self._database = new_db
+
+    def query( self, function, **kwargs ):
+        if not self._email:
+            raise EntrezConnection.EmailNotSuppliedException()
+        return function( **kwargs )
+
+
 class MissingArgumentException( Exception ):
     def __init__( self, str_reason ):
         self._reason = str_reason
