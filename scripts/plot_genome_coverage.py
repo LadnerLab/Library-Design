@@ -136,11 +136,40 @@ def verify_args( args ):
     if not args.database:
         raise MissingArgumentException( "database" )
 
+class EntrezController:
+    def __init__( self, email = None, database = None, api_key = None,
+                  rettype = None, retmode = None
+                ):
+        self._conn = EntrezConnection( email = email,
+                                       api_key = api_key
+                                     )
+        self._database = database
+        self._rettype  = rettype
+        self._retmode  = retmode
+
+    def set_database( self, new_db ):
+        self._database = database
+
+    def set_rettype( self, new_type ):
+        self._rettype = new_type
+
+    def set_retmode( self, new_mode ):
+        self._retmode = new_mode
+
+    def set_connection( self, new_connection ):
+        self._conn = new_connection
+
+    def get_record( self, id ):
+        return self._conn.query( Entrez.efetch, db = self._database,
+                                 rettype = self._rettype, retmode = self._retmode,
+                                 id = id
+                               ).read()
+                                 
 class EntrezConnection:
     API_KEY_REQS_PER_SEC = 10
     EMAIL_REQS_PER_SEC   = 3
 
-    def __init__( self, email = None, database = None, api_key = None ):
+    def __init__( self, email = None, api_key = None ):
         self._email               = email
         self._sleep_time          = 1
         self._api_key             = api_key
