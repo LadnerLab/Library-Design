@@ -107,6 +107,73 @@ class Composite:
     def as_list( self ):
         return self._items
             
+
+class RecordRetriever:
+    def __init__( self,  retriever = None ):
+        self._retriever = retriever
+
+    def retrieve( self, record_id ):
+        pass
+
+    def set_retriever( self, new_retriever ):
+        self._retriever = new_retriever
+  
+class LocalRecordRetriever( RecordRetriever ):
+    def __init__( self, location = None ):
+        self._location = location
+
+    def set_location( self, new_loc ):
+        self._location = new_loc
+
+    def set_retrieve_method( self, new_method ):
+        self._get_record = new_method
+
+    class RecordNotFoundException( Exception ):
+        def __init__( self, record ):
+            self._not_found = record
+            
+        def __str__( self ):
+            return "%s was not found" % self._not_found
+
+    def retrieve( self, record_id ):
+        found = False
+        for item in os.listdir( self._location ):
+            no_ext = self._remove_file_extension( item )
+            if no_ext == record_id:
+                found = True
+
+                return_val = [ self._get_record( self._location + '/' + item ) ]
+
+        if not found:
+            raise LocalRecordRetriever.RecordNotFoundException( record_id )
+
+        return return_val
+
+    def _get_record( self, filename ):
+        record_path = filename
+        out_lines = list()
+
+        with open( record_path, 'r' ) as open_file:
+            for line in open_file:
+                out_lines.append( line.strip() )
+        return out_lines
+                
+
+    def _remove_file_extension( self, item ):
+        return item.strip().split( '.' )[ 0 ]
+
+        
+class RemoteRecordRetriever( RecordRetriever ):
+    def __init__( self,  retriever = None ):
+        super.__init__( retriever )
+        
+    def retrieve( self, record_id ):
+        return self._retriever.get_record( record_id )
+        
+class DualRecordRetriever:
+    def __init__( self, retriever = None ):
+        super.__init( retriever )
+        
             
 class FileParser:
     def __init__( self, filename = None ):
