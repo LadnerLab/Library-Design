@@ -174,7 +174,7 @@ def main():
     print (len(famDict), len(famDictSpec))
     
     #Write out species-centric
-    fout = open("species-centric.txt", "w")
+    fout = open(args.output + "species-centric.txt", "w")
     fout.write("Species\tTotalOligos\tSpecificOligos\n")
     for sp,count in spDict.items():
         if sp in spDictSpec: specific = spDictSpec[sp]
@@ -183,7 +183,7 @@ def main():
     fout.close()
     
     #Write out genus-centric
-    fout = open("genus-centric.txt", "w")
+    fout = open(args.output + "genus-centric.txt", "w")
     fout.write("Genus\tTotalOligos\tSpecificOligos\n")
     for gen,count in genDict.items():
         if gen in genDictSpec: specific = genDictSpec[gen]
@@ -192,7 +192,7 @@ def main():
     fout.close()
     
     #Write out family-centric
-    fout = open("family-centric.txt", "w")
+    fout = open(args.output + "family-centric.txt", "w")
     fout.write("Family\tTotalOligos\tSpecificOligos\n")
     for fam,count in famDict.items():
         if fam in famDictSpec: specific = famDictSpec[fam]
