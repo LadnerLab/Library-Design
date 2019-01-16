@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import sys
+import sys, re
 
 import protein_oligo_library as oligo
 
@@ -28,6 +28,11 @@ def main():
     arg_parser.add_argument( '-r', '--reference',
                              help = "Fasta reference dataset used to create library"
                            )
+
+    arg_parser.add_argument( '-c', '--code',
+                             help = "Tab-delimited file needed if the map file contains coded names"
+                           )
+
 
     args = arg_parser.parse_args()
 
@@ -63,6 +68,14 @@ def main():
                      }
 
 
+    #Read in code, if a code file is provided
+    if args.code:
+        decode={}
+        with open(args.code, "r") as fin:
+            for line in fin:
+                cols=line.strip("\n").split("\t")
+                decode[cols[1]]=cols[0]
+
     for line in open( args.gap_file, 'r' ):
         line = line.split( '|' )
         gap_dict[ line[ 0 ] ] = line[ 1 ].strip()
@@ -87,31 +100,22 @@ def main():
     for line in open( args.map, 'r' ):
 
         oligo_file = open( args.output + "_oligo.tsv", 'a' )
-        line = line.split( '\t' )
+        line = line.strip("\n").split( '\t' )
 
-        taxids = set( [ oligo.get_taxid_from_name( item ) for item in line[ 1 ].split( '~' ) ] )
-
-        taxids = oligo.create_valid_taxids( taxids, missing_id_key )
+        if args.code:
+            taxids = set( [ get_OXXids_from_name( decode[item] ) for item in line[ 1 ].split( '~' ) ] )
+        else:
+            taxids = set( [ get_OXXids_from_name( item ) for item in line[ 1 ].split( '~' ) ] )
+        
+#        taxids = oligo.create_valid_taxids( taxids, missing_id_key )
 
         current_entry = line[ 0 ].strip() + '\t'
 
-        current_species = set()
-        current_genus = set()
-        current_family = set()
+        current_species = set([x[0] for x in taxids if x[0]])
+        current_genus = set([x[1] for x in taxids if x[1]])
+        current_family = set([x[2] for x in taxids if x[2]])
 
         JOIN_CHAR = '~'
-
-        for current_item in taxids:
-            try:
-                current_species |= set( [ taxid_dict[current_item][ 1 ] ] )
-                current_genus   |= set( [ taxid_dict[ current_item][2] ] )
-                current_family  |= set( [ taxid_dict[current_item][3] ] )
-            except KeyError:
-                missing_ids.add( current_item )
-
-        current_species = [ item for item in list( current_species ) if len( item ) > 0 ]
-        current_genus   = [ item for item in list( current_genus ) if len( item ) > 0 ]
-        current_family  = [ item for item in list( current_family ) if len( item ) > 0 ]
 
         current_entry += "%d\t%d\t%d\t%d\t" % ( len( line[ 1 ].split( '~' ) ), len( current_species ),
                                             len( current_genus ),
@@ -147,22 +151,22 @@ def main():
         else:
             name, numSeqs, numSp, numGen, numFam, namesSp, namesGen, namesFam = line.strip("\n").split("\t")
             #species-centric
-            for each in namesSp.strip(',').split(','):
+            for each in namesSp.strip(',').split(JOIN_CHAR):
                 if len( each ) > 0:
                     spDict[each] = spDict.get(each, 0) + 1
-                    if len(namesSp.strip(',').split(','))==1:
+                    if len(namesSp.strip(',').split(JOIN_CHAR))==1:
                         spDictSpec[each] = spDictSpec.get(each, 0) + 1
             #genus-centric
-            for each in namesGen.strip(',').split(','):
+            for each in namesGen.strip(',').split(JOIN_CHAR):
                 if len( each ) > 0:
                     genDict[each] = genDict.get(each, 0) + 1
-                    if len(namesGen.strip(',').split(','))==1:
+                    if len(namesGen.strip(',').split(JOIN_CHAR))==1:
                         genDictSpec[each] = genDictSpec.get(each, 0) + 1
             #family-centric
-            for each in namesFam.strip(',').split(','):
+            for each in namesFam.strip(',').split(JOIN_CHAR):
                 if len( each ) > 0:
                     famDict[each] = famDict.get(each, 0) + 1
-                    if len(namesFam.strip(',').split(','))==1:
+                    if len(namesFam.strip(',').split(JOIN_CHAR))==1:
                         famDictSpec[each] = famDictSpec.get(each, 0) + 1
     
     print (len(spDict), len(spDictSpec))
@@ -195,6 +199,11 @@ def main():
         else: specific = 0
         fout.write("%s\t%d\t%d\n" % (fam, count, specific))
     fout.close()
+
+def get_OXXids_from_name(name):
+    oxpat = re.compile("OXX=(\d*),(\d*),(\d*),(\d*)")
+    tax_ids = oxpat.search(name)
+    return tax_ids.group(2),tax_ids.group(3),tax_ids.group(4)
 
 if __name__ == '__main__':
     main()
