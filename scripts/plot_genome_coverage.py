@@ -36,6 +36,12 @@ def main():
                                                        "Entrez. If this flag is included, the files will be searched for locally.",
                              action = 'store_true'
                            )
+    arg_parser.add_argument( '-t', '--num_threads', help = "Number of threads to use for blast+ queries",
+                             default = 1, type = int
+                           )
+    arg_parser.add_argument( '-l', '--library', help = "Filename in which a designed library is stored, must be in FASTA format. "
+                                                       "Note that a blast db will be created from this fasta to improve blasting performance"
+                           )
 
     # parse args
     args = arg_parser.parse_args()
@@ -89,6 +95,7 @@ def main():
                 writer.write_file( filename, record, append = True)
 
     # perform the blast analyses on each protein sequence
+
 
     # create a directory to hold the blast outputs 
 
