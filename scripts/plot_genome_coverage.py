@@ -84,9 +84,25 @@ def main():
                                             accession
                                           )
 
-        for index, record in enumerate( new_records ):
-            writer = writers.as_list()[ index ]
-            writer.write_file( filename, record, append = True)
+            for index, record in enumerate( new_records ):
+                writer = writers.as_list()[ index ]
+                writer.write_file( filename, record, append = True)
+
+    # perform the blast analyses on each protein sequence
+
+    # create a directory to hold the blast outputs 
+
+    # create the command to be used for blasting
+
+    # for each record, perform the blast
+
+        # invoke the command with the correct input file
+
+    # combine the blast outputs to a single output
+    
+
+
+    # create a plot, one for each entry in the protein dir
 
 class Composite:
     def __init__( self, *args ):
