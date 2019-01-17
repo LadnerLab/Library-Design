@@ -7,6 +7,7 @@ matplotlib.use( 'Agg' )          # Don't want to display charts
 import matplotlib.pyplot as plt  # For generating charts
 import sys                       # for handling errors
 import os                        # for directory operations
+import subprocess                # for running queries
 
 def main():
 
@@ -45,6 +46,8 @@ def main():
 
     # parse args
     args = arg_parser.parse_args()
+
+    BLAST_OUT_DIR = 'blast_results'
 
     # verify command-line arguments
     try:
@@ -94,22 +97,36 @@ def main():
                 writer = writers.as_list()[ index ]
                 writer.write_file( filename, record, append = True)
 
-    # perform the blast analyses on each protein sequence
+    blaster = SubprocessRunner()
+    base_blast_command = 'blastp -query %s -subject -outfmt 5' # 5 for XML format
 
+    create_blast_db( blaster, args.library )
 
     # create a directory to hold the blast outputs 
+    if not os.path.exists( BLAST_OUT_DIR ):
+        os.makedir( BLAST_OUT_DIR )
 
-    # create the command to be used for blasting
+    
+    # perform the blast analyses on each protein sequence
+    for record in accession_data.as_list():
 
-    # for each record, perform the blast
+        # create the command to be used for blasting
+
 
         # invoke the command with the correct input file
 
     # combine the blast outputs to a single output
-    
 
 
     # create a plot, one for each entry in the protein dir
+
+def create_blast_db( runner, ref_file ):
+    command = [ 'makeblastdb', '-in %s' % ref_file,
+                '-input_type fasta',
+                '-dbtype prot'
+              ]
+
+    runner.invoke( command )
 
 class Composite:
     def __init__( self, *args ):
@@ -142,6 +159,28 @@ class FileParser:
 
     def parse( self ):
         pass
+
+class SubprocessRunner():
+    def __init__( self ):
+        self._runner       = subprocess.check_output
+        self._last_command = None
+        self._error        = False
+
+    def invoke( self, command_arg_list ):
+        self._last_command = command_arg_list
+
+        try:
+            value = self._runner( command_arg_list ).decode()
+            # If we reach this point, runner returned exit status of zero
+            self._error = False
+            return value
+
+        except:
+            self._error = True
+            return None
+
+    def get_last_command( self ):
+        return self._last_command
 
 class AccessionParser( FileParser ):
     def __init__( self, filename = None ):
