@@ -71,17 +71,17 @@ def main():
     controllers.call( EntrezController.set_connection, connection )
 
     # download genome information, if necessary. 
-    for record in accession_data.as_list():
-        filename = record.get_id()
-        accession = ','.join( record.get_accession_num() )
-        new_records = controllers.call( EntrezController.get_record,
-                                        accession
-                                      )
+   for record in accession_data.as_list():
+       filename = record.get_id()
+       accession = ','.join( record.get_accession_num() )
+       new_records = controllers.call( EntrezController.get_record,
+                                       accession
+                                     )
 
-        for index, record in enumerate( new_records ):
-            writer = writers.as_list()[ index ]
+       for index, record in enumerate( new_records ):
+           writer = writers.as_list()[ index ]
 
-            writer.write_file( filename, record, append = True)
+           writer.write_file( filename, record, append = True)
         
 class Composite:
     def __init__( self, *args ):
@@ -171,9 +171,27 @@ class RemoteRecordRetriever( RecordRetriever ):
         return self._retriever.get_record( record_id )
         
 class DualRecordRetriever:
-    def __init__( self, retriever = None ):
+    def __init__( self, local_retr = None, remote_retr = None ):
         super.__init( retriever )
+
+        self._local_retr  = local_retr
+        self._remote_retr = remote_retr
+
+    def retrieve( self, record_id ):
+        try:
+             yield self._local_retr.retrieve( record_id )
+        except LocalRecordRetriever.RecordNotFoundException:
+            yield self._remote_retr.retrieve( record_id )
+
+    def set_local_retriever( self, new_retr ):
+        self._local_retr = new_retr
         
+    def set_remote_retriever( self, new_retr ):
+        self._remote_retr = new_retr
+
+    def set_retrievers( self, local_retr = None, remote_retr = None ):
+        self.set_local_retriever( local_retr )
+        self.set_remote_retriever( remote_retr )
             
 class FileParser:
     def __init__( self, filename = None ):
