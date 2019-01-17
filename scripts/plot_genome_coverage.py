@@ -32,6 +32,10 @@ def main():
                                                  "With a valid api key, 10 requests will be made "
                                                  "per second."
                            )
+    arg_parser.add_argument( '--dont_download', help = "Include this flag if the sequences will not need to be downloaded from "
+                                                       "Entrez. If this flag is included, the files will be searched for locally.",
+                             action = 'store_true'
+                           )
 
     # parse args
     args = arg_parser.parse_args()
@@ -66,23 +70,24 @@ def main():
                             nucleotide_writer,
                             protein_writer
                           )
+    to_download = not args.dont_download
 
     # Everyone shares a connection so request limit is not overriden
     controllers.call( EntrezController.set_connection, connection )
 
     # download genome information, if necessary. 
-   for record in accession_data.as_list():
-       filename = record.get_id()
-       accession = ','.join( record.get_accession_num() )
-       new_records = controllers.call( EntrezController.get_record,
-                                       accession
-                                     )
+    if to_download:
+        for record in accession_data.as_list():
+            filename = record.get_id()
+            accession = ','.join( record.get_accession_num() )
+            new_records = controllers.call( EntrezController.get_record,
+                                            accession
+                                          )
 
-       for index, record in enumerate( new_records ):
-           writer = writers.as_list()[ index ]
+        for index, record in enumerate( new_records ):
+            writer = writers.as_list()[ index ]
+            writer.write_file( filename, record, append = True)
 
-           writer.write_file( filename, record, append = True)
-        
 class Composite:
     def __init__( self, *args ):
         self._items = list()
@@ -106,92 +111,6 @@ class Composite:
 
     def as_list( self ):
         return self._items
-            
-
-class RecordRetriever:
-    def __init__( self,  retriever = None ):
-        self._retriever = retriever
-
-    def retrieve( self, record_id ):
-        pass
-
-    def set_retriever( self, new_retriever ):
-        self._retriever = new_retriever
-  
-class LocalRecordRetriever( RecordRetriever ):
-    def __init__( self, location = None ):
-        self._location = location
-
-    def set_location( self, new_loc ):
-        self._location = new_loc
-
-    def set_retrieve_method( self, new_method ):
-        self._get_record = new_method
-
-    class RecordNotFoundException( Exception ):
-        def __init__( self, record ):
-            self._not_found = record
-            
-        def __str__( self ):
-            return "%s was not found" % self._not_found
-
-    def retrieve( self, record_id ):
-        found = False
-        for item in os.listdir( self._location ):
-            no_ext = self._remove_file_extension( item )
-            if no_ext == record_id:
-                found = True
-
-                return_val = [ self._get_record( self._location + '/' + item ) ]
-
-        if not found:
-            raise LocalRecordRetriever.RecordNotFoundException( record_id )
-
-        return return_val
-
-    def _get_record( self, filename ):
-        record_path = filename
-        out_lines = list()
-
-        with open( record_path, 'r' ) as open_file:
-            for line in open_file:
-                out_lines.append( line.strip() )
-        return out_lines
-                
-
-    def _remove_file_extension( self, item ):
-        return item.strip().split( '.' )[ 0 ]
-
-        
-class RemoteRecordRetriever( RecordRetriever ):
-    def __init__( self,  retriever = None ):
-        super.__init__( retriever )
-        
-    def retrieve( self, record_id ):
-        return self._retriever.get_record( record_id )
-        
-class DualRecordRetriever:
-    def __init__( self, local_retr = None, remote_retr = None ):
-        super.__init( retriever )
-
-        self._local_retr  = local_retr
-        self._remote_retr = remote_retr
-
-    def retrieve( self, record_id ):
-        try:
-             yield self._local_retr.retrieve( record_id )
-        except LocalRecordRetriever.RecordNotFoundException:
-            yield self._remote_retr.retrieve( record_id )
-
-    def set_local_retriever( self, new_retr ):
-        self._local_retr = new_retr
-        
-    def set_remote_retriever( self, new_retr ):
-        self._remote_retr = new_retr
-
-    def set_retrievers( self, local_retr = None, remote_retr = None ):
-        self.set_local_retriever( local_retr )
-        self.set_remote_retriever( remote_retr )
             
 class FileParser:
     def __init__( self, filename = None ):
