@@ -119,7 +119,7 @@ def main():
 
 
         # invoke the command with the correct input file
-        blaster.invoke( blast_command )
+        # blaster.invoke( blast_command )
 
     # combine the blast outputs to a single output
 
@@ -127,24 +127,23 @@ def main():
     # create a plot, one for each entry in the protein dir
 
 def create_blast_db( runner, ref_file ):
-    command = [ 'makeblastdb', '-in %s' % ref_file,
-                '-input_type fasta',
-                '-dbtype prot'
+    command = [ 'makeblastdb', '-in', '%s' % ref_file,
+                '-input_type', 'fasta',
+                '-dbtype', 'prot'
               ]
 
     runner.invoke( command )
 
 def make_blast_command( record_data, db_name, file_suffix, work_dir, out_dir, num_threads ):
     blast_command = [ 'blastp',
-                      '-query %s' % ( '%s/%s%s' % ( work_dir,
-                                                    record_data.get_id(),
-                                                    file_suffix
-                                                  )
-                                    ),
-                      '-db %s' % ( db_name ),
-                      '-outfmt 5', # 5 for XML format
-                      '-num_threads %d' % num_threads,
-                      '-out %s/%s_out' % ( out_dir, record_data.get_id() )
+                      '-query', '%s/%s%s' % ( work_dir,
+                                              record_data.get_id(),
+                                              file_suffix
+                                            ),
+                      '-db', '%s' % ( db_name ),
+                      '-outfmt', '5', # 5 for XML format
+                      '-num_threads',  '%d' % num_threads,
+                      '-out', '%s/%s_out' % ( out_dir, record_data.get_id() )
                       ]
 
     return blast_command
