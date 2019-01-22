@@ -98,22 +98,27 @@ def main():
                 writer.write_file( filename, record, append = True)
 
     blaster = SubprocessRunner()
-    base_blast_command = 'blastp -query %s -subject -outfmt 5' # 5 for XML format
 
     create_blast_db( blaster, args.library )
 
     # create a directory to hold the blast outputs 
     if not os.path.exists( BLAST_OUT_DIR ):
-        os.makedir( BLAST_OUT_DIR )
+        os.mkdir( BLAST_OUT_DIR )
 
     
     # perform the blast analyses on each protein sequence
     for record in accession_data.as_list():
 
         # create the command to be used for blasting
+        blast_command = make_blast_command( record, args.library,
+                                            protein_writer.get_suffix(),
+                                            protein_writer.get_work_dir(),
+                                            args.num_threads
+                                          )
 
 
         # invoke the command with the correct input file
+        blaster.invoke( blast_command )
 
     # combine the blast outputs to a single output
 
@@ -127,6 +132,20 @@ def create_blast_db( runner, ref_file ):
               ]
 
     runner.invoke( command )
+
+def make_blast_command( record_data, db_name, file_suffix, work_dir, num_threads ):
+    blast_command = [ 'blastp',
+                      '-query %s' % ( '%s/%s%s' % ( work_dir,
+                                                    record_data.get_id(),
+                                                    file_suffix
+                                                  )
+                                    ),
+                      '-db %s' % ( db_name ),
+                      '-outfmt 5', # 5 for XML format
+                      '-num_threads %d' % num_threads
+                      ]
+
+    return blast_command
 
 class Composite:
     def __init__( self, *args ):
@@ -312,6 +331,11 @@ class RecordWriter:
 
     def set_suffix( self, new_suffix ):
         self._suffix = new_suffix
+
+    def get_suffix( self ):
+        return self._suffix
+    def get_work_dir( self ):
+        return self._work_dir
         
     def set_prefix( self, new_prefix ):
         self._prefix = new_prefix
