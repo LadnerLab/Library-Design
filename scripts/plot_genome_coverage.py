@@ -313,12 +313,84 @@ class BlastRecordParser:
         self._num_hsps       = 1
         self._identity_score = 0.5
 
+    class BlastRecordHit:
+        def __init__( self,
+                      query_name       = None,
+                      query_length     = None,
+                      subject_name     = None,
+                      subject_length   = None,
+                      alignment_length = None,
+                      query_start      = None,
+                      query_end        = None,
+                      subject_start    = None,
+                      subject_end      = None,
+                      hsp_score        = None,
+                      hsp_expect       = None,
+                      hsp_identities   = None,
+                      percent_match    = None,
+                      number_of_gaps   = None
+                     ):
+            self.query_name       = query_name
+            self.query_length     = query_length
+            self.subject_name     = subject_name
+            self.subject_length   = subject_length
+            self.alignment_length = alignment_length
+            self.query_start      = query_start
+            self.query_end        = query_end
+            self.subject_start    = subject_start
+            self.subject_end      = subject_end
+            self.hsp_score        = hsp_score
+            self.hsp_expect       = hsp_expect
+            self.hsp_identities   = hsp_identities
+            self.percent_match    = percent_match
+            self.number_of_gaps   = number_of_gaps
+                      
     def parse( self, blast_record ):
         with open( blast_record.get_filename() ) as open_file:
             blast_records = NCBIXML.parse( open_file )
 
             for record in blast_records:
-                pass
+                parsed_record = self._parse_record( record )
+
+    def _parse_record( self, record ):
+        num_hits = len( record.alignments )
+        hits = list()
+
+        if len( record.alignments ) > 0:
+            if len( record.alignments ) > self._num_hits:
+                num_hits = self._num_hits
+
+                for current_hit in range( self._num_hits ):
+                    hits.append( self._parse_hit( record, current_hit ) )
+
+    def _parse_hit( self, record, hit ):
+        alignment = record.alignments[ hit ]
+        num_hsps = min( self._num_hsps, len( alignment.hsps ) )
+        out_list = list()
+
+        for this_hsp in range( num_hsps ):
+            first_hsp = alignment.hsps[ this_hsp ]
+
+            hit = BlastRecordParser.BlastRecordHit( 
+                     query_name       = record.query,
+                     query_length     = record.query_length,
+                     subject_name     = alignment.title,
+                     subject_length   = alignment.length,
+                     alignment_length = first_hsp.align_length,
+                     query_start      = first_hsp.query_start,
+                     query_end        = first_hsp.query_end,
+                     subject_start    = first_hsp.sbjct_start,
+                     subject_end      = first_hsp.sbjct_end,
+                     hsp_score        = first_hsp.score,
+                     hsp_expect       = first_hsp.expect,
+                     hsp_identities   = first_hsp.identities,
+                     percent_match    = float(first_hsp.identities)/int(first_hsp.align_length),
+                     number_of_gaps   =first_hsp.gaps
+                    )
+            out_list.append( hit )
+        return out_list
+
+         
 
     def set_num_hits( self, new_hits ):
         self._num_hits = new_hits
