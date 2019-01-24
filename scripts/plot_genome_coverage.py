@@ -44,6 +44,13 @@ def main():
     arg_parser.add_argument( '-l', '--library', help = "Filename in which a designed library is stored, must be in FASTA format. "
                                                        "Note that a blast db will be created from this fasta to improve blasting performance"
                            )
+    arg_parser.add_argument( '-n', '--num_hits', type = int, help = "Integer specifying the number of blast hits to report per query",
+                             default = 10
+                           )
+    arg_parser.add_argument( '--num_hsps', type = int, default = 1, help = "Integer specifying number of alignments to report "
+                                                                           "per query/subject pair."
+                           )
+    arg_parser.add_argument( '--identity', type = float, help = "Identity threshold to use when determining goodhit" )
 
     # parse args
     args = arg_parser.parse_args()
