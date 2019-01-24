@@ -349,11 +349,16 @@ class BlastRecordParser:
         records = list()
 
         with open( blast_record.get_filename() ) as open_file:
-            blast_records = NCBIXML.parse( open_file )
+            try:
+                
+                blast_records = NCBIXML.parse( open_file )
 
-            for record in blast_records:
-                parsed_record = self._parse_record( record )
-                records.append( parsed_record )
+                for record in blast_records:
+                    parsed_record = self._parse_record( record )
+                    records.append( parsed_record )
+            except ValueError as error:
+                print( error, blast_record.get_filename() )
+
 
         blast_record._records = records
 
@@ -557,7 +562,7 @@ class BlastPlotter:
             out_path = self._dir
         if len( blast_record._records ) > 0:
             record_lengths = self._get_record_lengths( blast_record )
-        print( record_lengths )
+            print( record_lengths )
         
 
     def _get_record_lengths( self, record ):
