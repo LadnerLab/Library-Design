@@ -56,6 +56,7 @@ def main():
     args = arg_parser.parse_args()
 
     BLAST_OUT_DIR = 'blast_results'
+    PLOT_OUT_DIR  = 'protein_plots'
     blast_records = BlastRecordCreator()
 
     # verify command-line arguments
@@ -142,6 +143,17 @@ def main():
 
 
     # create a plot, one for each entry in the protein dir
+    plotter = BlastPlotter( dir = PLOT_OUT_DIR )
+
+    blast_parser = blast_records.as_list()[ 0 ].get_parser()
+
+    blast_parser.set_num_hits( args.num_hits )
+    blast_parser.set_num_hsps( args.num_hsps )
+    blast_parser.set_id_score( args.identity )
+
+    for record in blast_records.as_list():
+        plotter.plot( record.get_parser().parse( record ) )
+        
 
 def create_blast_db( runner, ref_file ):
     command = [ 'makeblastdb', '-in', '%s' % ref_file,
@@ -295,14 +307,41 @@ class AccessionDataCollection:
     def as_list( self ):
         return self._data
 
+class BlastRecordParser:
+    def __init__( self ):
+        self._num_hits       = None
+        self._num_hsps       = None
+        self._identity_score = None
+
+    def parse( self, blast_record ):
+        with open( blast_record.get_filename() ) as open_file:
+            blast_records = NCBIXML.parse( open_file )
+
+            for record in blast_records:
+                pass
+
+    def set_num_hits( self, new_hits ):
+        self._num_hits = new_hits
+
+    def set_num_hsps( self, new_hsps ):
+        self._num_hsps = new_hsps
+
+    def set_id_score( self, new_id ):
+        self._identity_score = new_id 
+
 class BlastRecord:
+    parser = BlastRecordParser()
     def __init__( self, outfile_name ):
         self._file = outfile_name
 
     def get_filename( self ):
         return self._file
+
     def set_filename( self, newfile ):
         self._file = newfile
+
+    def get_parser( self ):
+        return BlastRecord.parser
         
 class BlastRecordCreator:
     def __init__( self ):
@@ -315,6 +354,8 @@ class BlastRecordCreator:
 
     def set_factory( self, new_fac ):
         self._factory = new_factory
+    def as_list( self ):
+        return self._blast_data
         
 class BlastRecordFactory:
     def create_record( self, record_name ):
@@ -420,6 +461,19 @@ class EntrezController:
                                  id = id
                                ).read()
                                  
+class BlastPlotter:
+    def __init__( self, dir = None ):
+        self._dir = dir
+
+        if dir:
+            if not os.path.exists( dir ):
+                os.mkdir( dir )
+    def plot( self, blast_record ):
+        out_path = ""
+        if self._dir:
+            out_path = self._dir
+
+            
 class EntrezConnection:
     API_KEY_REQS_PER_SEC = 10
     EMAIL_REQS_PER_SEC   = 3
