@@ -354,7 +354,10 @@ class BlastRecordParser:
             for record in blast_records:
                 parsed_record = self._parse_record( record )
                 records.append( parsed_record )
-        return records
+
+        blast_record._records = records
+
+        return blast_record
 
 
     def _parse_record( self, record ):
@@ -390,8 +393,8 @@ class BlastRecordParser:
                      hsp_score        = first_hsp.score,
                      hsp_expect       = first_hsp.expect,
                      hsp_identities   = first_hsp.identities,
-                     percent_match    = float(first_hsp.identities)/int(first_hsp.align_length),
-                     number_of_gaps   =first_hsp.gaps
+                     percent_match    = float( first_hsp.identities - first_hsp.gaps )/ int( first_hsp.align_length ),
+                     number_of_gaps   = first_hsp.gaps
                     )
             out_list.append( hit )
         return out_list
@@ -411,7 +414,7 @@ class BlastRecord:
     parser = BlastRecordParser()
     def __init__( self, outfile_name ):
         self._file        = outfile_name
-        self._parsed_data = None
+        self._records = None
 
     def get_filename( self ):
         return self._file
@@ -551,6 +554,7 @@ class BlastPlotter:
         out_path = ""
         if self._dir:
             out_path = self._dir
+        
 
             
 class EntrezConnection:
