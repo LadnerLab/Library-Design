@@ -430,6 +430,15 @@ class BlastRecord:
 
     def get_parser( self ):
         return BlastRecord.parser
+
+    def records_as_string( self ):
+        out_string = ""
+
+        for outer_item in self._records:
+            for inner_item in outer_item:
+                for record in inner_item:
+                    out_string += "%s\n" % ( str( record ) )
+        return out_string
         
 class BlastRecordCreator:
     def __init__( self ):
@@ -557,12 +566,23 @@ class BlastPlotter:
             if not os.path.exists( dir ):
                 os.mkdir( dir )
     def plot( self, blast_record ):
+        HEADER = (  "Query Name\tQuery Length\tSubject Name\t"
+                    "Subject Length\tAlignment Length\tQuery Start"
+                    "\tQuery End\tSubject Start\tSubject End\tHsp Score"
+                    "\tHsp Expect\tHsp Identities\t"
+                    "Percent Match\tNumber of Gaps"
+                 )
+
         out_path = ""
         if self._dir:
             out_path = self._dir
         if len( blast_record._records ) > 0:
-            record_lengths = self._get_record_lengths( blast_record )
-            print( record_lengths )
+            # record_lengths = self._get_record_lengths( blast_record )
+            with open( '%s/%s' % ( out_path, blast_record.get_filename().split(
+                    '/' )[ 1 ] ), 'w' ) as open_file:
+                open_file.write( '%s\n' % HEADER )
+                open_file.write( blast_record.records_as_string() )
+            # print( record_lengths )
         
 
     def _get_record_lengths( self, record ):
