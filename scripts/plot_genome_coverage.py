@@ -346,11 +346,16 @@ class BlastRecordParser:
             self.number_of_gaps   = number_of_gaps
                       
     def parse( self, blast_record ):
+        records = list()
+
         with open( blast_record.get_filename() ) as open_file:
             blast_records = NCBIXML.parse( open_file )
 
             for record in blast_records:
                 parsed_record = self._parse_record( record )
+                records.append( parsed_record )
+        return records
+
 
     def _parse_record( self, record ):
         num_hits = len( record.alignments )
@@ -362,6 +367,7 @@ class BlastRecordParser:
 
                 for current_hit in range( self._num_hits ):
                     hits.append( self._parse_hit( record, current_hit ) )
+        return hits
 
     def _parse_hit( self, record, hit ):
         alignment = record.alignments[ hit ]
@@ -404,7 +410,8 @@ class BlastRecordParser:
 class BlastRecord:
     parser = BlastRecordParser()
     def __init__( self, outfile_name ):
-        self._file = outfile_name
+        self._file        = outfile_name
+        self._parsed_data = None
 
     def get_filename( self ):
         return self._file
