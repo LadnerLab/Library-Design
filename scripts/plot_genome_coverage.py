@@ -309,9 +309,9 @@ class AccessionDataCollection:
 
 class BlastRecordParser:
     def __init__( self ):
-        self._num_hits       = None
-        self._num_hsps       = None
-        self._identity_score = None
+        self._num_hits       = 10
+        self._num_hsps       = 1
+        self._identity_score = 0.5
 
     def parse( self, blast_record ):
         with open( blast_record.get_filename() ) as open_file:
