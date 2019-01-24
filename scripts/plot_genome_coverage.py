@@ -119,7 +119,12 @@ def main():
 
 
         # invoke the command with the correct input file
-        # blaster.invoke( blast_command )
+        record_path = '%s/%s_out' % (
+                                    BLAST_OUT_DIR,
+                                    record.get_id()
+                                  )
+        if not os.path.isfile( record_path ):
+            blaster.invoke( blast_command )
 
     # combine the blast outputs to a single output
 
