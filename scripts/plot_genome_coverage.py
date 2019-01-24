@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt  # For generating charts
 import sys                       # for handling errors
 import os                        # for directory operations
 import subprocess                # for running queries
+from Bio.Blast import NCBIXML    # for parsing blast results 
 
 def main():
 
@@ -48,6 +49,7 @@ def main():
     args = arg_parser.parse_args()
 
     BLAST_OUT_DIR = 'blast_results'
+    blast_records = BlastRecordCreator()
 
     # verify command-line arguments
     try:
@@ -123,6 +125,9 @@ def main():
                                     BLAST_OUT_DIR,
                                     record.get_id()
                                   )
+
+        blast_records.create_record( record_path )
+
         if not os.path.isfile( record_path ):
             blaster.invoke( blast_command )
 
@@ -282,6 +287,31 @@ class AccessionDataCollection:
         self._data.append( new_data )
     def as_list( self ):
         return self._data
+
+class BlastRecord:
+    def __init__( self, outfile_name ):
+        self._file = outfile_name
+
+    def get_filename( self ):
+        return self._file
+    def set_filename( self, newfile ):
+        self._file = newfile
+        
+class BlastRecordCreator:
+    def __init__( self ):
+        self._factory = BlastRecordFactory()
+        self._blast_data = list()
+
+    def create_record( self, record_name ):
+        rec = self._factory.create_record( record_name )
+        self._blast_data.append( rec )
+
+    def set_factory( self, new_fac ):
+        self._factory = new_factory
+        
+class BlastRecordFactory:
+    def create_record( self, record_name ):
+        return BlastRecord( record_name )
 
 class AccessionData:
     def __init__( self, tax_id, accession_num ):
