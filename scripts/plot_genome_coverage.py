@@ -368,8 +368,9 @@ class BlastRecordParser:
             if len( record.alignments ) > self._num_hits:
                 num_hits = self._num_hits
 
-                for current_hit in range( self._num_hits ):
-                    hits.append( self._parse_hit( record, current_hit ) )
+            for current_hit in range( num_hits ):
+                hits.append( self._parse_hit( record, current_hit ) )
+
         return hits
 
     def _parse_hit( self, record, hit ):
@@ -554,8 +555,20 @@ class BlastPlotter:
         out_path = ""
         if self._dir:
             out_path = self._dir
+        if len( blast_record._records ) > 0:
+            record_lengths = self._get_record_lengths( blast_record )
+        print( record_lengths )
         
 
+    def _get_record_lengths( self, record ):
+        out_list = list()
+        for rec in record._records:
+            out_list.append( self._get_record_length( rec ) )
+        return out_list
+
+    def _get_record_length( self, sub_record ):
+        return sub_record[ 0 ][ 0 ].query_length
+        
             
 class EntrezConnection:
     API_KEY_REQS_PER_SEC = 10
