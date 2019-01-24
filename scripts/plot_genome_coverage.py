@@ -129,7 +129,7 @@ def main():
 
 
         # invoke the command with the correct input file
-        record_path = '%s/%s_out' % (
+        record_path = '%s/%s_out.tsv' % (
                                     BLAST_OUT_DIR,
                                     record.get_id()
                                   )
@@ -344,6 +344,18 @@ class BlastRecordParser:
             self.hsp_identities   = hsp_identities
             self.percent_match    = percent_match
             self.number_of_gaps   = number_of_gaps
+
+        def __str__( self ):
+            
+            return "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t" % \
+                   ( self.query_name, self.query_length, self.subject_name,
+                     self.subject_length, self.alignment_length, self.query_start,
+                     self.query_end, self.subject_start, self.subject_end,
+                     self.hsp_score, self.hsp_expect, self.hsp_identities, self.percent_match,
+                     self.number_of_gaps
+                   )
+
+        
                       
     def parse( self, blast_record ):
         records = list()
