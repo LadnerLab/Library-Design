@@ -50,7 +50,11 @@ def main():
     arg_parser.add_argument( '--num_hsps', type = int, default = 1, help = "Integer specifying number of alignments to report "
                                                                            "per query/subject pair."
                            )
-    arg_parser.add_argument( '--identity', type = float, help = "Identity threshold to use when determining goodhit" )
+    arg_parser.add_argument( '--identity', type = float, default = 0.85, help = "Identity threshold to use when determining goodhit" )
+    arg_parser.add_argument( '--alignment_length', type = int, default = 9, help = "Minimum length of alignment (any gaps are subtracted) "
+                                                                                   "for any hit to be considered good. Hits not meeting both "
+                                                                                   "this criteria, and identity criteria will not be included." 
+                           )
 
     # parse args
     args = arg_parser.parse_args()
@@ -152,8 +156,15 @@ def main():
     blast_parser.set_id_score( args.identity )
 
     for record in blast_records.as_list():
-        plotter.plot( record.get_parser().parse( record ) )
+        plotter.plot( get_good_hits(
+                                     record.get_parser().parse( record ),
+                                     args.identity, args.min_length
+                                   )
+                    )
         
+
+def get_good_hits( hits, min_identity, min_length ):
+    pass
 
 def create_blast_db( runner, ref_file ):
     command = [ 'makeblastdb', '-in', '%s' % ref_file,
@@ -589,7 +600,8 @@ class BlastPlotter:
         if self._dir:
             out_path = self._dir
         if len( blast_record._records ) > 0:
-            # record_lengths = self._get_record_lengths( blast_record )
+            record_lengths = self._get_record_lengths( blast_record )
+
             with open( '%s/%s' % ( out_path, blast_record.get_filename().split(
                     '/' )[ 1 ] ), 'w' ) as open_file:
                 open_file.write( '%s\n' % HEADER )
