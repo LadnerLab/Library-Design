@@ -532,7 +532,7 @@ class RecordWriter:
         if not os.path.exists( dir_name ):
             os.mkdir( dir_name, create_mode )
 
-    def write_file( self, filename, new_record, append = False ):
+    def write_file( self, filename, new_record, append = False, header = "" ):
         open_mode = 'w+'
 
         # Only creates the directory if it does not exist
@@ -547,6 +547,8 @@ class RecordWriter:
         openfile_name = "%s%s%s" % ( self._prefix, filename, self._suffix )
 
         with open( openfile_name, open_mode ) as open_file:
+            if header:
+                open_file.write( '%s\n' % header )
             open_file.write( new_record.strip() + '\n' )
 
         os.chdir( start_dir )
@@ -605,31 +607,40 @@ class EntrezController:
 class BlastPlotter:
     def __init__( self, dir = None ):
         self._dir = dir
+        self._record_writer = RecordWriter( suffix = '.tsv',
+                                            work_dir = dir
+                                          )
 
         if dir:
             if not os.path.exists( dir ):
                 os.mkdir( dir )
-    def plot( self, blast_record ):
+    def plot( self, blast_record, write_summary = False ):
+
+
+        out_path = ""
+        if self._dir:
+            out_path = self._dir
+        if write_summary:
+            self._write_summary( blast_record )
+            
+        if len( blast_record._records ) > 0:
+            record_lengths = self._get_record_lengths( blast_record )
+            print( record_lengths )
+            
+    def _write_summary( self, blast_record ):
         HEADER = (  "Query Name\tQuery Length\tSubject Name\t"
                     "Subject Length\tAlignment Length\tQuery Start"
                     "\tQuery End\tSubject Start\tSubject End\tHsp Score"
                     "\tHsp Expect\tHsp Identities\t"
                     "Percent Match\tNumber of Gaps"
                  )
-
-        out_path = ""
-        if self._dir:
-            out_path = self._dir
-        if len( blast_record._records ) > 0:
-            record_lengths = self._get_record_lengths( blast_record )
-
-            with open( '%s/%s' % ( out_path, blast_record.get_filename().split(
-                    '/' )[ 1 ] ), 'w' ) as open_file:
-                open_file.write( '%s\n' % HEADER )
-                open_file.write( blast_record.records_as_string() )
-            # print( record_lengths )
+        rec_file = '%s' % ( blast_record.get_filename().split(
+                            '/' )[ 1 ]
+                          )
+        self._record_writer.write_file( rec_file, str( blast_record ),
+                                        header = HEADER
+                                      )
         
-
     def _get_record_lengths( self, record ):
         out_list = list()
         for rec in record._records:
