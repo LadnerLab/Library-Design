@@ -224,11 +224,9 @@ class MapDecoder( FileDecoder ):
 
         split_data = split_data[ 1 ].split( DELIMITER )
 
-        for index, item in enumerate( split_data ):
-            # skip first item, as that is the key
-            if index:
-                item = self._decode_item( item.strip() )
-                decoded_data_list.append( item )
+        for item in split_data:
+            item = self._decode_item( item.strip() )
+            decoded_data_list.append( item )
         return [ key, decoded_data_list ]
 
     def _get_decoded_data( self ):
