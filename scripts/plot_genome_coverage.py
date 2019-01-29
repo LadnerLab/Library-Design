@@ -158,13 +158,34 @@ def main():
     for record in blast_records.as_list():
         plotter.plot( get_good_hits(
                                      record.get_parser().parse( record ),
-                                     args.identity, args.min_length
+                                     args.identity, args.alignment_length
                                    )
                     )
         
 
-def get_good_hits( hits, min_identity, min_length ):
-    pass
+def get_good_hits( record, min_identity, min_length ):
+    hits = record._records
+    out_hits = list()
+
+    for index, hit in enumerate( hits ):
+        inner_list = list()
+
+        for inner_index, inner in enumerate( hit ):
+            innermost_list = list()
+            for hit_index, hit_item in enumerate( inner ):
+                if is_good_hit( hit_item, min_identity, min_length ):
+                    innermost_list.append( hit_item )
+            if len( innermost_list ) > 0:
+                inner_list.append( innermost_list )
+        if len( inner_list ) > 0:
+            out_hits.append( inner_list )
+
+    record._records = out_hits
+    return record
+
+def is_good_hit( hit, min_identity, min_length ):
+    return ( hit.percent_match >= min_identity ) and \
+           ( hit.alignment_length - hit.number_of_gaps >= min_length )
 
 def create_blast_db( runner, ref_file ):
     command = [ 'makeblastdb', '-in', '%s' % ref_file,
