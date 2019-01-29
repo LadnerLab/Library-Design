@@ -159,7 +159,8 @@ def main():
         plotter.plot( get_good_hits(
                                      record.get_parser().parse( record ),
                                      args.identity, args.alignment_length
-                                   )
+                                   ),
+                      write_summary = True
                     )
         
 
