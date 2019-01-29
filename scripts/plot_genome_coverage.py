@@ -470,7 +470,8 @@ class BlastRecord:
         return self._file
 
     def get_id( self ):
-        return self._file.split( '.' )[ 0 ]
+        return self._file.split( '/' )[ 1 ] \
+                   .split( '.' )[ 0 ]
 
     def set_filename( self, newfile ):
         self._file = newfile
@@ -620,51 +621,44 @@ class BlastPlotter:
     def plot( self, blast_record, write_summary = False ):
         out_path = ""
         if self._dir:
-            out_path = self._dir
+            out_path = self._dir + '/'
         if write_summary:
             self._write_summary( blast_record )
             
         if len( blast_record._records ) > 0:
-            record_lengths = self._get_record_lengths( blast_record )
-
-            record_xvals = [ 0 ] * ( sum( record_lengths ) - 1 ) # 0-based index
-            self._get_xvals( record_xvals, record_lengths, blast_record._records )
-            # fig = plt.figure( figsize = ( 12, 12 ) )
+            record_xvals = self._get_xvals( blast_record._records )
             fig = plt.figure( figsize = ( 10, 10 ) )
-            # plt.title( blast_record.get_id() )
 
-            plot_dim = self._get_plot_dimension( len( record_lengths ) )
+            plot_dim = self._get_plot_dimension( len( record_xvals ) )
 
-            for index, x_val in enumerate( record_lengths ):
-                start_tick = sum( record_lengths[ :index ] )
-                end_tick   = min( len( record_xvals ), sum( record_lengths[ :index + 1 ]  ) )
-
-                y_axis = record_xvals[ start_tick : end_tick ]
+            for index, score_arr in enumerate( record_xvals ):
+                y_axis = score_arr
                 x_axis = range( 1, len( y_axis ) + 1 )
 
                 ax = fig.add_subplot( plot_dim, plot_dim, index + 1 )
                 ax.plot( x_axis, y_axis )
 
             plt.tight_layout()
-            fig.savefig( 'help.png' )
-            sys.exit( 1 )
+            fig.savefig( '%s%s.png' % ( out_path, blast_record.get_id() ))
 
     def _get_plot_dimension( self, num_items ):
         return math.ceil( math.sqrt( num_items ) )
 
-    def _get_xvals( self, record_vals, record_lengths, records ):
+    def _get_xvals( self, records ):
+        out_list = list()
         for index, record in enumerate( records ):
-            self._get_xval( record_vals,
-                            sum( record_lengths[ :index ] ) - 1,
-                            record )
+            out_list.append( self._get_xval( record ) )
+        return out_list
 
-    def _get_xval( self, record_vals, start_index, record ):
+    def _get_xval( self, record ):
+        out_list = [0] * record[ 0 ][ 0 ].query_length
         for hits in record:
             for hit in hits:
-                hit_start = start_index + hit.query_start 
-                hit_end   = start_index + hit.query_end
+                hit_start = hit.query_start - 1
+                hit_end   = hit.query_end 
 
-                self._update_values( record_vals, hit_start, hit_end )
+                self._update_values( out_list, hit_start, hit_end )
+        return out_list
 
     def _update_values( self, val_array, hit_start, hit_end ):
         for index in range( hit_start, hit_end ): # inclusive
