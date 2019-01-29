@@ -3,6 +3,7 @@ from Bio import Entrez           # for efetch
 import argparse                  # for parsing command-line arguments
 import time                      # for tracking request frequency, sleeping
 import matplotlib                # for generating charts
+import math
 matplotlib.use( 'Agg' )          # Don't want to display charts
 import matplotlib.pyplot as plt  # For generating charts
 import sys                       # for handling errors
@@ -388,8 +389,6 @@ class BlastRecordParser:
                      self.number_of_gaps
                    )
 
-        
-                      
     def parse( self, blast_record ):
         records = list()
 
@@ -469,6 +468,9 @@ class BlastRecord:
 
     def get_filename( self ):
         return self._file
+
+    def get_id( self ):
+        return self._file.split( '.' )[ 0 ]
 
     def set_filename( self, newfile ):
         self._file = newfile
@@ -608,7 +610,7 @@ class EntrezController:
 class BlastPlotter:
     def __init__( self, dir = None ):
         self._dir = dir
-        self._record_writer = RecordWriter( suffix = '.tsv',
+        self._record_writer = RecordWriter( suffix = '',
                                             work_dir = dir
                                           )
 
@@ -616,8 +618,6 @@ class BlastPlotter:
             if not os.path.exists( dir ):
                 os.mkdir( dir )
     def plot( self, blast_record, write_summary = False ):
-
-
         out_path = ""
         if self._dir:
             out_path = self._dir
@@ -626,7 +626,49 @@ class BlastPlotter:
             
         if len( blast_record._records ) > 0:
             record_lengths = self._get_record_lengths( blast_record )
-            print( record_lengths )
+
+            record_xvals = [ 0 ] * ( sum( record_lengths ) - 1 ) # 0-based index
+            self._get_xvals( record_xvals, record_lengths, blast_record._records )
+            # fig = plt.figure( figsize = ( 12, 12 ) )
+            fig = plt.figure( figsize = ( 10, 10 ) )
+            # plt.title( blast_record.get_id() )
+
+            plot_dim = self._get_plot_dimension( len( record_lengths ) )
+
+            for index, x_val in enumerate( record_lengths ):
+                start_tick = sum( record_lengths[ :index ] )
+                end_tick   = min( len( record_xvals ), sum( record_lengths[ :index + 1 ]  ) )
+
+                y_axis = record_xvals[ start_tick : end_tick ]
+                x_axis = range( 1, len( y_axis ) + 1 )
+
+                ax = fig.add_subplot( plot_dim, plot_dim, index + 1 )
+                ax.plot( x_axis, y_axis )
+
+            plt.tight_layout()
+            fig.savefig( 'help.png' )
+            sys.exit( 1 )
+
+    def _get_plot_dimension( self, num_items ):
+        return math.ceil( math.sqrt( num_items ) )
+
+    def _get_xvals( self, record_vals, record_lengths, records ):
+        for index, record in enumerate( records ):
+            self._get_xval( record_vals,
+                            sum( record_lengths[ :index ] ) - 1,
+                            record )
+
+    def _get_xval( self, record_vals, start_index, record ):
+        for hits in record:
+            for hit in hits:
+                hit_start = start_index + hit.query_start 
+                hit_end   = start_index + hit.query_end
+
+                self._update_values( record_vals, hit_start, hit_end )
+
+    def _update_values( self, val_array, hit_start, hit_end ):
+        for index in range( hit_start, hit_end ): # inclusive
+            val_array[ index ] += 1
             
     def _write_summary( self, blast_record ):
         HEADER = (  "Query Name\tQuery Length\tSubject Name\t"
@@ -638,7 +680,7 @@ class BlastPlotter:
         rec_file = '%s' % ( blast_record.get_filename().split(
                             '/' )[ 1 ]
                           )
-        self._record_writer.write_file( rec_file, str( blast_record ),
+        self._record_writer.write_file( rec_file, blast_record.records_as_string(),
                                         header = HEADER
                                       )
         
