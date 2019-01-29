@@ -161,7 +161,8 @@ def main():
                                      record.get_parser().parse( record ),
                                      args.identity, args.alignment_length
                                    ),
-                      write_summary = True
+                      write_summary = False,
+                      write_key = True
                     )
         
 
@@ -618,13 +619,26 @@ class BlastPlotter:
         if dir:
             if not os.path.exists( dir ):
                 os.mkdir( dir )
-    def plot( self, blast_record, write_summary = False ):
+
+    class PlotKey:
+        def __init__( self, x = 0, y = 0, name = "" ):
+            self.x    = x
+            self.y    = y
+            self.name = name
+
+        def __str__( self ):
+            return '%s\t%s\t%s' % ( self.name, self.y, self.x )
+
+    def plot( self, blast_record, write_summary = False,
+              write_key = False ):
         out_path = ""
         if self._dir:
             out_path = self._dir + '/'
         if write_summary:
             self._write_summary( blast_record )
             
+        plot_keys = list()
+
         if len( blast_record._records ) > 0:
             record_xvals = self._get_xvals( blast_record._records )
             fig = plt.figure( figsize = ( 10, 10 ) )
@@ -632,15 +646,41 @@ class BlastPlotter:
             plot_dim = self._get_plot_dimension( len( record_xvals ) )
 
             for index, score_arr in enumerate( record_xvals ):
+                curr_record_name = blast_record._records[ index ][ 0 ][ 0 ].query_name
                 y_axis = score_arr
                 x_axis = range( 1, len( y_axis ) + 1 )
 
                 ax = fig.add_subplot( plot_dim, plot_dim, index + 1 )
                 ax.plot( x_axis, y_axis )
 
+                plot_keys.append( BlastPlotter.PlotKey( x = index % plot_dim,
+                                                        y = index // plot_dim,
+                                                        name =  curr_record_name
+                                                      )
+                                )
+
             plt.tight_layout()
             fig.savefig( '%s%s.png' % ( out_path, blast_record.get_id() ))
 
+            if write_key:
+                self._write_key( plot_keys, blast_record )
+            plt.close( fig )
+
+    def _write_key( self, keys, blast_record ):
+        HEADER = "Name\tRow\tColumn" 
+
+        key_str = ''
+
+        for curr_key in keys:
+            key_str += '%s\n' % str( curr_key )
+            
+        rec_file = '%s_key' % ( blast_record.get_filename().split(
+                            '/' )[ 1 ]
+                          )
+        self._record_writer.write_file( rec_file, key_str,
+                                        header = HEADER
+                                      )
+        
     def _get_plot_dimension( self, num_items ):
         return math.ceil( math.sqrt( num_items ) )
 
