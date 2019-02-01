@@ -6,19 +6,31 @@ def main():
 
     arg_parser = argparse.ArgumentParser( description = "Given blast output, determine and output good matches." )
 
-    arg_parser.add_argument( '-b', '--blast_output', description = "File output by BLAST to parse." )
+    arg_parser.add_argument( '-b', '--blast_output', help = "File output by BLAST to parse." )
 
 
     args = arg_parser.parse_args()
 
     records = parse_blast( args.blast_output )
 
+    self_scores = find_self_scores( records )
+    
 
+
+def find_self_scores( blast_records ):
+    for record in blast_records:
+        pass
 
 def parse_blast( blast_file ):
 
+    record_creator = BlastRecordCreator()
+    record_creator.create_record( blast_file )
+
+    record = record_creator.as_list()[ 0 ]
     parser = BlastRecordParser()
-    return parser.parse( blast_file )
+    parser.set_num_hits( 150 )
+
+    return parser.parse( record )
        
 class BlastRecordCreator:
     def __init__( self ):
