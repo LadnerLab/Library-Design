@@ -15,13 +15,32 @@ def main():
 
     self_scores = find_self_scores( records )
     
-
-
 def find_self_scores( blast_records ):
-    self_hits = {}
+    self_hits = set()
+    self_hit_names = set()
+    num = 0
     for record in blast_records._records:
-        for hit in record:
-            pass
+        for hit_recs in record:
+            for hit in hit_recs:
+                num += 1
+                if self_hit( hit ):
+                    add_self_hit( self_hits, hit )
+                    self_hit_names.add( hit.query_name )
+
+    return self_hits
+
+def add_self_hit( hit_set, single_hit ):
+    new_score = SelfHitScore( name      = single_hit.query_name,
+                              hit_score = single_hit.hsp_score
+                            )
+    hit_set.add( new_score )
+
+
+def self_hit( hit ):
+    split_subject = set( hit.subject_name.split( '|' ) )
+    split_query   = set( hit.query_name.split( '|' ) )
+
+    return len( split_subject & split_query )
 
 def parse_blast( blast_file ):
 
@@ -30,7 +49,6 @@ def parse_blast( blast_file ):
 
     record = record_creator.as_list()[ 0 ]
     parser = BlastRecordParser()
-    parser.set_num_hits( 150 )
 
     return parser.parse( record )
        
