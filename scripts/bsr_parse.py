@@ -1,9 +1,24 @@
 #!/usr/bin/env python3
 from Bio.Blast import NCBIXML # For parsing blast results
+import argparse               # For command-line arguments 
 
 def main():
-    pass
 
+    arg_parser = argparse.ArgumentParser( description = "Given blast output, determine and output good matches." )
+
+    arg_parser.add_argument( '-b', '--blast_output', description = "File output by BLAST to parse." )
+
+
+    args = arg_parser.parse_args()
+
+    records = parse_blast( args.blast_output )
+
+
+
+def parse_blast( blast_file ):
+
+    parser = BlastRecordParser()
+    return parser.parse( blast_file )
        
 class BlastRecordCreator:
     def __init__( self ):
