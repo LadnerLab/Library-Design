@@ -18,8 +18,10 @@ def main():
 
 
 def find_self_scores( blast_records ):
-    for record in blast_records:
-        pass
+    self_hits = {}
+    for record in blast_records._records:
+        for hit in record:
+            pass
 
 def parse_blast( blast_file ):
 
@@ -32,6 +34,27 @@ def parse_blast( blast_file ):
 
     return parser.parse( record )
        
+class HitScore:
+    def __init__( self, name = "",
+                  hit_score = 0 
+                  ):
+        self._name      = name
+        self._hit_score = hit_score
+
+    def __eq__( self, other ):
+        return self._name == other._name and \
+               self._hit_score == other._hit_score
+    def __hash__( self ):
+        return hash( self._name )
+
+class SelfHitScore( HitScore ):
+    def __init__( self, name = "",
+                  hit_score = 0
+                ):
+        super().__init__( name = name, hit_score = hit_score )
+
+
+
 class BlastRecordCreator:
     def __init__( self ):
         self._factory = BlastRecordFactory()
