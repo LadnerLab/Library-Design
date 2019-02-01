@@ -6,23 +6,23 @@ def main():
 
     arg_parser = argparse.ArgumentParser( description = "Given blast output, determine and output good matches." )
 
-    arg_parser.add_argument( '-b', '--blast_output', help = "File output by BLAST to parse." )
+    arg_parser.add_argument( '-s', '--self_blast', help = "Self BLAST output to parse" )
+    arg_parser.add_argument( '-r', '--ref_blast', help  = "Reference BLAST output to parse" )
 
 
     args = arg_parser.parse_args()
 
-    records = parse_blast( args.blast_output )
+    self_records = parse_blast( args.self_blast )
+    ref_records  = parse_blast( args.ref_blast )
 
-    self_scores = find_self_scores( records )
+    self_scores = find_self_scores( self_records )
     
 def find_self_scores( blast_records ):
     self_hits = set()
     self_hit_names = set()
-    num = 0
     for record in blast_records._records:
         for hit_recs in record:
             for hit in hit_recs:
-                num += 1
                 if self_hit( hit ):
                     add_self_hit( self_hits, hit )
                     self_hit_names.add( hit.query_name )
