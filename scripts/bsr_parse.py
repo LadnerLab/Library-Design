@@ -9,23 +9,43 @@ def main():
     arg_parser.add_argument( '-s', '--self_blast', help = "Self BLAST output to parse" )
     arg_parser.add_argument( '-r', '--ref_blast', help  = "Reference BLAST output to parse" )
 
+    IDENTITY = 0.8
 
     args = arg_parser.parse_args()
 
     self_records = parse_blast( args.self_blast )
     ref_records  = parse_blast( args.ref_blast )
 
-    self_scores = find_self_scores( self_records )
-    
+    self_scores     = find_self_scores( self_records )
+    non_self_scores = find_good_hits( ref_records, self_records, IDENTITY ) - self_scores
+
+def find_good_hits( ref_recs, self_recs, identity_score ):
+    hit_set = set()
+
+    for record in ref_recs._records:
+        for hits in record:
+            for hit in hits:
+                if good_hit( hit, identity_score ):
+                    add_good_hit( hit_set, hit )
+    return hit_set
+
+def good_hit( hit, identity_score ):
+    return hit.percent_match >= identity_score
+
+def add_good_hit( hit_set, hit ):
+    hit_set.add( HitScore( name = hit.query_name,
+                           other_name = hit.subject_name,
+                           hit_score = hit.hsp_score
+                         )
+               )
+
 def find_self_scores( blast_records ):
     self_hits = set()
-    self_hit_names = set()
     for record in blast_records._records:
         for hit_recs in record:
             for hit in hit_recs:
                 if self_hit( hit ):
                     add_self_hit( self_hits, hit )
-                    self_hit_names.add( hit.query_name )
 
     return self_hits
 
@@ -54,16 +74,18 @@ def parse_blast( blast_file ):
        
 class HitScore:
     def __init__( self, name = "",
+                  other_name = "",
                   hit_score = 0 
                   ):
-        self._name      = name
-        self._hit_score = hit_score
+        self._name       = name
+        self._other_name = name
+        self._hit_score  = hit_score
 
     def __eq__( self, other ):
         return self._name == other._name and \
                self._hit_score == other._hit_score
     def __hash__( self ):
-        return hash( self._name )
+        return hash( hash( self._name ) * self._hit_score )
 
 class SelfHitScore( HitScore ):
     def __init__( self, name = "",
@@ -208,7 +230,7 @@ class BlastRecordParser:
         self._num_hsps = new_hsps
 
     def set_id_score( self, new_id ):
-        self._identity_score = new_i
+        self._identity_score = new_id
 
 
 class BlastRecord:
