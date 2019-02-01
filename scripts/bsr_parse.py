@@ -7,19 +7,24 @@ def main():
     arg_parser = argparse.ArgumentParser( description = "Given blast output, determine and output good matches." )
 
     arg_parser.add_argument( '-s', '--self_blast', help = "Self BLAST output to parse" )
-    arg_parser.add_argument( '-r', '--ref_blast', help  = "Reference BLAST output to parse" )
+    arg_parser.add_argument( '-r', '--ref_blast',  help  = "Reference BLAST output to parse" )
+    arg_parser.add_argument( '-g', '--good_hit',   help   = "Floating point ratio determining what "
+                                                            "a good hit is.",
+                             type = float, default = 0.7
+                           )
 
-    IDENTITY = 0.8
 
     args = arg_parser.parse_args()
+
+    IDENTITY = args.good_hit
 
     self_records = parse_blast( args.self_blast )
     ref_records  = parse_blast( args.ref_blast )
 
     self_scores     = find_self_scores( self_records )
-    non_self_scores = find_good_hits( ref_records, self_records, IDENTITY ) - self_scores
+    non_self_scores = find_good_hits( ref_records, IDENTITY ) - self_scores
 
-def find_good_hits( ref_recs, self_recs, identity_score ):
+def find_good_hits( ref_recs, identity_score ):
     hit_set = set()
 
     for record in ref_recs._records:
