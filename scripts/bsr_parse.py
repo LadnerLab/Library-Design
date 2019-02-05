@@ -30,8 +30,7 @@ def find_good_hits( ref_recs, identity_score ):
     for record in ref_recs._records:
         for hits in record:
             for hit in hits:
-                if good_hit( hit, identity_score ):
-                    add_good_hit( hit_set, hit )
+                add_good_hit( hit_set, hit ) # Add all hits, parse good ones out later
     return hit_set
 
 def good_hit( hit, identity_score ):
@@ -90,7 +89,14 @@ class HitScore:
         return self._name == other._name and \
                self._hit_score == other._hit_score
     def __hash__( self ):
-        return hash( hash( self._name ) * self._hit_score )
+        if '|' in self._other_name:
+            return hash( self._other_name.split( '|' )[ 2 ] )
+        return hash( self._other_name )
+    
+    def __str__( self ):
+        return '%s\t%s\t%d' % ( self._name, self._other_name,
+                                self._hit_score
+                              )
 
 class SelfHitScore( HitScore ):
     def __init__( self, name = "",
@@ -98,7 +104,11 @@ class SelfHitScore( HitScore ):
                 ):
         super().__init__( name = name, hit_score = hit_score )
 
+    def __hash__( self ):
+        return hash( self._name.split( '|' )[ 1 ] )
 
+    def __str__( self ):
+        return '%s\t%d' % ( self._name, self._hit_score )
 
 class BlastRecordCreator:
     def __init__( self ):
