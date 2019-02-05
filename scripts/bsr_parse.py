@@ -37,10 +37,8 @@ def main():
 
     bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, IDENTITY )
 
-    for hit in bsr_hits:
-        print( str( hit ) )
-
     label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
+
 
 
 def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
@@ -63,6 +61,19 @@ def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
         tax_ids = re.search( query_pattern, query ).group()
 
         query_id = get_id_from_string( tax_ids )
+
+        ref_id_tag = get_id_tag_from_string( ref, ref_patterns )
+
+        hit._query_id = query_id
+        hit._ref_id   = nc_taxid[ ref_id_tag ]
+
+def get_id_tag_from_string( string, patterns ):
+
+    for pattern in patterns:
+        matched_str = re.search( pattern, string )
+        if re.search( pattern, string ):
+            return matched_str.group().split( '.' )[ 0 ]
+    return None
 
 def get_id_from_string( string ):
     ids = string.split( 'OXX=' )[ 1 ]
