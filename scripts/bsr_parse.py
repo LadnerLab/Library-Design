@@ -24,6 +24,10 @@ def main():
                                                 "a good hit has a BSR of >= good_hit, inclusion of this flag sets this test to "
                                                 " BSR < good_hit", default = False, action = 'store_true'
                            )
+    arg_parser.add_argument( '-o', '--output', help = "File to write output to, output format is of the form:"
+                                                      "re_name design_name refseq_taxid design_taxid bsr",
+                             default = 'bsr_output.tsv' 
+                           )
      
 
 
@@ -42,13 +46,32 @@ def main():
 
     bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, IDENTITY, inverted = args.invert )
 
-    print( len( bsr_hits ) )
-
     hits_with_ratio = label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
 
     mismatch_ids = get_hits_mismatch_taxids( hits_with_ratio )
-    print( len( mismatch_ids ) )
 
+    write_biggest_hits( mismatch_ids, args.output )
+
+
+def write_biggest_hits( bsr_reports, outfile_name ):
+    biggest_hit = get_biggest_hit( bsr_reports )
+
+    HEADER = 'Refseq Name\tDesign Name\tRefseq TaxID\t Design TaxID\tBlast Score Ratio'
+
+    with open( outfile_name, 'w' ) as open_file:
+        open_file.write( '%s\n' % HEADER )
+
+        for hit in bsr_reports:
+            if hit._bsr == biggest_hit:
+                open_file.write( '%s\n' % str( hit ) )
+
+
+def get_biggest_hit( bsr_items ):
+    max_bsr = 0
+    for current in bsr_items:
+        if current._bsr > max_bsr:
+            max_bsr = current._bsr
+    return max_bsr
 
 def get_hits_mismatch_taxids( hits ):
     out_list = list()
