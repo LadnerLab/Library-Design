@@ -49,6 +49,7 @@ def main():
     hits_with_ratio = label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
 
     mismatch_ids = get_hits_mismatch_taxids( hits_with_ratio )
+    print( mismatch_ids )
 
     write_biggest_hits( mismatch_ids, args.output )
 
@@ -62,18 +63,18 @@ def write_biggest_hits( bsr_reports, outfile_name ):
         open_file.write( '%s\n' % HEADER )
 
         for hit in bsr_reports:
-            if hit._bsr._bsr == biggest_hits[ hit._bsr._ref ]:
+            if hit._bsr._bsr == biggest_hits[ hit._bsr._query ]:
                 open_file.write( '%s\n' % str( hit ) )
 
 
 def get_biggest_hits( bsr_items ):
     out_dict = {}
     for current in bsr_items:
-        if current._bsr._ref not in out_dict:
-            out_dict[ current._bsr._ref ] = current._bsr._bsr
+        if current._bsr._query not in out_dict:
+            out_dict[ current._bsr._query ] = current._bsr._bsr
         else:
-            if out_dict[ current._bsr._ref ] < current._bsr._bsr:
-                out_dict[ current._bsr._ref ] = current._bsr._bsr 
+            if out_dict[ current._bsr._query ] < current._bsr._bsr:
+                out_dict[ current._bsr._query ] = current._bsr._bsr 
     return out_dict
 
 def get_hits_mismatch_taxids( hits ):
