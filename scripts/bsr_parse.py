@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from Bio.Blast import NCBIXML # For parsing blast results
 import argparse               # For command-line arguments 
+import re                     # for finding nc-tags and tax ids
 
 def main():
 
@@ -39,7 +40,41 @@ def main():
     for hit in bsr_hits:
         print( str( hit ) )
 
+    label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
 
+
+def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
+    query_pattern = r'OXX=[0-9]*,[0-9]*,[0-9]*,[0-9]*'
+
+    suffix = '[0-9]+\.[0-9]'
+    ref_patterns = ( r'NC_%s' % suffix,
+                     r'KJ%s'  % suffix,
+                     r'LC%s'  % suffix,
+                     r'MG%s'  % suffix,
+                     r'AB%s'  % suffix,
+                     r'KY%s'  % suffix,
+                     r'LT%s'  % suffix
+                   )
+
+    for hit in bsr_hits:
+        query = hit._query
+        ref   = hit._ref
+
+        tax_ids = re.search( query_pattern, query ).group()
+
+        query_id = get_id_from_string( tax_ids )
+
+def get_id_from_string( string ):
+    ids = string.split( 'OXX=' )[ 1 ]
+
+    id_list = ids.split( ',' )
+
+    # return species id, if available
+    if id_list[ 1 ]:
+        return id_list[ 1 ]
+
+    # return the first id
+    return id_list[ 0 ]
 
 def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh ):
     out_list = list()
@@ -62,6 +97,15 @@ class BSRScore:
         self._query = query
         self._ref   = ref
         self._bsr   = bsr
+
+        self._query_id = None
+        self._ref_id   = None
+
+    def set_query_id( self, id ):
+        self._query_id = id
+
+    def set_ref_id( self, id ):
+        self._ref_id = id 
 
     def __str__( self ):
         return '%s\t%s\t%f' % ( self._query, self._ref, self._bsr )
