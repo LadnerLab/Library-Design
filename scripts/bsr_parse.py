@@ -12,6 +12,9 @@ def main():
                                                             "a good hit is.",
                              type = float, default = 0.7
                            )
+    arg_parser.add_argument( '-n', '--num_hits', help = "Number of hits to consider for each reference blast",
+                             type = int, default = 10
+                           )
 
 
     args = arg_parser.parse_args()
@@ -19,7 +22,7 @@ def main():
     IDENTITY = args.good_hit
 
     self_records = parse_blast( args.self_blast )
-    ref_records  = parse_blast( args.ref_blast )
+    ref_records  = parse_blast( args.ref_blast, num_hits = args.num_hits )
 
     self_scores     = find_self_scores( self_records )
     non_self_scores = find_good_hits( ref_records, IDENTITY ) 
@@ -66,14 +69,15 @@ def self_hit( hit ):
 
     return len( split_subject & split_query )
 
-def parse_blast( blast_file ):
-
+def parse_blast( blast_file, num_hits = None ):
     record_creator = BlastRecordCreator()
     record_creator.create_record( blast_file )
 
     record = record_creator.as_list()[ 0 ]
     parser = BlastRecordParser()
 
+    if num_hits:
+        parser.set_num_hits( num_hits )
     return parser.parse( record )
        
 class HitScore:
