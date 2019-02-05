@@ -20,6 +20,11 @@ def main():
                                                     'this file should contain a mapping for each nc_tag found in '
                                                     'the self_blast sequences'
                            )
+    arg_parser.add_argument( '--invert', help = "Include flag if you want to invert the good hit criteria. By default, "
+                                                "a good hit has a BSR of >= good_hit, inclusion of this flag sets this test to "
+                                                " BSR < good_hit", default = False, action = 'store_true'
+                           )
+     
 
 
     args = arg_parser.parse_args()
