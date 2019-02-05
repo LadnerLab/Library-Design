@@ -40,9 +40,14 @@ def main():
 
     non_self_scores_d = scores_to_dict( non_self_scores )
 
-    bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, IDENTITY )
+    bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, IDENTITY, inverted = args.invert )
+
+    print( len( bsr_hits ) )
 
     hits_with_ratio = label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
+
+    mismatch_ids = get_hits_mismatch_taxids( hits_with_ratio )
+    print( len( mismatch_ids ) )
 
 
 def get_hits_mismatch_taxids( hits ):
@@ -126,18 +131,25 @@ def get_id_from_string( string ):
     # return the first id
     return id_list[ 0 ]
 
-def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh ):
+def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh, inverted = False ):
     out_list = list()
     for score in self_score_set:
         if score in non_self_dict:
             for current in non_self_dict[ score ]:
                 bsr = calc_bsr( current, score )
-                if bsr >= good_hit_thresh:
+                if not inverted and bsr >= good_hit_thresh:
                     out_list.append( BSRScore( query = current._name,
                                                ref = score._name,
                                                bsr = bsr
                                              )
                                     )
+                elif inverted and bsr < good_hit_thresh:
+                    out_list.append( BSRScore( query = current._name,
+                                               ref = score._name,
+                                               bsr = bsr
+                                             )
+                                    )
+                    
     return out_list
 
 class BSRScore:
