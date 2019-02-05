@@ -22,26 +22,26 @@ def main():
     ref_records  = parse_blast( args.ref_blast )
 
     self_scores     = find_self_scores( self_records )
-    non_self_scores = find_good_hits( ref_records, IDENTITY ) - self_scores
+    non_self_scores = find_good_hits( ref_records, IDENTITY ) 
+
 
 def find_good_hits( ref_recs, identity_score ):
-    hit_set = set()
+    hit_scores = list()
 
     for record in ref_recs._records:
         for hits in record:
             for hit in hits:
-                add_good_hit( hit_set, hit ) # Add all hits, parse good ones out later
-    return hit_set
+                hit_scores.append( add_good_hit( hit ) ) # Add all hits, parse good ones out later
+    return hit_scores
 
 def good_hit( hit, identity_score ):
     return hit.percent_match >= identity_score
 
-def add_good_hit( hit_set, hit ):
-    hit_set.add( HitScore( name = hit.query_name,
-                           other_name = hit.subject_name,
-                           hit_score = hit.hsp_score
-                         )
-               )
+def add_good_hit( hit ):
+    return HitScore( name = hit.query_name,
+                     other_name = hit.subject_name,
+                     hit_score = hit.hsp_score
+                   )
 
 def find_self_scores( blast_records ):
     self_hits = set()
