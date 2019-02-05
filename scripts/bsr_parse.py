@@ -15,12 +15,17 @@ def main():
     arg_parser.add_argument( '-n', '--num_hits', help = "Number of hits to consider for each reference blast",
                              type = int, default = 10
                            )
+    arg_parser.add_argument( '--rep_to_tax', help = 'Name of file containing NC_tag to tax id mapping, '
+                                                    'this file should contain a mapping for each nc_tag found in '
+                                                    'the self_blast sequences'
+                           )
 
 
     args = arg_parser.parse_args()
 
     IDENTITY = args.good_hit
 
+    nc_taxid     = parse_nc_taxid( args.rep_to_tax )
     self_records = parse_blast( args.self_blast )
     ref_records  = parse_blast( args.ref_blast, num_hits = args.num_hits )
 
@@ -29,10 +34,11 @@ def main():
 
     non_self_scores_d = scores_to_dict( non_self_scores )
 
-    bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, args.good_hit )
+    bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, IDENTITY )
 
     for hit in bsr_hits:
         print( str( hit ) )
+
 
 
 def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh ):
@@ -59,6 +65,15 @@ class BSRScore:
 
     def __str__( self ):
         return '%s\t%s\t%f' % ( self._query, self._ref, self._bsr )
+
+def parse_nc_taxid( filename ):
+    out_dict = {}
+    with open( filename, 'r' ) as open_file:
+        for lineno, line in enumerate( open_file ):
+            if lineno:
+                nc_tag, taxid = line.strip().split( '\t' )
+                out_dict[ nc_tag ] = taxid
+    return out_dict
 
 def calc_bsr( query, ref ):
     return query._hit_score / ref._hit_score 
