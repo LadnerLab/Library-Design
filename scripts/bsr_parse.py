@@ -37,12 +37,20 @@ def main():
 
     bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, IDENTITY )
 
-    label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
+    hits_with_ratio = label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
 
 
+def get_hits_mismatch_taxids( hits ):
+    out_list = list()
+    for hit in hits:
+        if hit._query_id != hit._ref_id:
+            out_list.append( hit )
 
+    return out_list
+        
 def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
     query_pattern = r'OXX=[0-9]*,[0-9]*,[0-9]*,[0-9]*'
+    out_labelled_hits = set()
 
     suffix = '[0-9]+\.[0-9]'
     ref_patterns = ( r'NC_%s' % suffix,
@@ -64,8 +72,34 @@ def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
 
         ref_id_tag = get_id_tag_from_string( ref, ref_patterns )
 
-        hit._query_id = query_id
-        hit._ref_id   = nc_taxid[ ref_id_tag ]
+        out_labelled_hits.add( BSRScoreWithTaxID( query_id = query_id,
+                                                  ref_id   = nc_taxid[ ref_id_tag ],
+                                                  bsr = hit
+                                                )
+                             )
+    return out_labelled_hits
+
+class BSRScoreWithTaxID:
+    def __init__( self, query_id = None, ref_id = None, bsr = None ):
+        self._query_id = query_id
+        self._ref_id   = ref_id
+        self._bsr      = bsr
+
+    def __hash__( self ):
+        return hash( self._bsr ) * hash( self._query_id ) * hash( self._ref_id )
+    def __eq__( self, other ):
+        return self._query_id == other._query_id and \
+               self._ref_id == other._ref_id and \
+               self._bsr == other._bsr
+               
+    
+        
+
+    def __ne__( self, other ):
+        return not self.__eq__( other )
+                               
+        
+    
 
 def get_id_tag_from_string( string, patterns ):
 
@@ -109,15 +143,17 @@ class BSRScore:
         self._ref   = ref
         self._bsr   = bsr
 
-        self._query_id = None
-        self._ref_id   = None
+    def __eq__( self, other ):
+        return self._query == other._query and \
+               self._ref == other._ref and \
+               self._bsr == other._bsr
 
-    def set_query_id( self, id ):
-        self._query_id = id
+    def __ne__( self, other ):
+        return not self.__eq__( other )
 
-    def set_ref_id( self, id ):
-        self._ref_id = id 
-
+    def __hash__( self ):
+        return hash( self._query ) * hash( self._ref ) 
+               
     def __str__( self ):
         return '%s\t%s\t%f' % ( self._query, self._ref, self._bsr )
 
