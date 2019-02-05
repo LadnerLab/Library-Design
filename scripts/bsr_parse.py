@@ -31,6 +31,9 @@ def main():
 
     bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, args.good_hit )
 
+    for hit in bsr_hits:
+        print( str( hit ) )
+
 
 def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh ):
     out_list = list()
@@ -39,7 +42,11 @@ def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh ):
             for current in non_self_dict[ score ]:
                 bsr = calc_bsr( current, score )
                 if bsr >= good_hit_thresh:
-                    out_list.append( BSRScore( query = current, ref = score, bsr = bsr ) )
+                    out_list.append( BSRScore( query = current._name,
+                                               ref = score._name,
+                                               bsr = bsr
+                                             )
+                                    )
     return out_list
 
 class BSRScore:
@@ -49,6 +56,9 @@ class BSRScore:
         self._query = query
         self._ref   = ref
         self._bsr   = bsr
+
+    def __str__( self ):
+        return '%s\t%s\t%f' % ( self._query, self._ref, self._bsr )
 
 def calc_bsr( query, ref ):
     return query._hit_score / ref._hit_score 
