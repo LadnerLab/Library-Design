@@ -54,7 +54,7 @@ def main():
 
 
 def write_biggest_hits( bsr_reports, outfile_name ):
-    biggest_hit = get_biggest_hit( bsr_reports )
+    biggest_hits = get_biggest_hits( bsr_reports )
 
     HEADER = 'Refseq Name\tDesign Name\tRefseq TaxID\t Design TaxID\tBlast Score Ratio'
 
@@ -62,16 +62,19 @@ def write_biggest_hits( bsr_reports, outfile_name ):
         open_file.write( '%s\n' % HEADER )
 
         for hit in bsr_reports:
-            if hit._bsr == biggest_hit:
+            if hit._bsr._bsr == biggest_hits[ hit._bsr._ref ]:
                 open_file.write( '%s\n' % str( hit ) )
 
 
-def get_biggest_hit( bsr_items ):
-    max_bsr = 0
+def get_biggest_hits( bsr_items ):
+    out_dict = {}
     for current in bsr_items:
-        if current._bsr > max_bsr:
-            max_bsr = current._bsr
-    return max_bsr
+        if current._bsr._ref not in out_dict:
+            out_dict[ current._bsr._ref ] = current._bsr._bsr
+        else:
+            if out_dict[ current._bsr._ref ] < current._bsr._bsr:
+                out_dict[ current._bsr._ref ] = current._bsr._bsr 
+    return out_dict
 
 def get_hits_mismatch_taxids( hits ):
     out_list = list()
@@ -124,15 +127,16 @@ class BSRScoreWithTaxID:
         return self._query_id == other._query_id and \
                self._ref_id == other._ref_id and \
                self._bsr == other._bsr
-               
-    
-        
+
+    def __str__( self ):
+        return '%s\t%s\t%s\t%s\t%f' % (
+               self._bsr._ref, self._bsr._query,
+               self._ref_id, self._query_id,
+               self._bsr._bsr
+            )
 
     def __ne__( self, other ):
         return not self.__eq__( other )
-                               
-        
-    
 
 def get_id_tag_from_string( string, patterns ):
 
