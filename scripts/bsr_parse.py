@@ -36,7 +36,7 @@ def main():
     IDENTITY = args.good_hit
 
     nc_taxid     = parse_nc_taxid( args.rep_to_tax )
-    self_records = parse_blast( args.self_blast )
+    self_records = parse_blast( args.self_blast, num_hits = args.num_hits )
     ref_records  = parse_blast( args.ref_blast, num_hits = args.num_hits )
 
     self_scores     = find_self_scores( self_records )
@@ -44,27 +44,45 @@ def main():
 
     non_self_scores_d = scores_to_dict( non_self_scores )
 
-    bsr_hits = get_good_bsr_scores( self_scores, non_self_scores_d, IDENTITY, inverted = args.invert )
+    best_hits = get_best_hits( non_self_scores_d )
+
+    bsr_hits = get_good_bsr_scores( self_scores, best_hits, IDENTITY, inverted = args.invert )
 
     hits_with_ratio = label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
 
+
     mismatch_ids = get_hits_mismatch_taxids( hits_with_ratio )
-    print( mismatch_ids )
 
     write_biggest_hits( mismatch_ids, args.output )
 
 
-def write_biggest_hits( bsr_reports, outfile_name ):
-    biggest_hits = get_biggest_hits( bsr_reports )
+def get_best_hits( hit_dict ):
+    out_dict = {}
 
+    for name, hits in hit_dict.items():
+        best_score = 0
+        new_hits = list()
+
+        for hit in hits:
+            if hit._hit_score > best_score:
+                new_hits = list()
+                new_hits.append( hit )
+                best_score = hit._hit_score
+            elif hit._hit_score == best_score:
+                new_hits.append( hit )
+
+        out_dict[ name ] = new_hits
+                
+    return out_dict
+
+def write_biggest_hits( bsr_reports, outfile_name ):
     HEADER = 'Refseq Name\tDesign Name\tRefseq TaxID\t Design TaxID\tBlast Score Ratio'
 
     with open( outfile_name, 'w' ) as open_file:
         open_file.write( '%s\n' % HEADER )
 
         for hit in bsr_reports:
-            if hit._bsr._bsr == biggest_hits[ hit._bsr._query ]:
-                open_file.write( '%s\n' % str( hit ) )
+            open_file.write( '%s\n' % str( hit ) )
 
 
 def get_biggest_hits( bsr_items ):
@@ -87,7 +105,7 @@ def get_hits_mismatch_taxids( hits ):
         
 def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
     query_pattern = r'OXX=[0-9]*,[0-9]*,[0-9]*,[0-9]*'
-    out_labelled_hits = set()
+    out_labelled_hits = list()
 
     suffix = '[0-9]+\.[0-9]'
     ref_patterns = ( r'NC_%s' % suffix,
@@ -103,17 +121,20 @@ def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
         query = hit._query
         ref   = hit._ref
 
-        tax_ids = re.search( query_pattern, query ).group()
+        try:
+            tax_ids = re.search( query_pattern, query ).group()
 
-        query_id = get_id_from_string( tax_ids )
+            query_id = get_id_from_string( tax_ids )
 
-        ref_id_tag = get_id_tag_from_string( ref, ref_patterns )
+            ref_id_tag = get_id_tag_from_string( ref, ref_patterns )
 
-        out_labelled_hits.add( BSRScoreWithTaxID( query_id = query_id,
-                                                  ref_id   = nc_taxid[ ref_id_tag ],
-                                                  bsr = hit
-                                                )
-                             )
+            out_labelled_hits.append( BSRScoreWithTaxID( query_id = query_id,
+                                                         ref_id   = nc_taxid[ ref_id_tag ],
+                                                         bsr = hit
+                                                       )
+                                 )
+        except AttributeError:
+            print( query )
     return out_labelled_hits
 
 class BSRScoreWithTaxID:
@@ -162,24 +183,31 @@ def get_id_from_string( string ):
 def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh, inverted = False ):
     out_list = list()
     for score in self_score_set:
-        if score in non_self_dict:
-            for current in non_self_dict[ score ]:
-                bsr = calc_bsr( current, score )
-                if not inverted and bsr >= good_hit_thresh:
-                    out_list.append( BSRScore( query = current._name,
-                                               ref = score._name,
-                                               bsr = bsr
-                                             )
-                                    )
-                elif inverted and bsr < good_hit_thresh:
-                    out_list.append( BSRScore( query = current._name,
-                                               ref = score._name,
-                                               bsr = bsr
-                                             )
-                                    )
-                    
+        for key in non_self_dict.keys():
+            if match( score._name, non_self_dict[ key ] ):
+                for current in non_self_dict[ key ]:
+                    bsr = calc_bsr( current, score )
+                    if not inverted and bsr >= good_hit_thresh:
+                        out_list.append( BSRScore( query = current._other_name,
+                                                   ref = score._name,
+                                                   bsr = bsr
+                                                 )
+                                        )
+                    elif inverted and bsr < good_hit_thresh:
+                        out_list.append( BSRScore( query = current._other_name,
+                                                   ref = score._name,
+                                                   bsr = bsr
+                                                 )
+                                        )
+                        
     return out_list
 
+def match( name, values ):
+    for val in values:
+        if name in val._name:
+            return True
+    return False
+    
 class BSRScore:
     def __init__( self, query = None, ref = None,
                   bsr = None
@@ -219,9 +247,9 @@ def scores_to_dict( list_of_scores ):
     scores = list_of_scores
 
     for item in scores:
-        if item not in out_dict:
-            out_dict[ item ] = list()
-        out_dict[ item ].append( item )
+        if item._other_name not in out_dict:
+            out_dict[ item._other_name ] = list()
+        out_dict[ item._other_name ].append( item )
 
     return out_dict
 
@@ -239,13 +267,13 @@ def good_hit( hit, identity_score ):
     return hit.percent_match >= identity_score
 
 def add_good_hit( hit ):
-    return HitScore( name = hit.query_name,
-                     other_name = hit.subject_name,
+    return HitScore( other_name = hit.query_name,
+                     name = hit.subject_name,
                      hit_score = hit.hsp_score
                    )
 
 def find_self_scores( blast_records ):
-    self_hits = set()
+    self_hits = list()
     for record in blast_records._records:
         for hit_recs in record:
             for hit in hit_recs:
@@ -258,7 +286,7 @@ def add_self_hit( hit_set, single_hit ):
     new_score = SelfHitScore( name      = single_hit.query_name,
                               hit_score = single_hit.hsp_score
                             )
-    hit_set.add( new_score )
+    hit_set.append( new_score )
 
 
 def self_hit( hit ):
@@ -305,7 +333,9 @@ class SelfHitScore( HitScore ):
     def __init__( self, name = "",
                   hit_score = 0
                 ):
-        super().__init__( name = name, hit_score = hit_score )
+        super().__init__( name = name, other_name = name,
+                          hit_score = hit_score
+                        )
 
     def __hash__( self ):
         return hash( self._name.split( '|' )[ -1 ] )
