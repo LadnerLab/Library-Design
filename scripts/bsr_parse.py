@@ -50,7 +50,6 @@ def main():
 
     hits_with_ratio = label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
 
-
     mismatch_ids = get_hits_mismatch_taxids( hits_with_ratio )
 
     write_biggest_hits( mismatch_ids, args.output )
@@ -98,16 +97,16 @@ def get_biggest_hits( bsr_items ):
 def get_hits_mismatch_taxids( hits ):
     out_list = list()
     for hit in hits:
-        if hit._query_id != hit._ref_id:
+        if hit._query_id.strip() != hit._ref_id.strip():
             out_list.append( hit )
 
     return out_list
         
 def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
-    query_pattern = r'OXX=[0-9]*,[0-9]*,[0-9]*,[0-9]*'
+    query_pattern = r'OXX=[0-9]* *,[0-9]* *,[0-9]* *,[0-9]* *'
     out_labelled_hits = list()
 
-    suffix = '[0-9]+\.[0-9]'
+    suffix = '[0-9]+\.[0-9]*'
     ref_patterns = ( r'NC_%s' % suffix,
                      r'KJ%s'  % suffix,
                      r'LC%s'  % suffix,
@@ -133,7 +132,7 @@ def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
                                                          bsr = hit
                                                        )
                                  )
-        except AttributeError:
+        except Error:
             print( query )
     return out_labelled_hits
 
@@ -184,6 +183,7 @@ def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh, inverte
     out_list = list()
     for score in self_score_set:
         for key in non_self_dict.keys():
+
             if match( score._name, non_self_dict[ key ] ):
                 for current in non_self_dict[ key ]:
                     bsr = calc_bsr( current, score )
