@@ -91,7 +91,7 @@ def get_best_hits( hit_dict ):
 
 def write_biggest_hits( bsr_reports, outfile_name ):
     HEADER = 'Refseq Name\tDesign Name\tRefseq TaxID\t Design TaxID\tBlast Score Ratio\t' + \
-             'Percent Query in Alignment\tPercent Subject in Alignment\tPercent match'
+             'Percent RefSeq in Alignment\tPercent Design Seq in Alignment\tPercent match'
 
     with open( outfile_name, 'w' ) as open_file:
         open_file.write( '%s\n' % HEADER )
