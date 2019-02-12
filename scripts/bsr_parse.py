@@ -39,7 +39,9 @@ def main():
 
     IDENTITY = args.good_hit
 
-    nc_taxid     = parse_nc_taxid( args.rep_to_tax, args.taxonomic_level )
+    tax_rank     = get_tax_rank( args.taxonomic_level )
+
+    nc_taxid     = parse_nc_taxid( args.rep_to_tax, tax_rank )
     self_records = parse_blast( args.self_blast, num_hits = args.num_hits )
     ref_records  = parse_blast( args.ref_blast, num_hits = args.num_hits )
 
@@ -52,12 +54,21 @@ def main():
 
     bsr_hits = get_good_bsr_scores( self_scores, best_hits, IDENTITY, inverted = args.invert )
 
-    hits_with_ratio = label_bsr_hits_with_taxids( nc_taxid, bsr_hits )
+    hits_with_ratio = label_bsr_hits_with_taxids( nc_taxid, bsr_hits, tax_rank )
 
     mismatch_ids = get_hits_mismatch_taxids( hits_with_ratio )
 
     write_biggest_hits( mismatch_ids, args.output )
 
+
+def get_tax_rank( level_str ):
+    levels = { 'species': 1,
+               'genus':   2,
+               'family':  3
+             }
+    level = level_str.lower()
+
+    return levels[ level ]
 
 def get_best_hits( hit_dict ):
     out_dict = {}
@@ -106,7 +117,7 @@ def get_hits_mismatch_taxids( hits ):
 
     return out_list
         
-def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
+def label_bsr_hits_with_taxids( nc_taxid, bsr_hits, taxonomic_rank ):
     query_pattern = r'OXX=[0-9]* *,[0-9]* *,[0-9]* *,[0-9]* *'
     out_labelled_hits = list()
 
@@ -127,7 +138,7 @@ def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
         try:
             tax_ids = re.search( query_pattern, query ).group()
 
-            query_id = get_id_from_string( tax_ids )
+            query_id = get_id_from_string( tax_ids, taxonomic_rank )
 
             ref_id_tag = get_id_tag_from_string( ref, ref_patterns )
 
@@ -171,14 +182,14 @@ def get_id_tag_from_string( string, patterns ):
             return matched_str.group().split( '.' )[ 0 ]
     return None
 
-def get_id_from_string( string ):
+def get_id_from_string( string, level ):
     ids = string.split( 'OXX=' )[ 1 ]
 
     id_list = ids.split( ',' )
 
     # return species id, if available
-    if id_list[ 1 ]:
-        return id_list[ 1 ]
+    if id_list[ level ]:
+        return id_list[ level ]
 
     # return the first id
     return id_list[ 0 ]
@@ -235,19 +246,13 @@ class BSRScore:
         return '%s\t%s\t%f' % ( self._query, self._ref, self._bsr )
 
 def parse_nc_taxid( filename, level ):
-    level = level.lower()
-    levels = { 'species': 1,
-               'genus':   2,
-               'family':  3
-             }
-
     out_dict = {}
     with open( filename, 'r' ) as open_file:
         for lineno, line in enumerate( open_file ):
             if lineno:
                 split_line = line.strip().split( '\t' )
                 nc_tag = split_line[ 0 ]
-                out_dict[ nc_tag ] = ( split_line[ levels[ level ] ] )
+                out_dict[ nc_tag ] = ( split_line[ level ] )
     return out_dict
 
 def calc_bsr( query, ref ):
