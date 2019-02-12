@@ -97,7 +97,11 @@ def write_biggest_hits( bsr_reports, outfile_name ):
         open_file.write( '%s\n' % HEADER )
 
         for hit in bsr_reports:
-            open_file.write( '%s\n' % str( hit ) )
+            if ( hit._bsr._perc_s_in_align > 0.80 or \
+                 hit._bsr._perc_q_in_align > 0.80 ) and \
+                 hit._bsr._perc_match > 0.95:
+
+                open_file.write( '%s\n' % str( hit ) )
 
 
 def get_biggest_hits( bsr_items ):
@@ -206,8 +210,6 @@ def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh, inverte
             if match( score._name, non_self_dict[ key ] ):
                 for current in non_self_dict[ key ]:
                     bsr = calc_bsr( current, score )
-                    if current._other_name == 'ID=A0A2L0WUG1_9HEPC AC=A0A2L0WUG1 OXX=11103,11103,11102,11050':
-                        print( 'found' )
                     if not inverted and bsr >= good_hit_thresh:
                         out_list.append( BSRScore( query = current._other_name,
                                                    ref = score._name,
