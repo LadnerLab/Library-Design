@@ -42,7 +42,7 @@ def main():
     self_scores     = find_self_scores( self_records )
     non_self_scores = find_good_hits( ref_records, IDENTITY ) 
 
-    non_self_scores_d = scores_to_dict( non_self_scores )
+    non_self_scores_d = scores_to_dict( non_self_scores ) # removes duplicates
 
     best_hits = get_best_hits( non_self_scores_d )
 
@@ -132,7 +132,7 @@ def label_bsr_hits_with_taxids( nc_taxid, bsr_hits ):
                                                          bsr = hit
                                                        )
                                  )
-        except Error:
+        except:
             print( query )
     return out_labelled_hits
 
@@ -218,8 +218,8 @@ class BSRScore:
 
     def __eq__( self, other ):
         return self._query == other._query and \
-               self._ref == other._ref and \
-               self._bsr == other._bsr
+               self._ref   == other._ref and \
+               self._bsr   == other._bsr
 
     def __ne__( self, other ):
         return not self.__eq__( other )
@@ -248,8 +248,8 @@ def scores_to_dict( list_of_scores ):
 
     for item in scores:
         if item._other_name not in out_dict:
-            out_dict[ item._other_name ] = list()
-        out_dict[ item._other_name ].append( item )
+            out_dict[ item._other_name ] = set()
+        out_dict[ item._other_name ].add( item )
 
     return out_dict
 
