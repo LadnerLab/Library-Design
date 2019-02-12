@@ -170,8 +170,8 @@ class BSRScoreWithTaxID:
                self._bsr._ref, self._bsr._query,
                self._ref_id, self._query_id,
                self._bsr._bsr,
-               self._bsr._perc_q_in_align * 100,
                self._bsr._perc_s_in_align * 100,
+               self._bsr._perc_q_in_align * 100,
                self._bsr._perc_match      * 100
             )
 
@@ -206,6 +206,8 @@ def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh, inverte
             if match( score._name, non_self_dict[ key ] ):
                 for current in non_self_dict[ key ]:
                     bsr = calc_bsr( current, score )
+                    if current._other_name == 'ID=A0A2L0WUG1_9HEPC AC=A0A2L0WUG1 OXX=11103,11103,11102,11050':
+                        print( 'found' )
                     if not inverted and bsr >= good_hit_thresh:
                         out_list.append( BSRScore( query = current._other_name,
                                                    ref = score._name,
@@ -514,7 +516,7 @@ class BlastRecordParser:
                      query_end        = first_hsp.query_end,
                      subject_start    = first_hsp.sbjct_start,
                      subject_end      = first_hsp.sbjct_end,
-                     hsp_score        = first_hsp.score,
+                     hsp_score        = first_hsp.bits,
                      hsp_expect       = first_hsp.expect,
                      hsp_identities   = first_hsp.identities,
                      percent_match    = float( first_hsp.identities - first_hsp.gaps )/ int( first_hsp.align_length ),
