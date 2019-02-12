@@ -28,6 +28,10 @@ def main():
                                                       "re_name design_name refseq_taxid design_taxid bsr",
                              default = 'bsr_output.tsv' 
                            )
+    arg_parser.add_argument( '-t', '--taxonomic_level', help = "Taxonomic level at which to compare hits. "
+                                                              "Must be one of either 'family', 'genus', or 'species'.",
+                            default = 'species'
+                          ) 
      
 
 
@@ -35,7 +39,7 @@ def main():
 
     IDENTITY = args.good_hit
 
-    nc_taxid     = parse_nc_taxid( args.rep_to_tax )
+    nc_taxid     = parse_nc_taxid( args.rep_to_tax, args.taxonomic_level )
     self_records = parse_blast( args.self_blast, num_hits = args.num_hits )
     ref_records  = parse_blast( args.ref_blast, num_hits = args.num_hits )
 
@@ -230,13 +234,20 @@ class BSRScore:
     def __str__( self ):
         return '%s\t%s\t%f' % ( self._query, self._ref, self._bsr )
 
-def parse_nc_taxid( filename ):
+def parse_nc_taxid( filename, level ):
+    level = level.lower()
+    levels = { 'species': 1,
+               'genus':   2,
+               'family':  3
+             }
+
     out_dict = {}
     with open( filename, 'r' ) as open_file:
         for lineno, line in enumerate( open_file ):
             if lineno:
-                nc_tag, taxid = line.strip().split( '\t' )
-                out_dict[ nc_tag ] = taxid
+                split_line = line.strip().split( '\t' )
+                nc_tag = split_line[ 0 ]
+                out_dict[ nc_tag ] = ( split_line[ levels[ level ] ] )
     return out_dict
 
 def calc_bsr( query, ref ):
