@@ -90,7 +90,8 @@ def get_best_hits( hit_dict ):
     return out_dict
 
 def write_biggest_hits( bsr_reports, outfile_name ):
-    HEADER = 'Refseq Name\tDesign Name\tRefseq TaxID\t Design TaxID\tBlast Score Ratio'
+    HEADER = 'Refseq Name\tDesign Name\tRefseq TaxID\t Design TaxID\tBlast Score Ratio\t' + \
+             'Percent Query in Alignment\tPercent Subject in Alignment\tPercent match'
 
     with open( outfile_name, 'w' ) as open_file:
         open_file.write( '%s\n' % HEADER )
@@ -165,10 +166,13 @@ class BSRScoreWithTaxID:
                self._bsr == other._bsr
 
     def __str__( self ):
-        return '%s\t%s\t%s\t%s\t%f' % (
+        return '%s\t%s\t%s\t%s\t%f\t%f\t%f\t%f' % (
                self._bsr._ref, self._bsr._query,
                self._ref_id, self._query_id,
-               self._bsr._bsr
+               self._bsr._bsr,
+               self._bsr._perc_q_in_align * 100,
+               self._bsr._perc_s_in_align * 100,
+               self._bsr._perc_match      * 100
             )
 
     def __ne__( self, other ):
@@ -205,13 +209,19 @@ def get_good_bsr_scores( self_score_set, non_self_dict, good_hit_thresh, inverte
                     if not inverted and bsr >= good_hit_thresh:
                         out_list.append( BSRScore( query = current._other_name,
                                                    ref = score._name,
-                                                   bsr = bsr
+                                                   bsr = bsr,
+                                                   perc_subject_in_align = current._perc_s_in_align,
+                                                   perc_query_in_align   = current._perc_q_in_align,
+                                                   percent_match         = current._perc_match
                                                  )
                                         )
                     elif inverted and bsr < good_hit_thresh:
                         out_list.append( BSRScore( query = current._other_name,
                                                    ref = score._name,
-                                                   bsr = bsr
+                                                   bsr = bsr,
+                                                   perc_subject_in_align = current._perc_s_in_align,
+                                                   perc_query_in_align   = current._perc_q_in_align,
+                                                   percent_match         = current._perc_match
                                                  )
                                         )
                         
@@ -225,11 +235,17 @@ def match( name, values ):
     
 class BSRScore:
     def __init__( self, query = None, ref = None,
-                  bsr = None
+                  bsr = None,
+                  perc_query_in_align   = None,
+                  perc_subject_in_align = None,
+                  percent_match         = None
                 ):
         self._query = query
         self._ref   = ref
         self._bsr   = bsr
+        self._perc_q_in_align = perc_query_in_align
+        self._perc_s_in_align = perc_subject_in_align
+        self._perc_match      = percent_match
 
     def __eq__( self, other ):
         return self._query == other._query and \
@@ -283,9 +299,13 @@ def good_hit( hit, identity_score ):
     return hit.percent_match >= identity_score
 
 def add_good_hit( hit ):
+    align_len = hit.alignment_length
     return HitScore( other_name = hit.query_name,
                      name = hit.subject_name,
-                     hit_score = hit.hsp_score
+                     hit_score = hit.hsp_score,
+                     perc_query_in_align   = align_len / hit.query_length,
+                     perc_subject_in_align = align_len / hit.subject_length,
+                     percent_match         = hit.percent_match
                    )
 
 def find_self_scores( blast_records ):
@@ -299,8 +319,12 @@ def find_self_scores( blast_records ):
     return self_hits
 
 def add_self_hit( hit_set, single_hit ):
+    align_len = single_hit.alignment_length
     new_score = SelfHitScore( name      = single_hit.query_name,
-                              hit_score = single_hit.hsp_score
+                              hit_score = single_hit.hsp_score,
+                              perc_query_in_align   = align_len / single_hit.query_length,
+                              perc_subject_in_align = align_len / single_hit.subject_length,
+                              percent_match         = single_hit.percent_match
                             )
     hit_set.append( new_score )
 
@@ -325,11 +349,17 @@ def parse_blast( blast_file, num_hits = None ):
 class HitScore:
     def __init__( self, name = "",
                   other_name = "",
+                  perc_query_in_align   = 0,
+                  perc_subject_in_align = 0,
+                  percent_match         = 0,
                   hit_score = 0 
                   ):
         self._name       = name
         self._other_name = other_name
         self._hit_score  = hit_score
+        self._perc_q_in_align = perc_query_in_align
+        self._perc_s_in_align = perc_subject_in_align
+        self._perc_match      = percent_match
 
     def __eq__( self, other ):
         return hash( self ) == hash( other )
@@ -347,10 +377,16 @@ class HitScore:
 
 class SelfHitScore( HitScore ):
     def __init__( self, name = "",
+                  perc_query_in_align   = 0,
+                  perc_subject_in_align = 0,
+                  percent_match         = 0,
                   hit_score = 0
                 ):
         super().__init__( name = name, other_name = name,
-                          hit_score = hit_score
+                          hit_score = hit_score,
+                          perc_query_in_align = perc_query_in_align,
+                          perc_subject_in_align = perc_subject_in_align,
+                          percent_match = percent_match
                         )
 
     def __hash__( self ):
