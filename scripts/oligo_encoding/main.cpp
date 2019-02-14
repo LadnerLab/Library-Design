@@ -43,6 +43,7 @@ int main(int argc, char * const argv[])
     const char* ratio_output_file = nullptr;
     const char* probability_file = nullptr;
 
+
 #if DEBUG_INPUT
     
     // debugging value
@@ -116,10 +117,11 @@ int main(int argc, char * const argv[])
     acid_map['T'] = 16; acid_map['V'] = 17; acid_map['W'] = 18; acid_map['Y'] = 19;
 
     // set size of stream buffer if requested (use full buffering)
-    if (custom_buffer) {
-        setvbuf(fouts, nullptr, _IOFBF, 1 << buffer);
-        setvbuf(foutr, nullptr, _IOFBF, 1 << buffer);
-    }
+    if (custom_buffer)
+        {
+            setvbuf(fouts, nullptr, _IOFBF, 1 << buffer);
+            setvbuf(foutr, nullptr, _IOFBF, 1 << buffer);
+        }
     
     // process line by line
     int lines = 0;
@@ -141,31 +143,37 @@ int main(int argc, char * const argv[])
         size_t inputlen = strlen(input);
         size_t resultlen = namelen+1+digits+1 + inputlen+1 + 3*len;
         
+        uint16_t i = 0;
+        uint16_t j = 0;
+
         // calculate amino acid ratios
         size_t aa_counts[20] = {0};
-        for (int i = 0; i < len; ++i)
-            ++aa_counts[acid_map[input[i]]];
+        for ( i = 0; i < len; ++i)
+            ++aa_counts[ (uint8_t) acid_map[ (uint8_t) input[i] ] ];
         double aa_total = len;
         
         // prepare an array to store result (fwrite is much faster than fprintf)
         char result[resultlen+1]; result[resultlen] = '\n';
         memcpy(&result[0], name, namelen);
         result[namelen] = '_';
-        for (int i = 0; i < digits; ++i)
-            result[namelen+1+i] = '0';
+        for ( i = 0; i < digits; ++i)
+            {
+                result[namelen+1+i] = '0';
+            }
+
         result[namelen+1+digits] = ',';
         memcpy(&result[namelen+1+digits+1], input, inputlen);
         result[namelen+1+digits+1+inputlen] = ',';
         
         // trials
-        for (int j = 0; j < trials; ++j)
+        for ( j = 0; j < trials; ++j)
         {
             // keep track of nucleotide and codon ratios
             size_t nucleotides[4] = {0};
             size_t codons[64] = {0};
 
             // calculate result string
-            for (int i = 0; i < len; ++i)
+            for ( i = 0; i < len; ++i)
             {
                 double r = xoroshiro::uniform();
                 const char aa = input[i];
@@ -174,26 +182,31 @@ int main(int argc, char * const argv[])
                 double accum = (*cod)->w;
                 
                 while (accum < r)
-                    accum += (*++cod)->w;
+                    {
+                        accum += (*++cod)->w;
+                    }
                 
                 for (int j = 0; j < 4; ++j)
                     nucleotides[j] += (*cod)->nucleotides[j];
                 
                 ++codons[(*cod)->index];
 
-                memcpy(&result[namelen+1+digits+1+inputlen+1+3*i], (*cod)->c, 3);
+                memcpy( &result[ namelen+1+digits+1+inputlen+1+3*i ], (*cod)->c, 3);
             }
             
             // add suffix to name (sprintf is too slow)
-            for (int i = 0; i < digits; ++i)
+            for ( i = 0; i < digits; ++i)
             {
                 char* d = &result[namelen+1+digits-1-i];
                 if (*d == '9')
-                    *d = '0';
-                else {
-                    ++*d;
-                    break;
-                }
+                    {
+                        *d = '0';
+                    }
+                else
+                    {
+                        ++*d;
+                        break;
+                    }
             }
             
             // write line to file
