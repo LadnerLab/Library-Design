@@ -1,4 +1,4 @@
-CFLAGS= -g -O0 
+CFLAGS= -O0 -Wall -fopenmp
 CC= g++
 
 main: main.o 
@@ -7,5 +7,15 @@ main.o: main.cpp xoroshiro.h table.h
 	$(CC) $(CFLAGS) main.cpp -c -o main.o
 
 
-clean:
-	rm -f *.o main
+.PHONY: clean optimized debug
+
+clean: 
+	rm -f *.o main *.gch
+
+optimized: CFLAGS+= -O3 -mtune=native
+optimized: clean
+optimized: main
+
+debug: clean
+debug: CFLAGS+= -g
+debug: main
