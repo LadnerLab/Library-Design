@@ -10,6 +10,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <omp.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -94,7 +95,7 @@ int main(int argc, char * const argv[])
     
 
     // start
-    clock_t begin = clock();
+    double begin  = omp_get_wtime();
     
     // seed RNG using hardware source
     xoroshiro::seedrandom();
@@ -153,7 +154,9 @@ int main(int argc, char * const argv[])
         double aa_total = len;
         
         // prepare an array to store result (fwrite is much faster than fprintf)
-        char result[resultlen+1]; result[resultlen] = '\n';
+        char result[resultlen+1];
+        result[resultlen] = '\n';
+
         memcpy(&result[0], name, namelen);
         result[namelen] = '_';
         for ( i = 0; i < digits; ++i)
@@ -311,7 +314,7 @@ int main(int argc, char * const argv[])
     fclose(fouts);
     fclose(fin);
 
-    printf("Processed %d lines x %d trials, time elapsed %f s\n", lines, trials, (double)(clock() - begin) / CLOCKS_PER_SEC);
+    printf("Processed %d lines x %d trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
 
     return EXIT_SUCCESS;
 }
