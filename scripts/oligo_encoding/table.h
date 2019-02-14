@@ -37,7 +37,7 @@ public:
         {
             int n, ln = 0; char aa; codon c;
             FILE* f = fopen(file, "r");
-            while ((n = fscanf(f, "%c,%3c,%lf,%c\n", &aa, c.c, &c.w, &c.index)) != EOF)
+            while ((n = fscanf(f, "%c,%3c,%lf,%hhu\n", &aa, c.c, &c.w, &c.index)) != EOF)
                 {
                     ++ln;
                     if (n == 4)
