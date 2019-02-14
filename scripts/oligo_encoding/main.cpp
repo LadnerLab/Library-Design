@@ -31,6 +31,7 @@
 
 
 const auto MAX_LINE_LENGTH = 128;
+const char *ARGS = "i:n:g:s:r:p:t:b:h?";
 
 
 int main(int argc, char * const argv[])
@@ -38,6 +39,8 @@ int main(int argc, char * const argv[])
     // default values
     int trials = 10000;
     uint8_t buffer = 0;
+    uint16_t num_to_subsample = 0;
+    double gc_target_ratio = 0;
     bool custom_buffer = false;
     const char* input_file = nullptr;
     const char* seq_output_file = nullptr;
@@ -60,7 +63,7 @@ int main(int argc, char * const argv[])
     
     // parse command line options
     int opt = 0;
-    while ((opt = getopt(argc, argv, "i:s:r:p:t:b:h?")) != -1)
+    while ((opt = getopt(argc, argv, ARGS )) != -1)
     {
         switch (opt)
         {
@@ -68,15 +71,19 @@ int main(int argc, char * const argv[])
             case 's': seq_output_file = optarg; break;
             case 'r': ratio_output_file = optarg; break;
             case 'p': probability_file = optarg; break;
+            case 'n': num_to_subsample = atoi( optarg ); break;
             case 't': trials = atoi(optarg); break;
+            case 'g': gc_target_ratio = atof( optarg ); break;
             case 'b': buffer = atoi(optarg); custom_buffer = true; break;
             case 'h':
             case '?':
-                printf("usage: codon_sampling -i input_file -s seq_output_file -r ratio_output_file -p probability_file [-t num_trials -b buffer_size]\n");
+                printf("usage: codon_sampling -i input_file -s seq_output_file -r ratio_output_file -p probability_file -n num_to_subsample -g gc_target_ratio [-t num_trials -b buffer_size]\n");
                 printf("   input_file: lines must be formatted as {identifier},{sequence}, with at most %d characters per line.\n", MAX_LINE_LENGTH);
                 printf("   seq_output_file: path to sequence output file (will be overwritten if it exists).\n");
                 printf("   ratio_output_file: path to ratios output file (will be overwritten if it exists).\n");
                 printf("   probability_file: lines must be formatted as {letter},{nucleotides,3},{weighting},{index}. The weightings do not need to sum to 1. Codon indices must range from 0 to 63.\n");
+                printf("   num_to_subsample: number of 'top' encodings to take, the best encodings are measured by absolute difference from gc_target_ratio.\n" );
+                printf("   gc_target_ratio: ratio GC to AT to target for encodings.\n" );
                 printf("   trials: number of nucleotide sequences to generate for each input sequence. The default is 10,000.\n");
                 printf("   buffer: size in bytes of output stream buffer expressed as a power of 2, between 4 and 30. Leave unspecified to use system default.\n");
                 printf("Note that the optimal buffer size may depend on hardware and on the number of trials.\n");
