@@ -6,6 +6,7 @@
 //  Copyright © 2018 Paul Altin. All rights reserved.
 //
 
+#include <string>
 #include <time.h>
 #include <math.h>
 #include <stdio.h>
@@ -22,12 +23,28 @@
 const uint8_t MAX_LINE_LENGTH    = 128;
 const uint8_t NUM_ITEMS_PER_NODE = 2;
 
-typedef struct file_input_t
+class FileInput
 {
-    struct file_input_t *next;
+ public:
+    std::string name;
+    std::string data;
 
-    char data[ NUM_ITEMS_PER_NODE ][ MAX_LINE_LENGTH ];
-} file_input_t;
+    FileInput( const char *, const char* );
+    FileInput();
+};
+
+FileInput::FileInput( const char *new_name, const char *new_data )
+{
+    name = new_name;
+    data = new_data;
+
+}
+
+FileInput::FileInput()
+{
+    name = "";
+    data = "";
+}
 
 // custom assertion
 #undef assert
@@ -40,7 +57,7 @@ typedef struct file_input_t
 
 
 const char *ARGS = "i:n:g:s:r:p:t:b:h?";
-
+uint32_t count_lines_in_file( const char *filename );
 
 int main(int argc, char * const argv[])
 {
@@ -140,190 +157,78 @@ int main(int argc, char * const argv[])
         }
     
     // process line by line
-    int lines = 0;
-    char line[MAX_LINE_LENGTH];
-    while (fgets(line, MAX_LINE_LENGTH, fin))
-    {
-        ++lines;
+    uint32_t lines = count_lines_in_file( input_file );
+    uint32_t loop_index = 0;
 
+    char line[MAX_LINE_LENGTH];
+    std::vector<FileInput> file_data_arr;
+
+    file_data_arr.reserve( lines );
+
+    for( loop_index = 0; loop_index < lines; ++loop_index )
+    {
+        fgets( line, MAX_LINE_LENGTH, fin );
         // replace trailing newline with terminator so we can use strlen
-        line[strcspn(line, "\n")] = 0;
+        line[strcspn(line, "\n")] = '\0';
 
         // line consists of name,input
         char* input = nullptr;
         char* name = strtok_r(line, ",", &input);
-        
-        // length of each component
-        size_t len = strlen(input);
-        size_t namelen = strlen(name);
-        size_t inputlen = strlen(input);
-        size_t resultlen = namelen+1+digits+1 + inputlen+1 + 3*len;
-        
-        uint16_t i = 0;
-        uint16_t j = 0;
 
-        // calculate amino acid ratios
-        size_t aa_counts[20] = {0};
-        for ( i = 0; i < len; ++i)
-            ++aa_counts[ (uint8_t) acid_map[ (uint8_t) input[i] ] ];
-        double aa_total = len;
-        
-        // prepare an array to store result (fwrite is much faster than fprintf)
-        char result[resultlen+1];
-        result[resultlen] = '\n';
-
-        memcpy(&result[0], name, namelen);
-        result[namelen] = '_';
-        for ( i = 0; i < digits; ++i)
-            {
-                result[namelen+1+i] = '0';
-            }
-
-        result[namelen+1+digits] = ',';
-        memcpy(&result[namelen+1+digits+1], input, inputlen);
-        result[namelen+1+digits+1+inputlen] = ',';
-        
-        // trials
-        for ( j = 0; j < trials; ++j)
-        {
-            // keep track of nucleotide and codon ratios
-            size_t nucleotides[4] = {0};
-            size_t codons[64] = {0};
-
-            // calculate result string
-            for ( i = 0; i < len; ++i)
-            {
-                double r = xoroshiro::uniform();
-                const char aa = input[i];
-                
-                codon** cod = t[aa];
-                double accum = (*cod)->w;
-                
-                while (accum < r)
-                    {
-                        accum += (*++cod)->w;
-                    }
-                
-                for (int j = 0; j < 4; ++j)
-                    nucleotides[j] += (*cod)->nucleotides[j];
-                
-                ++codons[(*cod)->index];
-
-                memcpy( &result[ namelen+1+digits+1+inputlen+1+3*i ], (*cod)->c, 3);
-            }
-            
-            // add suffix to name (sprintf is too slow)
-            for ( i = 0; i < digits; ++i)
-            {
-                char* d = &result[namelen+1+digits-1-i];
-                if (*d == '9')
-                    {
-                        *d = '0';
-                    }
-                else
-                    {
-                        ++*d;
-                        break;
-                    }
-            }
-            
-            // write line to file
-            fwrite(result, resultlen+1, 1, fouts);
-            
-            // write ratios to second file
-            size_t total_nucleotides = 3*len, total_codons = len;
-            
-            fprintf(foutr, "%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g\n",
-                    (double)nucleotides[0]/total_nucleotides,
-                    (double)nucleotides[1]/total_nucleotides,
-                    (double)nucleotides[2]/total_nucleotides,
-                    (double)nucleotides[3]/total_nucleotides,
-                    (double)aa_counts[0]/aa_total,
-                    (double)aa_counts[1]/aa_total,
-                    (double)aa_counts[2]/aa_total,
-                    (double)aa_counts[3]/aa_total,
-                    (double)aa_counts[4]/aa_total,
-                    (double)aa_counts[5]/aa_total,
-                    (double)aa_counts[6]/aa_total,
-                    (double)aa_counts[7]/aa_total,
-                    (double)aa_counts[8]/aa_total,
-                    (double)aa_counts[9]/aa_total,
-                    (double)aa_counts[10]/aa_total,
-                    (double)aa_counts[11]/aa_total,
-                    (double)aa_counts[12]/aa_total,
-                    (double)aa_counts[13]/aa_total,
-                    (double)aa_counts[14]/aa_total,
-                    (double)aa_counts[15]/aa_total,
-                    (double)aa_counts[16]/aa_total,
-                    (double)aa_counts[17]/aa_total,
-                    (double)aa_counts[18]/aa_total,
-                    (double)aa_counts[19]/aa_total,
-                    (double)codons[0]/total_codons,
-                    (double)codons[1]/total_codons,
-                    (double)codons[2]/total_codons,
-                    (double)codons[3]/total_codons,
-                    (double)codons[4]/total_codons,
-                    (double)codons[5]/total_codons,
-                    (double)codons[6]/total_codons,
-                    (double)codons[7]/total_codons,
-                    (double)codons[8]/total_codons,
-                    (double)codons[9]/total_codons,
-                    (double)codons[10]/total_codons,
-                    (double)codons[11]/total_codons,
-                    (double)codons[12]/total_codons,
-                    (double)codons[13]/total_codons,
-                    (double)codons[14]/total_codons,
-                    (double)codons[15]/total_codons,
-                    (double)codons[16]/total_codons,
-                    (double)codons[17]/total_codons,
-                    (double)codons[18]/total_codons,
-                    (double)codons[19]/total_codons,
-                    (double)codons[20]/total_codons,
-                    (double)codons[21]/total_codons,
-                    (double)codons[22]/total_codons,
-                    (double)codons[23]/total_codons,
-                    (double)codons[24]/total_codons,
-                    (double)codons[25]/total_codons,
-                    (double)codons[26]/total_codons,
-                    (double)codons[27]/total_codons,
-                    (double)codons[28]/total_codons,
-                    (double)codons[29]/total_codons,
-                    (double)codons[30]/total_codons,
-                    (double)codons[31]/total_codons,
-                    (double)codons[32]/total_codons,
-                    (double)codons[33]/total_codons,
-                    (double)codons[34]/total_codons,
-                    (double)codons[35]/total_codons,
-                    (double)codons[36]/total_codons,
-                    (double)codons[37]/total_codons,
-                    (double)codons[38]/total_codons,
-                    (double)codons[39]/total_codons,
-                    (double)codons[40]/total_codons,
-                    (double)codons[41]/total_codons,
-                    (double)codons[42]/total_codons,
-                    (double)codons[43]/total_codons,
-                    (double)codons[44]/total_codons,
-                    (double)codons[45]/total_codons,
-                    (double)codons[46]/total_codons,
-                    (double)codons[47]/total_codons,
-                    (double)codons[48]/total_codons,
-                    (double)codons[49]/total_codons,
-                    (double)codons[50]/total_codons,
-                    (double)codons[51]/total_codons,
-                    (double)codons[52]/total_codons,
-                    (double)codons[53]/total_codons,
-                    (double)codons[54]/total_codons,
-                    (double)codons[55]/total_codons,
-                    (double)codons[56]/total_codons,
-                    (double)codons[57]/total_codons,
-                    (double)codons[58]/total_codons,
-                    (double)codons[59]/total_codons,
-                    (double)codons[60]/total_codons,
-                    (double)codons[61]/total_codons,
-                    (double)codons[62]/total_codons,
-                    (double)codons[63]/total_codons);
-        }
+        FileInput new_input( name, input );
+        file_data_arr.push_back( new_input );
     }
+
+        
+    //    for( loop_index = 0; loop_index < num_lines; ++loop_index)
+    //        {
+    //        // trials
+    //        for ( j = 0; j < trials; ++j)
+    //            {
+    //                // keep track of nucleotide and codon ratios
+    //                size_t nucleotides[4] = {0};
+    //                size_t codons[64] = {0};
+    //
+    //                // calculate result string
+    //                for ( i = 0; i < len; ++i)
+    //                    {
+    //                        double r = xoroshiro::uniform();
+    //                        const char aa = input[i];
+    //                
+    //                        codon** cod = t[aa];
+    //                        double accum = (*cod)->w;
+    //                
+    //                        while (accum < r)
+    //                            {
+    //                                accum += (*++cod)->w;
+    //                            }
+    //                
+    //                        for (int j = 0; j < 4; ++j)
+    //                            nucleotides[j] += (*cod)->nucleotides[j];
+    //                
+    //                        ++codons[(*cod)->index];
+    //
+    //                        memcpy( &result[ namelen+1+digits+1+inputlen+1+3*i ], (*cod)->c, 3);
+    //                    }
+    //            
+    //                // add suffix to name (sprintf is too slow)
+    //                for ( i = 0; i < digits; ++i)
+    //                    {
+    //                        char* d = &result[namelen+1+digits-1-i];
+    //                        if (*d == '9')
+    //                            {
+    //                                *d = '0';
+    //                            }
+    //                        else
+    //                            {
+    //                                ++*d;
+    //                                break;
+    //                            }
+    //                    }
+    //            
+    //                // write line to file
+    //            }
+    //        }
 
     fclose(foutr);
     fclose(fouts);
@@ -332,4 +237,23 @@ int main(int argc, char * const argv[])
     printf("Processed %d lines x %d trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
 
     return EXIT_SUCCESS;
+}
+
+uint32_t count_lines_in_file( const char *filename )
+{
+    FILE *open_file = NULL;
+    int c = 0;
+    uint32_t count = 0;
+
+    open_file = fopen( filename, "r" );
+
+    while( ( c = fgetc( open_file ) ) != EOF )
+        {
+            if( !( c - (int) '\n' ) )
+                {
+                    count++;
+                }
+        }
+
+    return count;
 }
