@@ -19,6 +19,15 @@
 
 #define DEBUG_INPUT 0
 
+const uint8_t MAX_LINE_LENGTH    = 128;
+const uint8_t NUM_ITEMS_PER_NODE = 2;
+
+typedef struct file_input_t
+{
+    struct file_input_t *next;
+
+    char data[ NUM_ITEMS_PER_NODE ][ MAX_LINE_LENGTH ];
+} file_input_t;
 
 // custom assertion
 #undef assert
@@ -30,7 +39,6 @@
 }
 
 
-const auto MAX_LINE_LENGTH = 128;
 const char *ARGS = "i:n:g:s:r:p:t:b:h?";
 
 
