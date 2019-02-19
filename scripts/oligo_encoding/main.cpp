@@ -14,6 +14,9 @@
 #include <omp.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ios>
+#include <iomanip>
+#include <sstream>
 #include <limits.h>
 
 #include "table.h"
@@ -53,7 +56,7 @@ FileInput::FileInput()
 class Encoding
 {
   public:
-    FileInput *original;
+    FileInput original;
 
     std::string encoding;
 
@@ -74,7 +77,7 @@ class Encoding
       ~Encoding()
       {
           delete &encoding;
-          delete original;
+          delete &original;
       }
 };
 
@@ -262,7 +265,7 @@ int main(int argc, char * const argv[])
                 {
                     Encoding *current = new Encoding();
                     // keep track of nucleotide and codon ratios
-                    current->original = &file_data;
+                    current->original = file_data;
             
                     // calculate result string
                     for ( current_aa = 0; current_aa < len; ++current_aa )
@@ -345,6 +348,27 @@ int main(int argc, char * const argv[])
                         }
                 }
             best_encodings.push_back( current_vector );
+        }
+
+    std::string out_string;
+    for( index = 0; index < lines; index++ )
+        {
+            std::vector<Encoding *> current_vector = best_encodings[ index ];
+
+            for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
+                {
+                    std::ostringstream digit_str;
+
+                    digit_str << std::internal << std::setfill( '0' ) << std::setw( digits + 1 ) << inner_index;
+                    out_string.append( current_vector[ index ]->original.name );
+                    out_string.append( "_" );
+
+                    out_string.append( digit_str.str() );
+                    out_string.append( "," );
+                    out_string.append( current_vector[ index ]->original.data );
+                    out_string.append( "," );
+                    out_string.append( current_vector[ index ]->encoding );
+                }
         }
      
 
