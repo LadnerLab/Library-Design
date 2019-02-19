@@ -12,6 +12,10 @@
 
 
 const uint8_t MAX_CODONS = 6;
+const uint8_t A_INDEX            = 0;
+const uint8_t C_INDEX            = 1;
+const uint8_t G_INDEX            = 2;
+const uint8_t T_INDEX             = 3;
 
 static_assert(sizeof(char) == 1, "huh?");
 
@@ -87,16 +91,34 @@ public:
                                     {
                                         switch (cod->c[j])
                                             {
-                                            case 'A':  ++cod->nucleotides[0];  break;
-                                            case 'C':  ++cod->nucleotides[1];  break;
-                                            case 'G':  ++cod->nucleotides[2];  break;
-                                            case 'T':  ++cod->nucleotides[3];  break;
+                                            case 'A':  ++cod->nucleotides[ A_INDEX ];  break;
+                                            case 'C':  ++cod->nucleotides[ C_INDEX ];  break;
+                                            case 'G':  ++cod->nucleotides[ G_INDEX ];  break;
+                                            case 'T':  ++cod->nucleotides[ T_INDEX ];  break;
                                             }
                                     }
                             }
                     }
             }
     }
+
+    table( const table &tab )
+    {
+        uint8_t index       = 0;
+        uint8_t inner_index = 0;
+
+        for( index = 0; index < 'Z'; index++ )
+            {
+                for( inner_index = 0; inner_index < MAX_CODONS; inner_index++ )
+                    {
+                        if( tab.map[ index ][ inner_index ] )
+                            {
+                                map[ index ][ inner_index ] = new codon( *(tab.map[ index ][ inner_index ]) );
+                            }
+                    }
+            }
+    }
+
     
     ~table()
     {
