@@ -57,6 +57,15 @@ class Encoding
     uint8_t nucleotides[ 4 ] = { 0 };
     uint8_t codons[ 64 ]     = { 0 };
 
+    double calc_gc_ratio( void )
+    {
+        uint8_t g_and_c = nucleotides[ G_INDEX ] + nucleotides[ C_INDEX ];
+        uint8_t t_and_a = nucleotides[ T_INDEX ] + nucleotides[ A_INDEX ];
+
+        gc_ratio = (double) g_and_c / (double) t_and_a;
+
+        return gc_ratio;
+    }
       ~Encoding()
       {
           delete &encoding;
@@ -217,46 +226,44 @@ int main(int argc, char * const argv[])
                 }
 
 
-            uint64_t i   = 0;
-            uint64_t j   = 0;
+            uint64_t current_aa    = 0;
+            uint64_t current_trial = 0;
             uint16_t len = 0;
+            uint64_t i = 0;
 
             len = file_data.data.length();
 
-            for( loop_index = 0; loop_index < lines; ++loop_index)
+            // trials
+            for ( current_trial = 0; current_trial < trials; ++current_trial)
                 {
-                    // trials
-                    for ( j = 0; j < trials; ++j)
+                    Encoding *current = new Encoding();
+                    // keep track of nucleotide and codon ratios
+                    current->original = &file_data;
+            
+                    // calculate result string
+                    for ( current_aa = 0; current_aa < len; ++current_aa )
                         {
-                            Encoding *current = new Encoding();
-                            // keep track of nucleotide and codon ratios
-                            current->original = &file_data;
-            
-                            // calculate result string
-                            for ( i = 0; i < len; ++i)
+                            double r = xoroshiro::uniform();
+                            const char aa = file_data.data[current_aa];
+                           
+                            codon** cod = t[aa];
+                            double accum = (*cod)->w;
+                           
+                            while ( accum < r )
                                 {
-                                    double r = xoroshiro::uniform();
-                                    const char aa = file_data.data[i];
-                           
-                                    codon** cod = t[aa];
-                                    double accum = (*cod)->w;
-                           
-                                    while ( accum < r )
-                                        {
-                                            accum += (*++cod)->w;
-                                        }
-                           
-                                    for ( j = 0; j < 4; ++j )
-                                        {
-                                            current->nucleotides[ j ] += (*cod)->nucleotides[j];
-                                        }
-                                    ++current->codons[(*cod)->index];
-                                    current->encoding.append( (*cod)->c );
-            
+                                    accum += (*++cod)->w;
                                 }
-                       
-                            // write line to file
+                           
+                            for ( i = 0; i < 4; ++i )
+                                {
+                                    current->nucleotides[ i ] += (*cod)->nucleotides[i];
+                                }
+                            ++current->codons[(*cod)->index];
+                            current->encoding.append( (*cod)->c );
+            
                         }
+                    current->calc_gc_ratio();
+                    encodings[ ( trials * loop_index ) + current_trial ] = current;
                 }
         }
 
