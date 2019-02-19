@@ -14,6 +14,7 @@
 #include <omp.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 
 #include "table.h"
 #include "xoroshiro.h"
@@ -22,6 +23,7 @@
 
 const uint64_t DEFAULT_TRIALS = 10000;
 const uint8_t MAX_LINE_LENGTH = 128;
+const uint16_t DEFAULT_NUM_SUBSAMPLE = 10000;
 
 class FileInput
 {
@@ -111,7 +113,7 @@ int main(int argc, char * const argv[])
     // default values
     uint64_t trials = DEFAULT_TRIALS;
     uint8_t buffer = 0;
-    uint16_t num_to_subsample = 0;
+    uint16_t num_to_subsample = DEFAULT_NUM_SUBSAMPLE;
     double gc_target_ratio = 0;
     bool custom_buffer = false;
     const char* input_file = nullptr;
@@ -207,6 +209,7 @@ int main(int argc, char * const argv[])
     uint32_t lines = count_lines_in_file( input_file );
     uint32_t loop_index = 0;
     uint32_t index = 0;
+    uint32_t inner_index = 0;
 
     char line[MAX_LINE_LENGTH];
     std::vector<FileInput> file_data_arr;
@@ -230,6 +233,7 @@ int main(int argc, char * const argv[])
     }
 
     Encoding **encodings = (Encoding**) malloc( sizeof( Encoding *) * lines * trials );
+
     for( loop_index = 0; loop_index < lines; ++loop_index )
         {
 
@@ -290,6 +294,59 @@ int main(int argc, char * const argv[])
     uint64_t num_encodings = trials * lines;
     // sort the encodings according to gc_ratio
     qsort( encodings, num_encodings, sizeof( Encoding *), encoding_compar );
+
+    // find the index of the encoding with the smallest difference between low and high
+    double smallest_ratio = INT_MAX;
+    double ratio = 0;
+    uint64_t smallest_ratio_index = 0;
+    int64_t left_index = 0;
+    uint64_t right_index = 0;
+
+    std::vector<std::vector<Encoding*>> best_encodings;
+    best_encodings.reserve( lines );
+
+    for( index = 0; index < lines; index++ )
+        {
+
+            smallest_ratio = INT_MAX;
+            ratio = 0;
+            smallest_ratio_index = 0;
+            std::vector<Encoding *> current_vector;
+            current_vector.reserve( num_to_subsample );
+
+            for( inner_index = trials * index; inner_index < ( trials * ( index + 1 ) ); inner_index++ )
+                {
+                    ratio = encodings[ inner_index ]->gc_ratio;
+                    if( abs( ratio - gc_target_ratio ) < smallest_ratio )
+                        {
+                            smallest_ratio = ratio;
+                            smallest_ratio_index = inner_index;
+                        }
+                }
+
+            left_index  = std::max( 0LU, smallest_ratio_index - 1 );
+            right_index = std::min( smallest_ratio_index + 1, num_encodings );
+
+            current_vector.push_back( encodings[ smallest_ratio_index ] );
+
+            while( current_vector.size() < num_to_subsample &&
+                   ( left_index > 0 || right_index <= num_encodings )
+                 )
+                {
+                    if( left_index >= 0 )
+                        {
+                            current_vector.push_back( encodings[ left_index ] );
+                            left_index--;
+                        }
+                    if( right_index < num_encodings )
+                        {
+                            current_vector.push_back( encodings[ right_index ] );
+                            right_index++;
+                        }
+                }
+            best_encodings.push_back( current_vector );
+        }
+     
 
     fclose(foutr);
     fclose(fouts);
