@@ -44,7 +44,9 @@ FileInput::FileInput()
 {
     name = "";
     data = "";
+
 }
+
 
 class Encoding
 {
@@ -66,6 +68,7 @@ class Encoding
 
         return gc_ratio;
     }
+
       ~Encoding()
       {
           delete &encoding;
@@ -73,6 +76,23 @@ class Encoding
       }
 };
 
+int encoding_compar( const void *first, const void *second )
+{
+    Encoding *first_ptr  = (Encoding*) first;
+    Encoding *second_ptr = (Encoding*) second;
+
+    double diff = first_ptr->gc_ratio - second_ptr->gc_ratio;
+
+    if( diff > 0 )
+        {
+            return 1;
+        }
+    if( diff < 0 )
+        {
+            return -1;
+        }
+    return 0;
+}
 // custom assertion
 #undef assert
 #define assert(cond, message...) {  \
@@ -266,6 +286,10 @@ int main(int argc, char * const argv[])
                     encodings[ ( trials * loop_index ) + current_trial ] = current;
                 }
         }
+
+    uint64_t num_encodings = trials * lines;
+    // sort the encodings according to gc_ratio
+    qsort( encodings, num_encodings, sizeof( Encoding *), encoding_compar );
 
     fclose(foutr);
     fclose(fouts);
