@@ -20,8 +20,8 @@
 
 #define DEBUG_INPUT 0
 
-const uint8_t MAX_LINE_LENGTH    = 128;
-const uint8_t NUM_ITEMS_PER_NODE = 2;
+const uint64_t DEFAULT_TRIALS = 10000;
+const uint8_t MAX_LINE_LENGTH = 128;
 
 class FileInput
 {
@@ -46,6 +46,24 @@ FileInput::FileInput()
     data = "";
 }
 
+class Encoding
+{
+  public:
+    FileInput *original;
+
+    std::string encoding;
+
+    double gc_ratio;
+    uint8_t nucleotides[ 4 ] = { 0 };
+    uint8_t codons[ 64 ]     = { 0 };
+
+      ~Encoding()
+      {
+          delete &encoding;
+          delete original;
+      }
+};
+
 // custom assertion
 #undef assert
 #define assert(cond, message...) {  \
@@ -62,7 +80,7 @@ uint32_t count_lines_in_file( const char *filename );
 int main(int argc, char * const argv[])
 {
     // default values
-    int trials = 10000;
+    uint64_t trials = DEFAULT_TRIALS;
     uint8_t buffer = 0;
     uint16_t num_to_subsample = 0;
     double gc_target_ratio = 0;
@@ -140,7 +158,7 @@ int main(int argc, char * const argv[])
     FILE* fouts = fopen(seq_output_file, "w");
     FILE* foutr = fopen(ratio_output_file, "w");
     auto t = table(probability_file);
-    
+
     // mapping of amino acid string to index
     char acid_map['Z'] = {0};
     acid_map['A'] = 0;  acid_map['C'] = 1;  acid_map['D'] = 2;  acid_map['E'] = 3;
@@ -182,6 +200,7 @@ int main(int argc, char * const argv[])
         file_data_arr.push_back( new_input );
     }
 
+    Encoding **encodings = (Encoding**) malloc( sizeof( Encoding *) * lines * trials );
     for( loop_index = 0; loop_index < lines; ++loop_index )
         {
 
@@ -191,68 +210,61 @@ int main(int argc, char * const argv[])
             double aa_total = file_data.data.length();
             uint64_t result_len = file_data.name.length() + 1 + digits + 1 + ( 4 * file_data.data.length() );
 
+
             for( index = 0; index < file_data.data.length(); ++index )
                 {
                     ++aa_counts[ (uint8_t) acid_map[ (uint8_t) file_data.data[ index ] ] ];
                 }
 
 
-                for( loop_index = 0; loop_index < num_lines; ++loop_index)
-                    {
+            uint64_t i   = 0;
+            uint64_t j   = 0;
+            uint16_t len = 0;
+
+            len = file_data.data.length();
+
+            for( loop_index = 0; loop_index < lines; ++loop_index)
+                {
                     // trials
                     for ( j = 0; j < trials; ++j)
                         {
+                            Encoding *current = new Encoding();
                             // keep track of nucleotide and codon ratios
-                            size_t nucleotides[4] = {0};
-                            size_t codons[64] = {0};
+                            current->original = &file_data;
             
                             // calculate result string
                             for ( i = 0; i < len; ++i)
                                 {
                                     double r = xoroshiro::uniform();
-                                    const char aa = input[i];
-                            
+                                    const char aa = file_data.data[i];
+                           
                                     codon** cod = t[aa];
                                     double accum = (*cod)->w;
-                            
-                                    while (accum < r)
+                           
+                                    while ( accum < r )
                                         {
                                             accum += (*++cod)->w;
                                         }
-                            
-                                    for (int j = 0; j < 4; ++j)
-                                        nucleotides[j] += (*cod)->nucleotides[j];
-                            
-                                    ++codons[(*cod)->index];
+                           
+                                    for ( j = 0; j < 4; ++j )
+                                        {
+                                            current->nucleotides[ j ] += (*cod)->nucleotides[j];
+                                        }
+                                    ++current->codons[(*cod)->index];
+                                    current->encoding.append( (*cod)->c );
             
-                                    memcpy( &result[ namelen+1+digits+1+inputlen+1+3*i ], (*cod)->c, 3);
                                 }
-                        
-                            // add suffix to name (sprintf is too slow)
-                            for ( i = 0; i < digits; ++i)
-                                {
-                                    char* d = &result[namelen+1+digits-1-i];
-                                    if (*d == '9')
-                                        {
-                                            *d = '0';
-                                        }
-                                    else
-                                        {
-                                            ++*d;
-                                            break;
-                                        }
-                                }
-                        
+                       
                             // write line to file
                         }
-                    }
+                }
         }
 
     fclose(foutr);
     fclose(fouts);
     fclose(fin);
 
-    printf("Processed %d lines x %d trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
+    printf("Processed %d lines x %lu trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
 
     return EXIT_SUCCESS;
 }
