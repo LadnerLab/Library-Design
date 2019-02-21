@@ -32,6 +32,7 @@ const uint16_t DEFAULT_NUM_SUBSAMPLE = 10000;
 const uint8_t NUM_AMINO_ACIDS = 20;
 const uint8_t NUM_CODONS_POSSIBLE = 64;
 const uint8_t NUM_NUCLEOTIDES = 4;
+const uint8_t DEFAULT_NUM_THREADS = 1;
 
 class FileInput
 {
@@ -118,7 +119,7 @@ int encoding_compar( const void *first, const void *second )
 }
 
 
-const char *ARGS = "i:n:g:s:r:p:t:b:h?";
+const char *ARGS = "i:c:n:g:s:r:p:t:b:h?";
 uint32_t count_lines_in_file( const char *filename );
 
 int main(int argc, char * const argv[])
@@ -127,6 +128,7 @@ int main(int argc, char * const argv[])
     uint64_t trials = DEFAULT_TRIALS;
     uint8_t buffer = 0;
     uint16_t num_to_subsample = DEFAULT_NUM_SUBSAMPLE;
+    uint8_t num_threads = DEFAULT_NUM_THREADS;
     double gc_target_ratio = 0;
     bool custom_buffer = false;
     const char* input_file = nullptr;
@@ -159,6 +161,7 @@ int main(int argc, char * const argv[])
             case 'r': ratio_output_file = optarg; break;
             case 'p': probability_file = optarg; break;
             case 'n': num_to_subsample = atoi( optarg ); break;
+            case 'c': num_threads = atoi( optarg ); break;
             case 't': trials = atoi(optarg); break;
             case 'g': gc_target_ratio = atof( optarg ); break;
             case 'b': buffer = atoi(optarg); custom_buffer = true; break;
@@ -221,6 +224,8 @@ int main(int argc, char * const argv[])
     std::vector<FileInput> file_data_arr;
     std::vector<std::string> results;
 
+    omp_set_num_threads( num_threads );
+
     file_data_arr.reserve( lines );
     results.reserve( lines );
 
@@ -240,6 +245,7 @@ int main(int argc, char * const argv[])
 
     Encoding **encodings = (Encoding**) malloc( sizeof( Encoding *) * lines * trials );
 
+    #pragma omp parallel for shared( encodings, file_data_arr ) private( loop_index ) schedule( dynamic )
     for( loop_index = 0; loop_index < lines; ++loop_index )
         {
 
@@ -247,8 +253,6 @@ int main(int argc, char * const argv[])
 
             file_data.aa_total = file_data.data.length();
             file_data.total_nucleotides = file_data.aa_total * CODON_SIZE;
-            uint64_t result_len = file_data.name.length() + 1 + digits + 1 + ( 4 * file_data.data.length() );
-
 
             for( index = 0; index < file_data.data.length(); ++index )
                 {
@@ -377,16 +381,22 @@ int main(int argc, char * const argv[])
         }
 
     uint64_t print_index = 0;
-    std::string ratio_string;
     Encoding *current_encoding = NULL;
+    char **str_arr = (char**) malloc( sizeof( char *) * lines * num_to_subsample );
+    char *new_str = NULL;
+             
+#pragma omp parallel for shared( str_arr, num_to_subsample ) private( new_str, index, inner_index, current_encoding ) schedule( dynamic )
     for( index = 0; index < lines; index++ )
         {
             std::vector<Encoding *> current_vector = best_encodings[ index ];
 
             for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
                 {
-                            current_encoding = current_vector[ print_index ];
-    fprintf(foutr, "%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g\n",
+                            current_encoding = current_vector[ inner_index ];
+                            new_str = (char*) malloc( sizeof( char ) * 12 * 88);
+                            str_arr[ ( index * num_to_subsample ) + inner_index ] = new_str;
+
+    sprintf(new_str, "%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g\n",
                     (double)current_encoding->nucleotides[0]/current_encoding->original.total_nucleotides,
                     (double)current_encoding->nucleotides[1]/current_encoding->original.total_nucleotides,
                     (double)current_encoding->nucleotides[2]/current_encoding->original.total_nucleotides,
@@ -476,6 +486,15 @@ int main(int argc, char * const argv[])
                     (double)current_encoding->codons[62]/current_encoding->total_codons,
                     (double)current_encoding->codons[63]/current_encoding->total_codons);
                     
+                }
+        }
+
+    for( index = 0; index < lines; index++ )
+        {
+
+            for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
+                {
+                    fprintf( foutr, "%s", str_arr[ inner_index ] );
                 }
         }
 
