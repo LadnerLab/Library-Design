@@ -6,6 +6,8 @@
 //  Copyright © 2018 Paul Altin. All rights reserved.
 //
 
+#include <iostream>
+#include <fstream>
 #include <string>
 #include <time.h>
 #include <math.h>
@@ -189,8 +191,8 @@ int main(int argc, char * const argv[])
 
     // open files
     FILE* fin = fopen(input_file, "r");
-    FILE* fouts = fopen(seq_output_file, "w");
     FILE* foutr = fopen(ratio_output_file, "w");
+    std::ofstream out_file;
     auto t = table(probability_file);
 
     // mapping of amino acid string to index
@@ -201,13 +203,6 @@ int main(int argc, char * const argv[])
     acid_map['P'] = 12; acid_map['Q'] = 13; acid_map['R'] = 14; acid_map['S'] = 15;
     acid_map['T'] = 16; acid_map['V'] = 17; acid_map['W'] = 18; acid_map['Y'] = 19;
 
-    // set size of stream buffer if requested (use full buffering)
-    if (custom_buffer)
-        {
-            setvbuf(fouts, nullptr, _IOFBF, 1 << buffer);
-            setvbuf(foutr, nullptr, _IOFBF, 1 << buffer);
-        }
-    
     // process line by line
     uint32_t lines = count_lines_in_file( input_file );
     uint32_t loop_index = 0;
@@ -286,7 +281,7 @@ int main(int argc, char * const argv[])
                                     current->nucleotides[ i ] += (*cod)->nucleotides[i];
                                 }
                             ++current->codons[(*cod)->index];
-                            current->encoding.append( (*cod)->c );
+                            current->encoding.append( (*cod)->c, CODON_SIZE );
             
                         }
                     current->calc_gc_ratio();
@@ -357,9 +352,9 @@ int main(int argc, char * const argv[])
 
             for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
                 {
-                    std::ostringstream digit_str;
+                    std::stringstream digit_str;
 
-                    digit_str << std::internal << std::setfill( '0' ) << std::setw( digits + 1 ) << inner_index;
+                    digit_str << std::internal << std::setw( digits ) << std::setfill( '0' ) <<  inner_index + 1;
                     out_string.append( current_vector[ index ]->original.name );
                     out_string.append( "_" );
 
@@ -368,12 +363,15 @@ int main(int argc, char * const argv[])
                     out_string.append( current_vector[ index ]->original.data );
                     out_string.append( "," );
                     out_string.append( current_vector[ index ]->encoding );
+                    out_string.append( "\n" );
                 }
         }
      
+    out_file.open( seq_output_file );
+    out_file << out_string;
+    out_file.close();
 
     fclose(foutr);
-    fclose(fouts);
     fclose(fin);
 
     printf("Processed %d lines x %lu trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
