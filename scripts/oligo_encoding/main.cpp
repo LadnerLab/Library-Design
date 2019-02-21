@@ -341,7 +341,7 @@ int main(int argc, char * const argv[])
             current_vector.push_back( encodings[ smallest_ratio_index ] );
 
             while( current_vector.size() < num_to_subsample &&
-                   ( left_index > 0 || right_index <= num_encodings )
+                   ( left_index >= 0 || right_index <= num_encodings )
                  )
                 {
                     if( left_index >= 0 )
