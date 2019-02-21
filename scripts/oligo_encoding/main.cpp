@@ -304,7 +304,11 @@ int main(int argc, char * const argv[])
 
     uint64_t num_encodings = trials * lines;
     // sort the encodings according to gc_ratio
-    qsort( encodings, num_encodings, sizeof( Encoding *), encoding_compar );
+    #pragma omp parallel for private( index ) shared( encodings, trials, num_encodings, lines )
+    for( index = 0; index < lines; index++ )
+        {
+            qsort( encodings + (index * trials), (num_encodings / lines), sizeof( Encoding *), encoding_compar );
+        }
 
     // find the index of the encoding with the smallest difference between low and high
     double smallest_ratio = INT_MAX;
@@ -326,6 +330,9 @@ int main(int argc, char * const argv[])
             std::vector<Encoding *> current_vector;
             current_vector.reserve( max_item );
 
+            int64_t start_index = 0;
+            uint64_t end_index   = 0;
+
             for( inner_index = trials * index; inner_index < ( trials * ( index + 1 ) ); ++inner_index )
                 {
                     ratio = encodings[ inner_index ]->gc_ratio;
@@ -336,16 +343,20 @@ int main(int argc, char * const argv[])
                         }
                 }
 
-            left_index  = std::max( 0LU, smallest_ratio_index - 1 );
-            right_index = std::min( smallest_ratio_index + 1, num_encodings );
+
+            start_index = trials * index;
+            end_index   = trials * ( index + 1 );
+
+            left_index  = std::max( start_index, (int64_t)smallest_ratio_index - 1 );
+            right_index = std::min( smallest_ratio_index + 1, end_index );
 
             current_vector.push_back( encodings[ smallest_ratio_index ] );
 
             while( current_vector.size() < max_item &&
-                   ( left_index >= 0 || right_index <= num_encodings )
+                   ( left_index >= start_index || right_index < end_index )
                  )
                 {
-                    if( left_index >= 0 )
+                    if( left_index >= start_index )
                         {
                             current_vector.push_back( encodings[ left_index ] );
                             left_index--;
