@@ -494,9 +494,12 @@ int main(int argc, char * const argv[])
 
             for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
                 {
-                    fprintf( foutr, "%s", str_arr[ inner_index ] );
+                    fprintf( foutr, "%s", str_arr[ ( index * num_to_subsample ) + inner_index ] );
+
+                    free( str_arr[ ( index * num_to_subsample ) + inner_index ] );
                 }
         }
+    free( str_arr );
 
      
     out_file_seqs.open( seq_output_file );
