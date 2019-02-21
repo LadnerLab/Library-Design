@@ -29,12 +29,19 @@
 const uint64_t DEFAULT_TRIALS = 10000;
 const uint8_t MAX_LINE_LENGTH = 128;
 const uint16_t DEFAULT_NUM_SUBSAMPLE = 10000;
+const uint8_t NUM_AMINO_ACIDS = 20;
+const uint8_t NUM_CODONS_POSSIBLE = 64;
+const uint8_t NUM_NUCLEOTIDES = 4;
 
 class FileInput
 {
  public:
     std::string name;
     std::string data;
+
+    uint8_t aa_total = 0;
+    uint8_t aa_counts[ 20 ] = {0};
+    uint16_t total_nucleotides = 0;
 
     FileInput( const char *, const char* );
     FileInput();
@@ -65,6 +72,7 @@ class Encoding
     double gc_ratio;
     uint8_t nucleotides[ 4 ] = { 0 };
     uint8_t codons[ 64 ]     = { 0 };
+    uint16_t total_codons = 0;
 
     double calc_gc_ratio( void )
     {
@@ -191,8 +199,8 @@ int main(int argc, char * const argv[])
 
     // open files
     FILE* fin = fopen(input_file, "r");
-    FILE* foutr = fopen(ratio_output_file, "w");
-    std::ofstream out_file;
+    FILE *foutr = fopen( ratio_output_file, "w" );
+    std::ofstream out_file_seqs;
     auto t = table(probability_file);
 
     // mapping of amino acid string to index
@@ -237,14 +245,14 @@ int main(int argc, char * const argv[])
 
             FileInput file_data = file_data_arr.at( loop_index );
 
-            uint8_t aa_counts[ 20 ] = { 0 };
-            double aa_total = file_data.data.length();
+            file_data.aa_total = file_data.data.length();
+            file_data.total_nucleotides = file_data.aa_total * CODON_SIZE;
             uint64_t result_len = file_data.name.length() + 1 + digits + 1 + ( 4 * file_data.data.length() );
 
 
             for( index = 0; index < file_data.data.length(); ++index )
                 {
-                    ++aa_counts[ (uint8_t) acid_map[ (uint8_t) file_data.data[ index ] ] ];
+                    ++file_data.aa_counts[ (uint8_t) acid_map[ (uint8_t) file_data.data[ index ] ] ];
                 }
 
 
@@ -285,6 +293,7 @@ int main(int argc, char * const argv[])
             
                         }
                     current->calc_gc_ratio();
+                    current->total_codons = len;
                     encodings[ ( trials * loop_index ) + current_trial ] = current;
                 }
         }
@@ -366,12 +375,115 @@ int main(int argc, char * const argv[])
                     out_string.append( "\n" );
                 }
         }
-     
-    out_file.open( seq_output_file );
-    out_file << out_string;
-    out_file.close();
 
-    fclose(foutr);
+    uint64_t print_index = 0;
+    std::string ratio_string;
+    Encoding *current_encoding = NULL;
+    for( index = 0; index < lines; index++ )
+        {
+            std::vector<Encoding *> current_vector = best_encodings[ index ];
+
+            for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
+                {
+                            current_encoding = current_vector[ print_index ];
+    fprintf(foutr, "%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g\n",
+                    (double)current_encoding->nucleotides[0]/current_encoding->original.total_nucleotides,
+                    (double)current_encoding->nucleotides[1]/current_encoding->original.total_nucleotides,
+                    (double)current_encoding->nucleotides[2]/current_encoding->original.total_nucleotides,
+                    (double)current_encoding->nucleotides[3]/current_encoding->original.total_nucleotides,
+                    (double)current_encoding->original.aa_counts[0]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[1]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[2]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[3]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[4]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[5]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[6]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[7]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[8]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[9]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[10]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[11]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[12]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[13]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[14]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[15]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[16]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[17]/current_encoding->original.aa_total,
+                    (double)current_encoding->original.aa_counts[18]/current_encoding->original.aa_total,
+            (double)current_encoding->original.aa_counts[19]/current_encoding->original.aa_total,
+                    (double)current_encoding->codons[0]/current_encoding->total_codons,
+                    (double)current_encoding->codons[1]/current_encoding->total_codons,
+                    (double)current_encoding->codons[2]/current_encoding->total_codons,
+                    (double)current_encoding->codons[3]/current_encoding->total_codons,
+                    (double)current_encoding->codons[4]/current_encoding->total_codons,
+                    (double)current_encoding->codons[5]/current_encoding->total_codons,
+                    (double)current_encoding->codons[6]/current_encoding->total_codons,
+                    (double)current_encoding->codons[7]/current_encoding->total_codons,
+                    (double)current_encoding->codons[8]/current_encoding->total_codons,
+                    (double)current_encoding->codons[9]/current_encoding->total_codons,
+                    (double)current_encoding->codons[10]/current_encoding->total_codons,
+                    (double)current_encoding->codons[11]/current_encoding->total_codons,
+                    (double)current_encoding->codons[12]/current_encoding->total_codons,
+                    (double)current_encoding->codons[13]/current_encoding->total_codons,
+                    (double)current_encoding->codons[14]/current_encoding->total_codons,
+                    (double)current_encoding->codons[15]/current_encoding->total_codons,
+                    (double)current_encoding->codons[16]/current_encoding->total_codons,
+                    (double)current_encoding->codons[17]/current_encoding->total_codons,
+                    (double)current_encoding->codons[18]/current_encoding->total_codons,
+                    (double)current_encoding->codons[19]/current_encoding->total_codons,
+                    (double)current_encoding->codons[20]/current_encoding->total_codons,
+                    (double)current_encoding->codons[21]/current_encoding->total_codons,
+                    (double)current_encoding->codons[22]/current_encoding->total_codons,
+                    (double)current_encoding->codons[23]/current_encoding->total_codons,
+                    (double)current_encoding->codons[24]/current_encoding->total_codons,
+                    (double)current_encoding->codons[25]/current_encoding->total_codons,
+                    (double)current_encoding->codons[26]/current_encoding->total_codons,
+                    (double)current_encoding->codons[27]/current_encoding->total_codons,
+                    (double)current_encoding->codons[28]/current_encoding->total_codons,
+                    (double)current_encoding->codons[29]/current_encoding->total_codons,
+                    (double)current_encoding->codons[30]/current_encoding->total_codons,
+                    (double)current_encoding->codons[31]/current_encoding->total_codons,
+                    (double)current_encoding->codons[32]/current_encoding->total_codons,
+                    (double)current_encoding->codons[33]/current_encoding->total_codons,
+                    (double)current_encoding->codons[34]/current_encoding->total_codons,
+                    (double)current_encoding->codons[35]/current_encoding->total_codons,
+                    (double)current_encoding->codons[36]/current_encoding->total_codons,
+                    (double)current_encoding->codons[37]/current_encoding->total_codons,
+                    (double)current_encoding->codons[38]/current_encoding->total_codons,
+                    (double)current_encoding->codons[39]/current_encoding->total_codons,
+                    (double)current_encoding->codons[40]/current_encoding->total_codons,
+                    (double)current_encoding->codons[41]/current_encoding->total_codons,
+                    (double)current_encoding->codons[42]/current_encoding->total_codons,
+                    (double)current_encoding->codons[43]/current_encoding->total_codons,
+                    (double)current_encoding->codons[44]/current_encoding->total_codons,
+                    (double)current_encoding->codons[45]/current_encoding->total_codons,
+                    (double)current_encoding->codons[46]/current_encoding->total_codons,
+                    (double)current_encoding->codons[47]/current_encoding->total_codons,
+                    (double)current_encoding->codons[48]/current_encoding->total_codons,
+                    (double)current_encoding->codons[49]/current_encoding->total_codons,
+                    (double)current_encoding->codons[50]/current_encoding->total_codons,
+                    (double)current_encoding->codons[51]/current_encoding->total_codons,
+                    (double)current_encoding->codons[52]/current_encoding->total_codons,
+                    (double)current_encoding->codons[53]/current_encoding->total_codons,
+                    (double)current_encoding->codons[54]/current_encoding->total_codons,
+                    (double)current_encoding->codons[55]/current_encoding->total_codons,
+                    (double)current_encoding->codons[56]/current_encoding->total_codons,
+                    (double)current_encoding->codons[57]/current_encoding->total_codons,
+                    (double)current_encoding->codons[58]/current_encoding->total_codons,
+                    (double)current_encoding->codons[59]/current_encoding->total_codons,
+                    (double)current_encoding->codons[60]/current_encoding->total_codons,
+                    (double)current_encoding->codons[61]/current_encoding->total_codons,
+                    (double)current_encoding->codons[62]/current_encoding->total_codons,
+                    (double)current_encoding->codons[63]/current_encoding->total_codons);
+                    
+                }
+        }
+
+     
+    out_file_seqs.open( seq_output_file );
+    out_file_seqs << out_string;
+    out_file_seqs.close();
+
     fclose(fin);
 
     printf("Processed %d lines x %lu trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
