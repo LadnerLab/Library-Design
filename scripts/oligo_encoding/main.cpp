@@ -316,6 +316,7 @@ int main(int argc, char * const argv[])
     std::vector<std::vector<Encoding*>> best_encodings;
     best_encodings.reserve( lines );
 
+    uint64_t max_item = std::min( (uint64_t)num_to_subsample, trials );
     for( index = 0; index < lines; index++ )
         {
 
@@ -340,7 +341,7 @@ int main(int argc, char * const argv[])
 
             current_vector.push_back( encodings[ smallest_ratio_index ] );
 
-            while( current_vector.size() <= num_to_subsample &&
+            while( current_vector.size() <= max_item &&
                    ( left_index >= 0 || right_index <= num_encodings )
                  )
                 {
@@ -363,7 +364,7 @@ int main(int argc, char * const argv[])
         {
             std::vector<Encoding *> current_vector = best_encodings[ index ];
 
-            for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
+            for( inner_index = 0; inner_index < max_item; inner_index++ )
                 {
                     std::stringstream digit_str;
 
@@ -381,19 +382,19 @@ int main(int argc, char * const argv[])
         }
 
     Encoding *current_encoding = NULL;
-    char **str_arr = (char**) malloc( sizeof( char *) * lines * num_to_subsample );
+    char **str_arr = (char**) malloc( sizeof( char *) * lines * max_item );
     char *new_str = NULL;
              
-    #pragma omp parallel for shared( str_arr, num_to_subsample ) private( new_str, index, inner_index, current_encoding ) schedule( dynamic )
+    #pragma omp parallel for shared( str_arr, max_item ) private( new_str, index, inner_index, current_encoding ) schedule( dynamic )
     for( index = 0; index < lines; index++ )
         {
             std::vector<Encoding *> current_vector = best_encodings[ index ];
 
-            for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
+            for( inner_index = 0; inner_index < max_item; inner_index++ )
                 {
                             current_encoding = current_vector[ inner_index ];
                             new_str = (char*) malloc( sizeof( char ) * 12 * 88);
-                            str_arr[ ( index * num_to_subsample ) + inner_index ] = new_str;
+                            str_arr[ ( index * max_item ) + inner_index ] = new_str;
 
     sprintf(new_str, "%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g,%.4g\n",
                     (double)current_encoding->nucleotides[0]/current_encoding->original.total_nucleotides,
@@ -490,11 +491,11 @@ int main(int argc, char * const argv[])
 
     for( index = 0; index < lines; index++ )
         {
-            for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
+            for( inner_index = 0; inner_index < max_item; inner_index++ )
                 {
-                    fprintf( foutr, "%s", str_arr[ ( index * num_to_subsample ) + inner_index ] );
+                    fprintf( foutr, "%s", str_arr[ ( index * max_item ) + inner_index ] );
 
-                    free( str_arr[ ( index * num_to_subsample ) + inner_index ] );
+                    free( str_arr[ ( index * max_item ) + inner_index ] );
                 }
         }
     free( str_arr );
