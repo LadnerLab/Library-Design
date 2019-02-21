@@ -133,7 +133,7 @@ public:
     
     codon** operator[](char index)
     {
-        return &map[ (int) index ][ 0 ];
+        return &map[ (unsigned int) index ][ 0 ];
     }
 };
 
