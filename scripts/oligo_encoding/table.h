@@ -12,6 +12,7 @@
 
 
 const uint8_t MAX_CODONS = 6;
+const uint8_t CODON_SIZE = 3;
 const uint8_t A_INDEX            = 0;
 const uint8_t C_INDEX            = 1;
 const uint8_t G_INDEX            = 2;
