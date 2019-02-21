@@ -380,7 +380,6 @@ int main(int argc, char * const argv[])
                 }
         }
 
-    uint64_t print_index = 0;
     Encoding *current_encoding = NULL;
     char **str_arr = (char**) malloc( sizeof( char *) * lines * num_to_subsample );
     char *new_str = NULL;
@@ -491,7 +490,6 @@ int main(int argc, char * const argv[])
 
     for( index = 0; index < lines; index++ )
         {
-
             for( inner_index = 0; inner_index < num_to_subsample; inner_index++ )
                 {
                     fprintf( foutr, "%s", str_arr[ ( index * num_to_subsample ) + inner_index ] );
