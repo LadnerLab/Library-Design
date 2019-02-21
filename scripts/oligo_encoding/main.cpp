@@ -324,9 +324,9 @@ int main(int argc, char * const argv[])
             ratio = 0;
             smallest_ratio_index = 0;
             std::vector<Encoding *> current_vector;
-            current_vector.reserve( num_to_subsample );
+            current_vector.reserve( max_item );
 
-            for( inner_index = trials * index; inner_index < ( trials * ( index + 1 ) ); inner_index++ )
+            for( inner_index = trials * index; inner_index < ( trials * ( index + 1 ) ); ++inner_index )
                 {
                     ratio = encodings[ inner_index ]->gc_ratio;
                     if( abs( ratio - gc_target_ratio ) < smallest_ratio )
@@ -341,7 +341,7 @@ int main(int argc, char * const argv[])
 
             current_vector.push_back( encodings[ smallest_ratio_index ] );
 
-            while( current_vector.size() <= max_item &&
+            while( current_vector.size() < max_item &&
                    ( left_index >= 0 || right_index <= num_encodings )
                  )
                 {
@@ -489,9 +489,9 @@ int main(int argc, char * const argv[])
                 }
         }
 
-    for( index = 0; index < lines; index++ )
+    for( index = 0; index < lines; ++index )
         {
-            for( inner_index = 0; inner_index < max_item; inner_index++ )
+            for( inner_index = 0; inner_index < max_item; ++inner_index )
                 {
                     fprintf( foutr, "%s", str_arr[ ( index * max_item ) + inner_index ] );
 
