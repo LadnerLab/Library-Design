@@ -15,16 +15,16 @@
  * 
  * @param input dynamic_string_t input to be tested 
  **/
-void ds_check_for_resize( dynamic_string_t* input, char string_to_add[] )
+void ds_check_for_resize( dynamic_string_t* input, unsigned int input_len )
 {
     int new_capacity;
-    int add_length = strlen( string_to_add );
+    int add_length = input_len;
     char* new_data;
 
     if( input->capacity <= input->size + add_length + 10 )
         {
             new_capacity = ( input->capacity ) + add_length + DEFAULT_LENGTH;
-            new_data     = realloc( input->data, new_capacity );
+            new_data = realloc( input->data, new_capacity );
 
             if( !new_data )
                 {
@@ -41,19 +41,13 @@ void ds_check_for_resize( dynamic_string_t* input, char string_to_add[] )
 
 int string_length( char* input )
 {
-    int length = 0;
-
-    while( *( input + length ) )
-        {
-            length++;
-        }
-    return length;
+    return strlen( input );
 }
 
 void ds_init( dynamic_string_t* input )
 {
     input->capacity = DEFAULT_LENGTH;
-    input->data = calloc( DEFAULT_LENGTH, sizeof( char ) );
+    input->data = calloc( DEFAULT_LENGTH + 1, sizeof( char ) );
     input->size = 0;
 }
 
@@ -64,26 +58,15 @@ void ds_add( dynamic_string_t* input, char string[] )
     int input_length = strlen( string );
     int new_size = size + input_length;
 
-
-    int index = 0;
-
-    ds_check_for_resize( input, string );
- 
-    for( index = 0; index < input_length; index++ )
-        {
-            if( string[ index ] >= SPACE )
-                {
-                    *( input->data + size + index ) = string[ index ];
-                }
-        }
-
-    input->data[ new_size ] = '\0';
+    ds_check_for_resize( input, input_length );
+    strcat( input->data, string );
     input->size = new_size;
 }
 
 void ds_clear( dynamic_string_t* input )
 {
     free( input->data );
+    free( input );
 }
 
 
