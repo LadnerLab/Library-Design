@@ -347,12 +347,12 @@ int main(int argc, char * const argv[])
             start_index = trials * index;
             end_index   = trials * ( index + 1 );
 
-            left_index  = std::max( start_index, (int64_t)smallest_ratio_index - 1 );
-            right_index = std::min( smallest_ratio_index + 1, end_index );
+            left_index  = smallest_ratio_index - 1;
+            right_index = smallest_ratio_index + 1;
 
             current_vector.push_back( encodings[ smallest_ratio_index ] );
 
-            while( current_vector.size() < max_item &&
+            while( current_vector.size() <= max_item &&
                    ( left_index >= start_index || right_index < end_index )
                  )
                 {
@@ -361,7 +361,7 @@ int main(int argc, char * const argv[])
                             current_vector.push_back( encodings[ left_index ] );
                             left_index--;
                         }
-                    if( right_index < num_encodings )
+                    if( right_index < end_index )
                         {
                             current_vector.push_back( encodings[ right_index ] );
                             right_index++;
