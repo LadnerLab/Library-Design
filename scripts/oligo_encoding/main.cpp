@@ -245,7 +245,7 @@ int main(int argc, char * const argv[])
 
     Encoding **encodings = (Encoding**) malloc( sizeof( Encoding *) * lines * trials );
 
-    #pragma omp parallel for shared( encodings, file_data_arr ) private( loop_index ) schedule( dynamic )
+    // #pragma omp parallel for shared( encodings, file_data_arr ) private( loop_index, index ) schedule( dynamic )
     for( loop_index = 0; loop_index < lines; ++loop_index )
         {
 
@@ -368,14 +368,14 @@ int main(int argc, char * const argv[])
                     std::stringstream digit_str;
 
                     digit_str << std::internal << std::setw( digits ) << std::setfill( '0' ) <<  inner_index + 1;
-                    out_string.append( current_vector[ index ]->original.name );
+                    out_string.append( current_vector[ inner_index ]->original.name );
                     out_string.append( "_" );
 
                     out_string.append( digit_str.str() );
                     out_string.append( "," );
-                    out_string.append( current_vector[ index ]->original.data );
+                    out_string.append( current_vector[ inner_index ]->original.data );
                     out_string.append( "," );
-                    out_string.append( current_vector[ index ]->encoding );
+                    out_string.append( current_vector[ inner_index ]->encoding );
                     out_string.append( "\n" );
                 }
         }
@@ -384,7 +384,7 @@ int main(int argc, char * const argv[])
     char **str_arr = (char**) malloc( sizeof( char *) * lines * num_to_subsample );
     char *new_str = NULL;
              
-#pragma omp parallel for shared( str_arr, num_to_subsample ) private( new_str, index, inner_index, current_encoding ) schedule( dynamic )
+    #pragma omp parallel for shared( str_arr, num_to_subsample ) private( new_str, index, inner_index, current_encoding ) schedule( dynamic )
     for( index = 0; index < lines; index++ )
         {
             std::vector<Encoding *> current_vector = best_encodings[ index ];
