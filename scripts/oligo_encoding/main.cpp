@@ -120,7 +120,7 @@ int encoding_compar( const void *first, const void *second )
 
 
 const char *ARGS = "i:c:n:g:s:r:p:t:b:h?";
-uint32_t count_lines_in_file( const char *filename );
+uint64_t count_lines_in_file( const char *filename );
 
 int main(int argc, char * const argv[])
 {
@@ -216,10 +216,10 @@ int main(int argc, char * const argv[])
     acid_map['T'] = 16; acid_map['V'] = 17; acid_map['W'] = 18; acid_map['Y'] = 19;
 
     // process line by line
-    uint32_t lines = count_lines_in_file( input_file );
-    uint32_t loop_index = 0;
-    uint32_t index = 0;
-    uint32_t inner_index = 0;
+    uint64_t lines = count_lines_in_file( input_file );
+    uint64_t loop_index = 0;
+    uint64_t index = 0;
+    uint64_t inner_index = 0;
 
     char line[MAX_LINE_LENGTH];
     std::vector<FileInput> file_data_arr;
@@ -246,7 +246,7 @@ int main(int argc, char * const argv[])
 
     Encoding **encodings = (Encoding**) malloc( sizeof( Encoding *) * lines * trials );
 
-    #pragma omp parallel for shared( encodings, file_data_arr ) private( loop_index, index ) schedule( dynamic )
+    #pragma omp parallel for shared( trials, encodings, file_data_arr ) private( loop_index, index ) schedule( dynamic )
     for( loop_index = 0; loop_index < lines; ++loop_index )
         {
 
@@ -299,6 +299,7 @@ int main(int argc, char * const argv[])
                         }
                     current->calc_gc_ratio();
                     current->total_codons = len;
+
                     encodings[ ( trials * loop_index ) + current_trial ] = current;
                 }
         }
@@ -519,16 +520,16 @@ int main(int argc, char * const argv[])
 
     fclose(fin);
 
-    printf("Processed %d lines x %lu trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
+    printf("Processed %lu lines x %lu trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
 
     return EXIT_SUCCESS;
 }
 
-uint32_t count_lines_in_file( const char *filename )
+uint64_t count_lines_in_file( const char *filename )
 {
     FILE *open_file = NULL;
     int c = 0;
-    uint32_t count = 0;
+    uint64_t count = 0;
 
     open_file = fopen( filename, "r" );
 
