@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,48 +44,56 @@ int count_letters( char* in_str )
     return char_count;
 }
 
-
 void read_sequences( FILE* file_to_read, sequence_t** in_sequence )
 {
     int has_line;
     int index = 0;
 
-    dynamic_string_t* line     = (dynamic_string_t*) malloc( sizeof( dynamic_string_t ) );
+    dynamic_string_t* line = (dynamic_string_t*) malloc( sizeof( dynamic_string_t ) );
     dynamic_string_t* sequence = NULL;
-    char *new_name = NULL;
 
     ds_init( line );
-
     has_line = get_a_line( file_to_read, line );
+
     while( has_line )
         {
+
+            // remove newline-character if the line is not empty
+            if( strchr( line->data, '\n' ) != NULL
+                && line->size )
+                {
+                    line->data[ --line->size ] = '\0';
+                }
 
             if( line->data[ 0 ] == '>' )
                 {
                     *( in_sequence + index ) = malloc( sizeof( sequence_t ) );
                     sequence = malloc( sizeof( dynamic_string_t ) );
-                    new_name = malloc( line->size + 1 );
                     ds_init( sequence );
 
-                    strcpy( new_name, line->data );
-                    in_sequence[ index ]->name = new_name;
+                    in_sequence[ index ]->name = line->data;
                     in_sequence[ index ]->sequence = sequence; 
-                    in_sequence[ index ]->collapsed = 0; 
                     index++;
-
                 }
             else
                 {
                     ds_add( sequence, line->data );
                 }
-            ds_clear( line );
             ds_init( line );
             has_line = get_a_line( file_to_read, line );
+
+            // remove newline-character, update size to reflect the removal of
+            // char
+            if( line->size )
+                {
+                    line->data[ --line->size ] = '\0';
+                }
         }
 
     ds_clear( line );
-    free( line );
 }
+
+
 
 void write_fastas( sequence_t** in_seqs, int num_seqs, char* output )
 {
@@ -136,14 +145,19 @@ int count_seqs_in_file( FILE* data_file )
 
 int get_a_line( FILE* stream, dynamic_string_t* to_read )
 {
-    char current_char[ 16384 ];
+    char *current_char = NULL;
+    size_t size = 0;
+    bool return_val = false;
 
-    if( fgets( current_char, 16384, stream ) ) 
+    if( getline( &current_char, &size, stream ) != EOF ) 
         {
             ds_add( to_read, current_char );
-            return true;
+
+            return_val = true;
         }
-    return false;
+
+    free( current_char );
+    return return_val;
 
 }
 
