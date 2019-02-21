@@ -173,6 +173,7 @@ int main(int argc, char * const argv[])
                 printf("   ratio_output_file: path to ratios output file (will be overwritten if it exists).\n");
                 printf("   probability_file: lines must be formatted as {letter},{nucleotides,3},{weighting},{index}. The weightings do not need to sum to 1. Codon indices must range from 0 to 63.\n");
                 printf("   num_to_subsample: number of 'top' encodings to take, the best encodings are measured by absolute difference from gc_target_ratio.\n" );
+                printf("   number of threads to use for operations, default is 1\n");
                 printf("   gc_target_ratio: ratio GC to AT to target for encodings.\n" );
                 printf("   trials: number of nucleotide sequences to generate for each input sequence. The default is 10,000.\n");
                 printf("   buffer: size in bytes of output stream buffer expressed as a power of 2, between 4 and 30. Leave unspecified to use system default.\n");
@@ -245,7 +246,7 @@ int main(int argc, char * const argv[])
 
     Encoding **encodings = (Encoding**) malloc( sizeof( Encoding *) * lines * trials );
 
-    // #pragma omp parallel for shared( encodings, file_data_arr ) private( loop_index, index ) schedule( dynamic )
+    #pragma omp parallel for shared( encodings, file_data_arr ) private( loop_index, index ) schedule( dynamic )
     for( loop_index = 0; loop_index < lines; ++loop_index )
         {
 

@@ -1,4 +1,4 @@
-CFLAGS= -O0 -Wall -fopenmp
+CFLAGS= -O0 -Wall -fopenmp 
 CC= g++
 
 main: main.o 
