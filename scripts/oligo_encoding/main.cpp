@@ -34,13 +34,6 @@ const uint8_t NUM_CODONS_POSSIBLE = 64;
 const uint8_t NUM_NUCLEOTIDES = 4;
 const uint8_t DEFAULT_NUM_THREADS = 1;
 
-typedef struct ambiguity_codes
-{
-    char ambiguity_B[ NUM_OPTIONS_AMBIGUITY_CODES ] = { 'N', 'D' };
-    char ambiguity_Z[ NUM_OPTIONS_AMBIGUITY_CODES ] = { 'Q', 'E' };
-
-} ambiguity_codes;
-
 class FileInput
 {
  public:
@@ -68,7 +61,6 @@ FileInput::FileInput()
     data = "";
 
 }
-
 
 class Encoding
 {
@@ -243,8 +235,23 @@ int main(int argc, char * const argv[])
         char* input = nullptr;
         char* name = strtok_r(line, ",", &input);
 
-        FileInput new_input( name, input );
-        file_data_arr.push_back( new_input );
+
+        if( !( strchr( input, 'B' )
+               || strchr( input, 'Z' )
+            )
+          )
+            {
+                FileInput new_input( name, input );
+                file_data_arr.push_back( new_input );
+
+            }
+        else
+            {
+                printf( "Notice: Skipping oligo with ambiguous code, B or Z,  %s.\n",
+                        input
+                      );
+            }
+
     }
 
     out_file_seqs.open( seq_output_file );
