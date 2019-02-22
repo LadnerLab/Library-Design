@@ -34,6 +34,13 @@ const uint8_t NUM_CODONS_POSSIBLE = 64;
 const uint8_t NUM_NUCLEOTIDES = 4;
 const uint8_t DEFAULT_NUM_THREADS = 1;
 
+typedef struct ambiguity_codes
+{
+    char ambiguity_B[ NUM_OPTIONS_AMBIGUITY_CODES ] = { 'N', 'D' };
+    char ambiguity_Z[ NUM_OPTIONS_AMBIGUITY_CODES ] = { 'Q', 'E' };
+
+} ambiguity_codes;
+
 class FileInput
 {
  public:
