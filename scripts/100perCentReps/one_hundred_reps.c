@@ -11,7 +11,7 @@
 
 const int NUM_THREADS   = 4;
 const int MAX_NUM_CHARS = 256;
-const char *ARGS        = "f:n:m:";
+const char *ARGS        = "f:h::n:m:";
 
 int seq_compare( const void *a, const void *b );
 void write_map( hash_table_t *table, char *filename );
@@ -65,6 +65,15 @@ int main( int argc, char **argv )
                         strcpy( map_file, optarg );
                         map_file_included = true;
                         break;
+                    case 'h':
+                        printf( "USAGE: one_hundred_reps -f infile_name -n num_threads -m map_file\n" );
+                        printf( "infile_name name of fasta file to parse and collapse. Output will be written "
+                                "to infile_name_out\n" );
+                        printf( "num_threads number of threads to use. Default is 4.\n" );
+                        printf( "map_file Optional, name of file to write out map to, this map will contain a mapping "
+                                "of which sequences were collapsed under which sequences\n" );
+                        return EXIT_SUCCESS;
+                    
                     default:
                         printf( "Incorrect argument supplied!\n" );
 
