@@ -213,6 +213,7 @@ int main(int argc, char * const argv[])
 
     // process line by line
     uint64_t lines = count_lines_in_file( input_file );
+    uint64_t new_lines = lines;
     uint64_t loop_index = 0;
     uint64_t index = 0;
 
@@ -238,6 +239,9 @@ int main(int argc, char * const argv[])
 
         if( !( strchr( input, 'B' )
                || strchr( input, 'Z' )
+               || strchr( input, 'U' )
+               || strchr( input, 'O' )
+               || strchr( input, 'J' )
             )
           )
             {
@@ -247,12 +251,15 @@ int main(int argc, char * const argv[])
             }
         else
             {
-                printf( "Notice: Skipping oligo with ambiguous code, B or Z,  %s.\n",
+                printf( "Notice: Skipping oligo with ambiguous code, B,Z U, O or J,  %s.\n",
                         input
                       );
+                --new_lines;
             }
 
     }
+
+    lines = new_lines;
 
     out_file_seqs.open( seq_output_file );
 
