@@ -12,6 +12,7 @@
 const int NUM_THREADS   = 4;
 const int MAX_NUM_CHARS = 256;
 const char *ARGS        = "f:h::n:m:";
+const int SMALL_TABLE_SIZE = 1000;
 
 int seq_compare( const void *a, const void *b );
 void write_map( hash_table_t *table, char *filename );
@@ -35,14 +36,16 @@ int main( int argc, char **argv )
     sequence_t **in_seqs;
 
     array_list_t *out_seqs = NULL;
-    array_list_t *new_list = NULL;
+    hash_table_t *new_list = NULL;
 
     sequence_t **intermed_seqs = NULL;
     hash_table_t *map_table    = NULL;
-    HT_Entry *items = NULL;
     char map_file[ MAX_NUM_CHARS ];
     int TABLE_SIZE = 0;
 
+    hash_table_t *other_table = NULL;
+    HT_Entry **other_entries = NULL;
+    uint64_t innermost_index = 0;
     bool map_file_included = false;
 
     out_seqs = malloc( sizeof( array_list_t ) );
@@ -129,18 +132,19 @@ int main( int argc, char **argv )
 
             for( index = 0; index < num_seqs; index++ )
                 {
-                    new_list = malloc( sizeof( array_list_t ) );
-                    ar_init( new_list );
-                    ar_add( new_list, in_seqs[ index ] );
+                    new_list = malloc( sizeof( hash_table_t ) );
+                    ht_init( new_list, SMALL_TABLE_SIZE );
+                    ht_add( new_list, in_seqs[ index ]->name, in_seqs[ index ] );
                     ht_add( map_table, in_seqs[ index ]->name, new_list );
                 }
         }
 
-    #pragma omp parallel for private( outer_index, inner_index, found, new_list ) shared( intermed_seqs, in_seqs, num_seqs, map_table ) schedule( dynamic )
+    #pragma omp parallel for private( other_table, other_entries, innermost_index, outer_index, inner_index, found, new_list ) \
+                             shared( intermed_seqs, in_seqs, num_seqs, map_table ) schedule( dynamic )
     for( outer_index = 0; outer_index < num_seqs; outer_index++ )
         {
             found = false;
-            for( inner_index = outer_index + 1; inner_index < num_seqs; inner_index++ )
+                for( inner_index = num_seqs - 1; inner_index > outer_index; inner_index-- )
                 {
                     if( strstr( in_seqs[ inner_index]->sequence->data,
                                 in_seqs[ outer_index ]->sequence->data
@@ -149,36 +153,42 @@ int main( int argc, char **argv )
                         {
                             found = true;
 
-
-
-
                             if( map_table )
                                 {
 
                                     #pragma omp critical
                                     {
-                                        in_seqs[ outer_index ]->collapsed = 1;
-
-                                        if( in_seqs[ inner_index ]->collapsed == 0 )
+                                        if( in_seqs[ outer_index ]->collapsed == 0)
                                             {
-                                                ht_delete( map_table, in_seqs[ outer_index ]->name );
-                                                new_list = ht_find( map_table, in_seqs[ inner_index ]->name );
-                                                ar_add( new_list, in_seqs[ outer_index ] );
-                                            }
+                                               in_seqs[ outer_index ]->collapsed = 1;
 
+                                                other_table = ht_delete( map_table, in_seqs[ outer_index ]->name );
+
+                                                new_list = ht_find( map_table, in_seqs[ inner_index ]->name );
+                                                other_entries = ht_get_items( other_table );
+                                                for( innermost_index = 0; innermost_index < other_table->size; innermost_index++ )
+                                                    {
+                                                        ht_add( new_list, other_entries[ innermost_index ]->key, other_entries[ innermost_index ]->value );
+                                                    }
+
+                                                free( other_entries );
+                                            }
                                     }
                                 }
+                            // we found a seq, no need to continue
                             break;
                         }
 
                 }
             if( !found )
-                intermed_seqs[ outer_index ] = in_seqs[ outer_index ];
+                {
+                    intermed_seqs[ outer_index ] = in_seqs[ outer_index ];
+                }
         }
 
     for( index = 0; index < num_seqs; index++ )
         {
-            if( intermed_seqs[ index ] )
+            if( intermed_seqs[ index ] && intermed_seqs[ index ]->collapsed == 0 )
                 {
                     ar_add( out_seqs, intermed_seqs[ index ] );
                 }
@@ -191,28 +201,6 @@ int main( int argc, char **argv )
         }
 
     write_fastas( (sequence_t**)out_seqs->array_data, out_seqs->size, out_file );
-    for( index = 0; index < num_seqs; index++ )
-        {
-            ds_clear( in_seqs[ index ]->sequence );
-            free( in_seqs[ index ]->sequence );
-        }
-
-    free( in_seqs );
-    free( out_seqs );
-
-    if( map_file_included )
-        {
-            items = ht_get_items( map_table );
-            uint32_t table_index = 0;
-
-            for( table_index = 0; table_index < map_table->size; table_index++ )
-                {
-                    ar_clear( items[ table_index ].value );
-                }
-            ht_clear( map_table );
-            free( items );
-            free( map_table );
-        }
 
     return EXIT_SUCCESS;
 }
@@ -227,8 +215,9 @@ int seq_compare( const void *a, const void *b )
 
 void write_map( hash_table_t *table, char *filename )
 {
-    HT_Entry *ht_items        = NULL;
-    array_list_t *current_arr = NULL;
+    HT_Entry **ht_items        = NULL;
+    hash_table_t *current_arr = NULL;
+    HT_Entry **current_arr_items = NULL;
     FILE *out_file            = NULL;
 
     uint32_t index       = 0;
@@ -243,21 +232,24 @@ void write_map( hash_table_t *table, char *filename )
             ht_items = ht_get_items( table );
             for( index = 0; index < table->size; index++ )
                 {
-                    current_arr = ht_items[ index ].value;
-                    current_data = current_arr->array_data[ 0 ];
+                    current_arr = ht_items[ index ]->value;
 
-                    if( current_arr->size > 0 && current_data->collapsed == 0 )
+                    current_arr_items = ht_get_items( current_arr );
+                    current_data = current_arr_items[ 0 ]->value;
+
+                    if( current_arr->size > 0 )
                         {
                             for( inner_index = 0; inner_index < current_arr->size; inner_index++ )
                                 {
-                                    current_data = ar_get( current_arr, inner_index );
-                                    if( current_data->collapsed == 0 )
-                                        {
-                                            fprintf( out_file, "%s\t", current_data->name );
-                                        }
+                                    current_data = current_arr_items[ inner_index ]->value;
+
+                                    fprintf( out_file, "%s\t", current_data->name );
                                 }
+
                             fprintf( out_file, "\n" );
                         }
+
+                    free( current_arr_items );
                 }
             free( ht_items );
             fclose( out_file );
