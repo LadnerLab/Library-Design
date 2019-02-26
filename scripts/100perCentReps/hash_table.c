@@ -144,7 +144,7 @@ int ht_add( hash_table_t* table, char* to_add, void* add_val )
             while( current_node->next != NULL )
                 {
                     // we don't want to add duplicates
-                    if( strcmp( current_node->key, to_add ) != 0 )
+                    if( strcmp( current_node->key, new_entry->key ) != 0 )
                         {
                             // update the value
                             current_node = current_node->next;
@@ -230,6 +230,7 @@ void* ht_delete( hash_table_t* table, char* in_key )
                     found_node->prev->next = found_node->next;
                 }
 
+            free( found_node->key );
             free( found_node );
 
             table->size -= 1;
@@ -242,9 +243,9 @@ void* ht_delete( hash_table_t* table, char* in_key )
 }
 
 
-HT_Entry *ht_get_items( hash_table_t* input )
+HT_Entry **ht_get_items( hash_table_t* input )
 {
-    HT_Entry *output = NULL;
+    HT_Entry **output = NULL;
     HT_Entry* next_node;
 
     uint32_t input_index;
@@ -254,21 +255,21 @@ HT_Entry *ht_get_items( hash_table_t* input )
 
     if( input->size > 0 )
         {
-            output = malloc( sizeof( HT_Entry ) * input->size );
+            output = malloc( sizeof( HT_Entry *) * input->size );
             output_index = 0;
 
             for( input_index = 0; input_index < capacity; input_index++ )
                 {
                     if( input->table_data[ input_index ] )
                         {
-                            output[ output_index ] = *(input->table_data[ input_index ]);
+                            output[ output_index ] = input->table_data[ input_index ];
                             next_node = input->table_data[ input_index ]->next;
 
                             output_index++;
 
                             while( next_node )
                                 {
-                                    output[ output_index ] = *(next_node);
+                                    output[ output_index ] = next_node;
                                     next_node = next_node->next;
 
                                     output_index++;
