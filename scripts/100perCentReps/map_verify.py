@@ -17,8 +17,16 @@ def main():
     original_seq_dict    = fasta_to_dict( args.uncollapsed_input )
     collapsed_names_dict = parse_map( args.map_file )
 
-    print( "Original number of sequences:  %d." % len( original_seq_dict.keys() ) )
-    print( "Collapsed number of sequences: %d." % len( collapsed_names_dict.keys() ) )
+    original_len   = len( original_seq_dict.keys() )
+    collapsed_len  = len( collapsed_names_dict.keys() )
+
+    print( "Original number of sequences:  %d." %  original_len )
+    print( "Collapsed number of sequences: %d." %  collapsed_len )
+
+    print( "Number of sequences who were collapsed (expected): %d." % ( original_len - collapsed_len ) )
+    print( "Number of sequences who were collapsed (actual):   %d." % sum( [ len( item ) for item in collapsed_names_dict.values() ] ) )
+    
+           
 
     for collapsed_under, collapsed in collapsed_names_dict.items():
         for current in collapsed:
