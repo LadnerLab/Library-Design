@@ -235,19 +235,18 @@ void write_map( hash_table_t *table, char *filename )
                     current_arr = ht_items[ index ]->value;
 
                     current_arr_items = ht_get_items( current_arr );
-                    current_data = current_arr_items[ 0 ]->value;
+                    fprintf( out_file, "%s\t", ht_items[ index ]->key );
 
-                    if( current_arr->size > 0 )
+                    if( current_arr->size > 1 )
                         {
-                            for( inner_index = 0; inner_index < current_arr->size; inner_index++ )
+                            for( inner_index = 1; inner_index < current_arr->size; inner_index++ )
                                 {
                                     current_data = current_arr_items[ inner_index ]->value;
-
                                     fprintf( out_file, "%s\t", current_data->name );
                                 }
 
-                            fprintf( out_file, "\n" );
                         }
+                    fprintf( out_file, "\n" );
 
                     free( current_arr_items );
                 }
