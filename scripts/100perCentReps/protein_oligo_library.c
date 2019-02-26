@@ -73,6 +73,7 @@ void read_sequences( FILE* file_to_read, sequence_t** in_sequence )
 
                     in_sequence[ index ]->name = line->data;
                     in_sequence[ index ]->sequence = sequence; 
+                    in_sequence[ index ]->collapsed = 0;
                     index++;
                 }
             else
