@@ -346,12 +346,18 @@ int main(int argc, char * const argv[])
             for( index = 0; index < num_to_subsample; index++ )
                 {
                             std::stringstream digit_str;
-                            std::stringstream gc_content;
-                            std::stringstream gc_dev;
+                            std::string gc_content;
+                            std::string gc_dev;
+                            char gc_content_c[ MAX_LINE_LENGTH ];
+                            char gc_dev_c[ MAX_LINE_LENGTH ];
+
+                            sprintf( gc_content_c, "%f", best_encodings[ index ]->gc_ratio );
+                            sprintf( gc_dev_c, "%f", best_encodings[ index ]->gc_dist_abs );
+
+                            gc_dev = gc_dev_c;
+                            gc_content = gc_content_c;
 
                             digit_str << std::internal << std::setw( digits ) << std::setfill( '0' ) <<  index + 1;
-                            gc_content << best_encodings[ index ]->gc_ratio;
-                            gc_dev << best_encodings[ index ]->gc_dist_abs;
                             out_string.append( best_encodings[ index ]->original.name );
                             out_string.append( "_" );
 
@@ -361,9 +367,9 @@ int main(int argc, char * const argv[])
                             out_string.append( "," );
                             out_string.append( best_encodings[ index ]->encoding );
                             out_string.append( "," );
-                            out_string.append( gc_content.str() );
+                            out_string.append( gc_content );
                             out_string.append( "," );
-                            out_string.append( gc_dev.str() );
+                            out_string.append( gc_dev );
                             out_string.append( "\n" );
                 }
 
