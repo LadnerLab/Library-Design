@@ -32,6 +32,11 @@ def main():
 
     best_encodings = get_n_best_encodings( generated_sequences, 'AA Peptide', args.nn_subset_size )
 
+    write_output( best_encodings, args.out_file )
+
+def write_output( encodings, outfile_name ):
+    encodings.to_csv( outfile_name, index = False )
+
 def get_n_best_encodings( seqs_dataframe, key, n ):
     out_frame = pandas.DataFrame()
     unique_seqs = get_unique_seqs( seqs_dataframe, key )
