@@ -27,7 +27,13 @@ def main():
 
     predictions = loaded_model.predict( h2o.H2OFrame( ratio_with_labelled_cols ) )
 
+    generated_sequences[ 'predicted' ]     = predictions.as_data_frame()
+    generated_sequences[ 'predicted_dev' ] = predictions.abs().as_data_frame()
 
+    unique_seqs = get_unique_seqs( generated_sequences, 'AA Peptide' )
+
+def get_unique_seqs( dataframe, key ):
+    return set( dataframe[ key ] )
 def read_ratio_and_label( filename ):
     parsed_file = pandas.read_csv( filename )
 
@@ -37,7 +43,9 @@ def read_ratio_and_label( filename ):
 
 def read_seq_file( filename ):
     parsed_file = pandas.read_csv( filename )
-    parsed_file.columns = [ "Seq ID", "AA Peptide", "Nucleotide Encoding" ]
+    parsed_file.columns = [ "Seq ID", "AA Peptide", "Nucleotide Encoding",
+                            "GC Ratio", "GC Dev (abs)"
+                          ]
 
     return parsed_file
 
