@@ -43,7 +43,7 @@ def get_n_best_encodings( seqs_dataframe, key, n ):
     for seq_id in unique_seqs:
         relevant_data = seqs_dataframe[ seqs_dataframe[ key ].str.contains( seq_id ) ]
         sorted_data   = relevant_data.sort_values( 'predicted_dev' )
-        out_frame = out_frame.append( sorted_data.iloc[ 0:n ] )
+        out_frame     = out_frame.append( sorted_data.iloc[ 0:n ] )
     return out_frame
 
 def get_unique_seqs( dataframe, key ):
