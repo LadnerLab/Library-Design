@@ -78,7 +78,7 @@ class Encoding
     double calc_gc_ratio( void )
     {
         uint8_t g_and_c = nucleotides[ G_INDEX ] + nucleotides[ C_INDEX ];
-        uint8_t t_and_a = nucleotides[ T_INDEX ] + nucleotides[ A_INDEX ];
+        uint8_t t_and_a = nucleotides[ T_INDEX ] + nucleotides[ A_INDEX ] + g_and_c;
 
         gc_ratio = (double) g_and_c / (double) t_and_a;
 
@@ -96,8 +96,7 @@ int encoding_compar( const void *first, const void *second )
     double diff = (*first_ptr)->gc_dist_abs - (*second_ptr)->gc_dist_abs;
 
     if( diff > 0 )
-        {
-            return 1;
+        {return 1;
         }
     if( diff < 0 )
         {
