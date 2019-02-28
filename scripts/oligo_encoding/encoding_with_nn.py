@@ -30,7 +30,16 @@ def main():
     generated_sequences[ 'predicted' ]     = predictions.as_data_frame()
     generated_sequences[ 'predicted_dev' ] = predictions.abs().as_data_frame()
 
-    unique_seqs = get_unique_seqs( generated_sequences, 'AA Peptide' )
+    best_encodings = get_n_best_encodings( generated_sequences, 'AA Peptide', args.nn_subset_size )
+
+def get_n_best_encodings( seqs_dataframe, key, n ):
+    out_frame = pandas.DataFrame()
+    unique_seqs = get_unique_seqs( seqs_dataframe, key )
+    for seq_id in unique_seqs:
+        relevant_data = seqs_dataframe[ seqs_dataframe[ key ].str.contains( seq_id ) ]
+        sorted_data   = relevant_data.sort_values( 'predicted_dev' )
+        out_frame = out_frame.append( sorted_data.iloc[ 0:n ] )
+    return out_frame
 
 def get_unique_seqs( dataframe, key ):
     return set( dataframe[ key ] )
