@@ -121,11 +121,9 @@ int main(int argc, char * const argv[])
 {
     // default values
     uint64_t trials = DEFAULT_TRIALS;
-    uint8_t buffer = 0;
     uint16_t num_to_subsample = DEFAULT_NUM_SUBSAMPLE;
     uint8_t num_threads = DEFAULT_NUM_THREADS;
     double gc_target_ratio = 0.55;
-    bool custom_buffer = false;
     const char* input_file = nullptr;
     const char* seq_output_file = nullptr;
     const char* ratio_output_file = nullptr;
@@ -146,10 +144,9 @@ int main(int argc, char * const argv[])
                 case 'c': num_threads = atoi( optarg ); break;
                 case 't': trials = atoi(optarg); break;
                 case 'g': gc_target_ratio = atof( optarg ); break;
-                case 'b': buffer = atoi(optarg); custom_buffer = true; break;
                 case 'h':
                 case '?':
-                    printf("usage: codon_sampling -i input_file -s seq_output_file -r ratio_output_file -p probability_file -n num_to_subsample -g gc_target_ratio [-t num_trials -b buffer_size]\n");
+                    printf("usage: codon_sampling -i input_file -s seq_output_file -r ratio_output_file -p probability_file -n num_to_subsample -g gc_target_ratio [-t num_trials ]\n");
                     printf("   input_file: lines must be formatted as {identifier},{sequence}, with at most %d characters per line.\n", MAX_LINE_LENGTH);
                     printf("   seq_output_file: path to sequence output file (will be overwritten if it exists).\n");
                     printf("   ratio_output_file: path to ratios output file (will be overwritten if it exists).\n");
@@ -158,8 +155,6 @@ int main(int argc, char * const argv[])
                     printf("   number of threads to use for operations, default is 1\n");
                     printf("   gc_target_ratio: ratio GC to AT to target for encodings.\n" );
                     printf("   trials: number of nucleotide sequences to generate for each input sequence. The default is 10,000.\n");
-                    printf("   buffer: size in bytes of output stream buffer expressed as a power of 2, between 4 and 30. Leave unspecified to use system default.\n");
-                    printf("Note that the optimal buffer size may depend on hardware and on the number of trials.\n");
                     exit(EXIT_SUCCESS);
                 default: break;
                 }
@@ -169,7 +164,6 @@ int main(int argc, char * const argv[])
     assert(input_file && probability_file, "Parameter error: need two input files. Type 'codon_sampling -h' for help.\n");
     assert(seq_output_file && ratio_output_file, "Parameter error: output file missing. Type 'codon_sampling -h' for help.\n");
     assert(trials >= 0, "Parameter error: number of trials must be non-negative. Type 'codon_sampling -h' for help.\n");
-    assert(!custom_buffer || (buffer >= 4 && buffer <= 30), "Parameter error: buffer size must be between 4 and 30. Type 'codon_sampling -h' for help.\n");
 
     // start
     double begin  = omp_get_wtime();
