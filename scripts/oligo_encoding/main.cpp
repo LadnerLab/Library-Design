@@ -298,14 +298,11 @@ int main(int argc, char * const argv[])
                     current->calc_gc_ratio();
                     current->total_codons = len;
 
+                    current->gc_dist_abs = fabs( current->gc_ratio - gc_target_ratio );
+
                     encodings[ current_trial ] = current;
                 }
             uint64_t num_encodings = trials;
-
-            for( index = 0; index < trials; index++ )
-                {
-                    encodings[ index ]->gc_dist_abs = fabs( encodings[ index ]->gc_ratio - gc_target_ratio );
-                }
 
             // sort the encodings according to gc_ratio
             qsort( encodings, num_encodings, sizeof( Encoding *), encoding_compar );
