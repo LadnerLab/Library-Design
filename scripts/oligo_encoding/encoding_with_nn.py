@@ -2,6 +2,7 @@
 import h2o      # For running models
 import argparse # for parsing command-line args
 import pandas   # reading csv
+import io
 import sys
 import subprocess
 
@@ -42,19 +43,18 @@ def main():
     if args.input:
         generate_oligos( args )
 
-    h2o.init()
+    h2o.init( max_mem_size = 1 )
 
     loaded_model = h2o.load_model( args.model )
 
     generated_sequences      = read_seq_file( args.sequences )
-    ratio_with_labelled_cols = read_ratio_and_label( args.ratio_file )
+    best_encodings           = pandas.DataFrame()
 
-    predictions = loaded_model.predict( h2o.H2OFrame( ratio_with_labelled_cols ) )
+    generated_sequences = open( args.sequences,  'r' )
+    ratio_file          = open( args.ratio_file, 'r' )
 
-    generated_sequences[ 'predicted' ]     = predictions.as_data_frame()
-    generated_sequences[ 'predicted_dev' ] = predictions.abs().as_data_frame()
-
-    best_encodings = get_n_best_encodings( generated_sequences, 'AA Peptide', args.nn_subset_size )
+    current_seq   = read_seq( generated_sequences,    args.subsample )
+    current_ratio = read_and_label_ratio( ratio_file, args.subsample )
 
     write_output( best_encodings, args.out_file )
 
@@ -63,6 +63,17 @@ def generate_oligos( args ):
                      ( args.input, args.sequences, args.ratio_file, args.probability_file, args.subsample, args.gc_target, args.trials, args.cores ),
                      shell = True
                    )
+def read_seq( open_file, subsample ):
+    seq_str = ""
+    for seq in range( subsample ):
+        seq_str += open_file.readline()
+    io_data = io.StringIO( seq_str )
+    if io_data:
+        return read_seq_file( io_data )
+    return None
+
+def read_and_label_ratio( filename, num_subsample ):
+    pass
     
 def write_output( encodings, outfile_name ):
     encodings.to_csv( outfile_name, index = False )
