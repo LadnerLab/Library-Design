@@ -37,11 +37,20 @@ def main():
     arg_parser.add_argument( '-t', '--trials', type = int, default = 10000, help = "Number of trials to perform. For each sequence in sequences, trials number of "
                                                                        "candidate encodings will be created."
                            )
+    arg_parser.add_argument( '--read_per_loop', type = int, default = 10, help = "Number of lines from the output seq and ratio files to read at a time, "
+                                                                                 "the higher this parameter is the more memory will be used by h2o."
+                           )
 
     args = arg_parser.parse_args()
 
     if args.input:
         generate_oligos( args )
+    if ( not args.input ) and args.subsample:
+        print( "WARNING: Input file was not provided, but subsample argument was. "
+               "This means that you are providing a file containing already-encoded sequences. "
+               "In order to achieve best results, you must ensure that the 'subsample' argument "
+               "is set to however many encodings were generated for each sequences."
+             )
 
     h2o.init( max_mem_size = 1 )
 
@@ -54,14 +63,12 @@ def main():
     ratio_file          = open( args.ratio_file, 'r' )
     out_file            = open( args.out_file,   'w' )
 
-    num_to_read = 10
+    num_to_read   = args.read_per_loop
     current_seq   = read_seq( generated_sequences,    args.subsample, num_to_read )
     current_ratio = read_and_label_ratio( ratio_file, args.subsample, num_to_read )
 
     while not current_seq is None and not current_ratio is None:
-        ratio_with_labelled_cols = read_ratio_and_label( args.ratio_file )
-
-        predictions = loaded_model.predict( h2o.H2OFrame( ratio_with_labelled_cols ) )
+        predictions = loaded_model.predict( h2o.H2OFrame( current_ratio ) )
 
         current_seq[ 'predicted' ]     = predictions.as_data_frame()
         current_seq[ 'predicted_dev' ] = predictions.abs().as_data_frame()
