@@ -52,31 +52,57 @@ def main():
 
     generated_sequences = open( args.sequences,  'r' )
     ratio_file          = open( args.ratio_file, 'r' )
+    out_file            = open( args.out_file,   'w' )
 
-    current_seq   = read_seq( generated_sequences,    args.subsample )
-    current_ratio = read_and_label_ratio( ratio_file, args.subsample )
+    num_to_read = 10
+    current_seq   = read_seq( generated_sequences,    args.subsample, num_to_read )
+    current_ratio = read_and_label_ratio( ratio_file, args.subsample, num_to_read )
 
-    write_output( best_encodings, args.out_file )
+    while not current_seq is None and not current_ratio is None:
+        ratio_with_labelled_cols = read_ratio_and_label( args.ratio_file )
+
+        predictions = loaded_model.predict( h2o.H2OFrame( ratio_with_labelled_cols ) )
+
+        current_seq[ 'predicted' ]     = predictions.as_data_frame()
+        current_seq[ 'predicted_dev' ] = predictions.abs().as_data_frame()
+
+        best_encodings = get_n_best_encodings( current_seq, 'AA Peptide', args.nn_subset_size )
+
+        write_output( best_encodings, out_file )
+
+        current_seq   = read_seq( generated_sequences,    args.subsample, num_to_read )
+        current_ratio = read_and_label_ratio( ratio_file, args.subsample, num_to_read )
 
 def generate_oligos( args ):
     subprocess.call( "./main -i %s -s %s -r %s -p %s -n %d -g %f -t %d -c %d" %
                      ( args.input, args.sequences, args.ratio_file, args.probability_file, args.subsample, args.gc_target, args.trials, args.cores ),
                      shell = True
                    )
-def read_seq( open_file, subsample ):
-    seq_str = ""
-    for seq in range( subsample ):
-        seq_str += open_file.readline()
-    io_data = io.StringIO( seq_str )
+def read_seq( open_file, subsample, num_to_read ):
+    io_data = read_n_lines_from_file( open_file, num_to_read * subsample )
+
     if io_data:
         return read_seq_file( io_data )
     return None
 
-def read_and_label_ratio( filename, num_subsample ):
-    pass
+def read_and_label_ratio( open_file, subsample, num_to_read ):
+    io_data = read_n_lines_from_file( open_file, num_to_read * subsample )
+    if io_data:
+        return read_ratio_and_label( io_data )
+    return None
+
+def read_n_lines_from_file( open_file, n ):
+    seq_str = ""
+    for cur in range( n ):
+        seq_str += open_file.readline()
+    if seq_str:
+        return io.StringIO( seq_str )
+    return None
     
-def write_output( encodings, outfile_name ):
-    encodings.to_csv( outfile_name, index = False )
+def write_output( encodings, outfile ):
+    encodings.to_csv( outfile, index = False,
+                      header = outfile.tell() == 0
+                    )
 
 def get_n_best_encodings( seqs_dataframe, key, n ):
     out_frame = pandas.DataFrame()
