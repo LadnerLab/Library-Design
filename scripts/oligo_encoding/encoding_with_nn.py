@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-import h2o      # For running models
-import argparse # for parsing command-line args
-import pandas   # reading csv
-import io
-import sys
-import subprocess
+import h2o        # For running models
+import argparse   # for parsing command-line args
+import pandas     # reading csv
+import io         # for encoding strings as files
+import subprocess # for calling the oligo encoding script
 
 def main():
     arg_parser = argparse.ArgumentParser( description = "Use h2o to select encodings for oligos." )  
