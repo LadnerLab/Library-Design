@@ -21,8 +21,21 @@ def main():
     ids_of_interest = get_id_set( args.ids )
     taxid_dict      = get_tax_ids( seq_dict )
 
+    
+def get_tax_ids( seq_dict ):
+    id_dict = {}
+    names = list( seq_dict.keys() )
+
     query_pattern = r'OXX=[0-9]* *,[0-9]* *,[0-9]* *,[0-9]* *'
-            tax_ids = re.search( query_pattern, query ).group()
+
+    for name in names:
+        tax_ids = re.search( query_pattern, name ).group()
+        ids     = tax_ids.split( '=' )[ 1 ]
+        ids     = ids.split( ',' )
+        for id in ids:
+            if id not in id_dict:
+                id_dict[ id ] = set()
+    return id_dict
 
 def get_id_set( filename ):
     out_set = set()
