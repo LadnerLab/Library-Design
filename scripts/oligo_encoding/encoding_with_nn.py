@@ -5,6 +5,7 @@ import pandas     # reading csv
 import io         # for encoding strings as files
 import subprocess # for calling the oligo encoding script
 from timeit import default_timer as timer
+import multiprocessing as mp
 
 def main():
     arg_parser = argparse.ArgumentParser( description = "Use h2o to select encodings for oligos." )  
@@ -72,7 +73,7 @@ def main():
         current_seq[ 'predicted' ]     = predictions.as_data_frame()
         current_seq[ 'predicted_dev' ] = predictions.abs().as_data_frame()
 
-        best_encodings = get_n_best_encodings( current_seq, 'AA Peptide', args.nn_subset_size )
+        best_encodings = get_n_best_encodings( current_seq, 'AA Peptide', args.nn_subset_size, args.cores )
 
         write_output( best_encodings, out_file )
 
@@ -110,19 +111,44 @@ def write_output( encodings, outfile ):
                       header = outfile.tell() == 0
                     )
 
-def get_n_best_encodings( seqs_dataframe, key, n ):
+
+def get_n_best_encodings( seqs_dataframe, key, n, cores ):
+    pool = mp.Pool( cores - 1 )
+    args = list()
+
+    unique_seqs = get_unique_seqs( seqs_dataframe, key )
+    for index, seq in enumerate( unique_seqs ):
+        args.append( ( seqs_dataframe, key, n, seq ) )
+
+    start = timer()
+    result = pool.map( get_n_best_encodings_parr,
+                       args
+    )
+
+    pool.close()
+    pool.join()
+    results_df = pandas.concat( result )
+    end = timer()
+
+    print( "Time to generate results: %f" % ( end - start ) )
+    return results_df 
+
+def get_n_best_encodings_parr( arg ):
+    seqs_dataframe = arg[ 0 ]
+    key            = arg[ 1 ]
+    n              = arg[ 2 ]
+    seq_id         = arg[ 3 ]
     total_start = timer()
     out_frame = pandas.DataFrame()
     unique_seqs = get_unique_seqs( seqs_dataframe, key )
-    for seq_id in unique_seqs:
-        desired = seqs_dataframe[ key ] == seq_id 
-        relevant_data = seqs_dataframe[ desired ]
-        sorted_data   = relevant_data.sort_values( 'predicted_dev' )
-        out_frame     = out_frame.append( sorted_data.iloc[ 0:n ] )
+
+    desired = seqs_dataframe[ key ] == seq_id 
+    relevant_data = seqs_dataframe[ desired ]
+    sorted_data   = relevant_data.sort_values( 'predicted_dev' )
+    out_frame     = out_frame.append( sorted_data.iloc[ 0:n ] )
 
     total_end = timer()
 
-    print( "Total time for getting encodings: %f" % ( total_end - total_start ) )
     return out_frame
 
 def get_unique_seqs( dataframe, key ):
