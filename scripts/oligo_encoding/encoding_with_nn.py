@@ -4,6 +4,7 @@ import argparse   # for parsing command-line args
 import pandas     # reading csv
 import io         # for encoding strings as files
 import subprocess # for calling the oligo encoding script
+from timeit import default_timer as timer
 
 def main():
     arg_parser = argparse.ArgumentParser( description = "Use h2o to select encodings for oligos." )  
@@ -110,12 +111,18 @@ def write_output( encodings, outfile ):
                     )
 
 def get_n_best_encodings( seqs_dataframe, key, n ):
+    total_start = timer()
     out_frame = pandas.DataFrame()
     unique_seqs = get_unique_seqs( seqs_dataframe, key )
     for seq_id in unique_seqs:
-        relevant_data = seqs_dataframe[ seqs_dataframe[ key ].str.contains( seq_id ) ]
+        desired = seqs_dataframe[ key ] == seq_id 
+        relevant_data = seqs_dataframe[ desired ]
         sorted_data   = relevant_data.sort_values( 'predicted_dev' )
         out_frame     = out_frame.append( sorted_data.iloc[ 0:n ] )
+
+    total_end = timer()
+
+    print( "Total time for getting encodings: %f" % ( total_end - total_start ) )
     return out_frame
 
 def get_unique_seqs( dataframe, key ):
