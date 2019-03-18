@@ -51,11 +51,10 @@ def main():
                "is set to however many encodings were generated for each sequences."
              )
 
-    h2o.init( max_mem_size = 1 )
+    h2o.init()
 
     loaded_model = h2o.load_model( args.model )
 
-    generated_sequences      = read_seq_file( args.sequences )
     best_encodings           = pandas.DataFrame()
 
     generated_sequences = open( args.sequences,  'r' )
