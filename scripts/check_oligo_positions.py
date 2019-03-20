@@ -7,6 +7,9 @@ def main():
                                                         "designed library actually appear at the "
                                                         "positions at which they are reported."
                                         )
+    arg_parser.add_argument( '-o', '--original_seqs', help = "Sequences that were used to "
+                                                             "create the oligo library"
+                           )
     arg_parser.add_argument( '-l', '--library', help = "Designed oligonucleotide library "
                                                        "containing either encoded nt sequences, "
                                                        "or amino acid sequences. Note that if nt "
@@ -26,9 +29,16 @@ def main():
     args = arg_parser.parse_args()
     fasta_parse = FastaParser()
 
-    oligo_seqs = fasta_parse.parse( args.library )
+    oligo_seqs    = fasta_parse.parse( args.library )
+    original_seqs = fasta_parse.parse( args.original_seqs )
+    loc_names = SequenceWithLocation.add_locs_to_seq_list( oligo_seqs )
 
-class FastaParser:
+class Parser:
+    def parse( self, filename ):
+        with open( filename, 'r' ) as open_file:
+            return open_file.readlines()
+
+class FastaParser( Parser ):
     def parse( self, filename ):
         names, sequences = oligo.read_fasta_lists( filename )
         out_seqs = list()
@@ -47,6 +57,46 @@ class Sequence:
 
     def __str__( self ):
         return ">%s\n%s" % ( self.name, self.sequence )
+
+class SequenceWithLocation( Sequence ):
+    def __init__( self, name = "", sequence = "",
+                  location_start = 0, location_end = 0 ):
+        self.name     = name
+        self.sequence = sequence
+
+        self.location_start = location_start
+
+        if location_end:
+            self.location_end = location_end
+        else:
+            self.location_end = len( sequence )
+    def add_locs_to_seq_list( seq_list ):
+        out_seqs = list()
+        for sequence in seq_list:
+            name       = sequence.name
+            split_name = name.split( '_' )
+            sequence = sequence.sequence
+            loc_start = split_name[ -2 ]
+            loc_end   = split_name[ -1 ]
+
+            try:
+                out_seqs.append( SequenceWithLocation( name = name, sequence = sequence,
+                                                       location_start = int( loc_start ),
+                                                       location_end   = int( loc_end )
+                                                     )
+                               )
+            except ValueError:
+                print( "WARNING: %s does not contain the location of an oligo, and will therefore not "
+                       "be considered." % ( name )
+                     )
+        return out_seqs 
+
+    def __str__( self ):
+        return ">%s_%d_%d\n%s" % ( self.name, self.location_start,
+                                   self.location_end, self.sequence
+                                 )
+
+
 
                 
 if __name__ == '__main__':
