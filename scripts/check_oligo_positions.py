@@ -35,8 +35,22 @@ def main():
     loc_names     = SequenceWithLocation.add_locs_to_seq_list( oligo_seqs )
     orig_seqs_dict = seqs_to_dict( original_seqs )
 
-    validate_oligo_locations( orig_seqs_dict, loc_names )
+    bad_seqs = validate_oligo_locations( orig_seqs_dict, loc_names )
 
+    if len( bad_seqs ) > 0:
+        report_bad_seqs( bad_seqs )
+    else:
+        print( "No errors detected." )
+
+def report_bad_seqs( seq_list ):
+    print( "Original Name\tOligo Name\tOriginal Seq\tOligo" )
+    for item in seq:
+        print( "%s\t%s\t%s\t%s\t" % ( item.original_seq.name,
+                                      item.oligo_seq.name,
+                                      item.origina._seq.sequence,
+                                      item.oligo_seq.sequence
+                                    )
+             )
 def seqs_to_dict( sequence_list ):
     out_dict = {}
     for seq in sequence_list:
@@ -44,6 +58,7 @@ def seqs_to_dict( sequence_list ):
     return out_dict
 
 def validate_oligo_locations( originals, with_locs ):
+    error_seqs = list()
     for sequence in with_locs:
         loc_start = sequence.location_start
         loc_end   = sequence.location_end
@@ -51,11 +66,20 @@ def validate_oligo_locations( originals, with_locs ):
         oligo     = sequence.sequence
 
         try:
-            assert( oligo == originals[ sequence.name ].sequence[ loc_start:loc_end ] )
+            orig_seq_oligo = originals[ sequence.name ].sequence[ loc_start:loc_end ]
+            assert( oligo == orig_seq_oligo )
         except AssertionError:
-            print( "oh no")
+            error_seqs.append( ErrorSequence( original_seq = Sequence( name = sequence.name,
+                                                                       sequence = orig_seq_oligo
+                                                                     ),
+                                              oligo_seq    = Sequence( name = sequence.name_str(),
+                                                                       sequence = oligo
+                                                                     )
+                                            )
+                             )
         except KeyError:
             pass
+    return error_seqs
 
 class Parser:
     def parse( self, filename ):
@@ -82,6 +106,11 @@ class Sequence:
     def __str__( self ):
         return ">%s\n%s" % ( self.name, self.sequence )
 
+class ErrorSequence( Sequence ):
+    def __init__( self, original_seq = "", oligo_seq = "" ):
+        self.original_seq = ""
+        self.oligo_seq    = ""
+
 class SequenceWithLocation( Sequence ):
     def __init__( self, name = "", sequence = "",
                   location_start = 0, location_end = 0 ):
@@ -94,6 +123,13 @@ class SequenceWithLocation( Sequence ):
             self.location_end = location_end
         else:
             self.location_end = len( sequence )
+    def name_str( self ):
+               out_string = "%s_%d_%d" % ( self.name,
+                                           self.location_start,
+                                           self.location_end
+                                         )
+               return out_string
+
     def add_locs_to_seq_list( seq_list ):
         pattern = re.compile ( '_(\d+)_(\d+)' )
         out_seqs = list()
