@@ -31,7 +31,30 @@ def main():
 
     oligo_seqs    = fasta_parse.parse( args.library )
     original_seqs = fasta_parse.parse( args.original_seqs )
-    loc_names = SequenceWithLocation.add_locs_to_seq_list( oligo_seqs )
+    loc_names     = SequenceWithLocation.add_locs_to_seq_list( oligo_seqs )
+    orig_seqs_dict = seqs_to_dict( original_seqs )
+
+    validate_oligo_locations( orig_seqs_dict, loc_names )
+
+def seqs_to_dict( sequence_list ):
+    out_dict = {}
+    for seq in sequence_list:
+        out_dict[ seq.name ] = seq
+    return out_dict
+
+def validate_oligo_locations( originals, with_locs ):
+    for sequence in with_locs:
+        loc_start = sequence.location_start
+        loc_end   = sequence.location_end
+
+        oligo     = sequence.sequence
+
+        try:
+            assert( oligo == originals[ sequence.name ].sequence[ loc_start:loc_end ] )
+        except AssertionError:
+            print( "oh no")
+        except KeyError:
+            pass
 
 class Parser:
     def parse( self, filename ):
@@ -80,7 +103,7 @@ class SequenceWithLocation( Sequence ):
             loc_end   = split_name[ -1 ]
 
             try:
-                out_seqs.append( SequenceWithLocation( name = name, sequence = sequence,
+                out_seqs.append( SequenceWithLocation( name = '_'.join( split_name[0:-2] ), sequence = sequence,
                                                        location_start = int( loc_start ),
                                                        location_end   = int( loc_end )
                                                      )
