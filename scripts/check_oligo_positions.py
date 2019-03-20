@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import protein_oligo_library as oligo
 import argparse
+import re
 
 def main():
     arg_parser = argparse.ArgumentParser( description = "Verify that the positions of oligos in a "
@@ -94,16 +95,18 @@ class SequenceWithLocation( Sequence ):
         else:
             self.location_end = len( sequence )
     def add_locs_to_seq_list( seq_list ):
+        pattern = re.compile ( '_(\d+)_(\d+)' )
         out_seqs = list()
         for sequence in seq_list:
             name       = sequence.name
-            split_name = name.split( '_' )
+            split_name = pattern.search( name )
             sequence = sequence.sequence
-            loc_start = split_name[ -2 ]
-            loc_end   = split_name[ -1 ]
+            loc_start = split_name.group( 1 )
+            loc_end   = split_name.group( 2 )
+            new_name  = name.split( split_name.group() )[ 0 ]
 
             try:
-                out_seqs.append( SequenceWithLocation( name = '_'.join( split_name[0:-2] ), sequence = sequence,
+                out_seqs.append( SequenceWithLocation( new_name, sequence = sequence,
                                                        location_start = int( loc_start ),
                                                        location_end   = int( loc_end )
                                                      )
