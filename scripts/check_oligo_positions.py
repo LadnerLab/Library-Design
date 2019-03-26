@@ -36,7 +36,7 @@ def main():
     if ( args.acid_map and args.encoding_map ):
         aa_map     = parse_acid_map( args.acid_map )
         parsed_name_map = parse_name_map( args.encoding_map )
-        oligo_seqs = encoding_to_aa( csv_to_seqs( args.original_seqs ), aa_map )
+        oligo_seqs = encoding_to_aa( csv_to_seqs( args.library ), aa_map )
         oligo_seqs = fix_seq_names( oligo_seqs, parsed_name_map )
     else:
         oligo_seqs    = fasta_parse.parse( args.library )
@@ -54,7 +54,7 @@ def main():
 
 def fix_seq_names( seqs, name_map ):
     out_seqs = list()
-    for sequence in seq:
+    for sequence in seqs:
         orig_name = sequence.name
         new_name  = name_map[ orig_name ]
         out_seqs.append( Sequence( name = new_name,
@@ -77,15 +77,16 @@ def parse_name_map( filename ):
 def encoding_to_aa( seqs, aa_map ):
     out_seqs = list()
     for seq in seqs:
-        aa_seq = nt_to_aa( seqs.sequence, aa_map )
+        aa_seq = nt_to_aa( seq.sequence, aa_map )
         new_sequence = Sequence( name = seq.name, sequence = aa_seq )
     return out_seqs
 
 def nt_to_aa( sequence, aa_map ):
     out_str = ""
+    aa_per_codon = 3
 
-    for index in range( len( sequence ) / 3 ):
-        codon = sequence[ index : index + 2 ]
+    for index in range( 0, len( sequence ) // aa_per_codon, aa_per_codon ):
+        codon = sequence[ index : index + aa_per_codon ]
         out_str += aa_map[ codon ]
     return out_str
     
@@ -110,7 +111,8 @@ def parse_acid_map( filename ):
         for line in open_file:
             split_line = line.split( ',' )
             codon = split_line[ 1 ]
-            aa    = split_lnie[ 2 ]
+            aa    = split_line[ 0 ]
+            out_map[ codon ] = aa 
     return out_map
 
 def report_bad_seqs( seq_list ):
