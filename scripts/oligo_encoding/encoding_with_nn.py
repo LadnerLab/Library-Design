@@ -41,6 +41,7 @@ def main():
     arg_parser.add_argument( '--read_per_loop', type = int, default = 10, help = "Number of lines from the output seq and ratio files to read at a time, "
                                                                                  "the higher this parameter is the more memory will be used by h2o."
                            )
+    arg_parser.add_argument( '--adapter', type = str, default = "CCTATACTTCCAAGGCGCA|GGTGACTCTCTGTCTTGGC", help = "Adapter to add to output encoded sequences. In the form {prefix}|{suffix}" )
 
     args = arg_parser.parse_args()
 
@@ -74,6 +75,8 @@ def main():
         current_seq[ 'predicted_dev' ] = predictions.abs().as_data_frame()
 
         best_encodings = get_n_best_encodings( current_seq, 'AA Peptide', args.nn_subset_size, args.cores )
+
+        best_encodings[ "Nucleotide Encoding w/ Adapters" ] = add_adapters( best_encodings[ "Nucleotide Encoding" ], args.adapter )
 
         write_output( best_encodings, out_file )
 
@@ -168,6 +171,14 @@ def read_seq_file( filename ):
 
     return parsed_file
 
+def add_adapters( data, adapter ):
+    prefix, suffix = adapter.split( '|' )
+    out_items = list()
+
+    for item in data:
+        out_items.append( prefix + item + suffix )
+    return out_items
+    
 
 if __name__ == '__main__':
     main()
