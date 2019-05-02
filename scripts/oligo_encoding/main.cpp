@@ -552,5 +552,5 @@ int valid_line( char *input_line )
 
 void report_bad_line( char *line, int lineno )
 {
-    printf( "Warning: Line %d: %s is invalid.\n", lineno, line );
+    printf( "Warning: Line %d: %s is invalid and will be skipped.\n", lineno, line );
 }
