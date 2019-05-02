@@ -62,6 +62,9 @@ FileInput::FileInput()
 
 }
 
+int valid_line( char *input_line );
+void report_bad_line( char *line, int lineno );
+
 class Encoding
 {
   public:
@@ -195,6 +198,7 @@ int main(int argc, char * const argv[])
     uint64_t index = 0;
 
     char line[MAX_LINE_LENGTH];
+    char line_copy[ MAX_LINE_LENGTH ];
     std::vector<FileInput> file_data_arr;
     std::vector<std::string> results;
 
@@ -209,9 +213,11 @@ int main(int argc, char * const argv[])
         // replace trailing newline with terminator so we can use strlen
         line[strcspn(line, "\n")] = '\0';
 
+        strcpy( line_copy, line );
+
         // line consists of name,input
         char* input = nullptr;
-        char* name = strtok_r(line, ",", &input);
+        char* name = strtok_r( line_copy, ",", &input );
 
 
         if( !( strchr( input, 'B' )
@@ -222,9 +228,16 @@ int main(int argc, char * const argv[])
             )
           )
             {
-                FileInput new_input( name, input );
-                file_data_arr.push_back( new_input );
-
+                if( valid_line( line ) )
+                    {
+                        FileInput new_input( name, input );
+                        file_data_arr.push_back( new_input );
+                    }
+                else
+                    {
+                        report_bad_line( line, loop_index + 1 );
+                        --new_lines;
+                    }
             }
         else
             {
@@ -494,4 +507,50 @@ uint64_t count_lines_in_file( const char *filename )
         }
 
     return count;
+}
+
+int valid_input( char *input )
+{
+    int cur_char = 0;
+
+    if( input )
+        {
+            while( input[ cur_char ] )
+                {
+                    if( !( input[ cur_char ] >= 'A' &&
+                           input[ cur_char ] <= 'Z'
+                         )
+                      )
+                        {
+                            // input contains invalid char
+                            return 0;
+                        }
+                    ++cur_char;
+                }
+            // input is valid
+            return 1;
+        }
+    // input is null
+    return 0;
+}
+
+int valid_line( char *input_line )
+{
+    char copy_str[ MAX_LINE_LENGTH ];
+    strcpy( copy_str, input_line );
+
+    // line consists of name,input
+    char* input = nullptr;
+    char* name = strtok_r( copy_str, ",", &input );
+
+    if( name && valid_input( input ) )
+        {
+            return 1;
+        }
+    return 0;
+}
+
+void report_bad_line( char *line, int lineno )
+{
+    printf( "Warning: Line %d: %s is invalid.\n", lineno, line );
 }
