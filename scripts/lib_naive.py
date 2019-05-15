@@ -56,7 +56,9 @@ class LibraryDesigner():
                                      sequence = xmer
                                    )
                          )
-            start += self.step_size
+            else:
+                print( xmer )
+                start += self.step_size
             end    = start + self.step_size + self.window_size - 1
         return xmers
 
@@ -67,7 +69,6 @@ class LibraryDesigner():
             oligos = self._get_oligos( seq )
 
             all_oligos.union( oligos )
-            print( all_oligos )
         return all_oligos
 
     def _valid_oligo( oligo ):
