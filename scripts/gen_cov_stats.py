@@ -12,6 +12,7 @@ def main():
                                                            "a corresponding cluster in the design dictionary"
                            )
     arg_parser.add_argument( '-d', '--design_dir', help  = "Directory containing designed clusters, each cluster containing oligos." )
+    arg_parser.add_argument( '-o', '--output', help = 'Tab-delimited file to write output to', default = 'output.txt' )
 
     args = arg_parser.parse_args()
 
@@ -20,8 +21,17 @@ def main():
 
     kmer_sizes = [ 7, 8, 9, 10, 30 ]
 
-    design_stats = get_fasta_stats( design_clusters, kmer_sizes )
-    orig_stats   = get_fasta_stats( orig_clusters, kmer_sizes )
+    design_stats = get_fasta_stats( design_clusters[ 0:4 ], kmer_sizes )
+    orig_stats   = get_fasta_stats( orig_clusters[ 0:4 ], kmer_sizes )
+
+    with open( args.output, 'w' ) as open_file:
+        header = 'Run Name\tFile Name\tNum 7mers\tNum 8mers\tNum 10mers\tNum 30mers\n'
+        open_file.write( header )
+
+        for index, stat in enumerate( design_stats ):
+            write_str = '\t'.join( [ str( item ) for item in orig_stats[ index ].divide( stat ) ] )
+            open_file.write( write_str + '\n' )
+        
 
 
 
@@ -71,6 +81,7 @@ class Fasta:
 
     def get_sequences( self ):
         return self.sequences
+
 class FastaStats:
     def __init__( self, filename ):
         self.filename  = filename
@@ -81,6 +92,20 @@ class FastaStats:
 
     def __eq__( self, other ):
         return self.filename == other.filename 
+    def divide( self, other ):
+        out_vals = list()
+
+        for key, value in self.num_kmers.items():
+            out_vals.append( value / other.num_kmers[ key ] )
+        return out_vals
+            
+
+    def __str__( self ):
+        out_str = '%s\t' % self.filename
+
+        for k, count in self.num_kmers.items():
+            out_str += '%d\t%d' % ( k, count )
+        return out_str + '\n'
 
 def parse_fasta_dir( dirname ):
     files      = os.listdir( dirname )
@@ -108,7 +133,6 @@ def get_fasta_stat( fasta, kmer_sizes ):
         for seq in seqs:
             k_set |= seq.get_kmers_with_step( k, 1 )
         stat.num_kmers[ k ] = len( k_set )
-    print( stat.filename, stat.num_kmers )
     return stat
             
     
