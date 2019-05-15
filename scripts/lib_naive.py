@@ -73,11 +73,42 @@ class LibraryDesigner():
         return not 'X' in oligo
         
 class GapSpanningLibraryDesigner( LibraryDesigner ):
-    def __init__( self ):
-        super().__init__()
+    def __init__( self, window_size = 0, step_size = 0 ):
+        super().__init__( window_size = window_size, step_size = step_size )
 
-    def design():
-        pass
+    def design( self, sequences ):
+        all_oligos = set()
+
+        for seq in sequences:
+            oligos = self._get_oligos( seq )
+            all_oligos |= oligos
+        return all_oligos
+
+    def _get_oligos( self, seq ):
+        start = 0
+        sequence = seq.sequence
+        oligos = set()
+
+        while start + self.window_size <= len( seq ):
+            current   = start
+            probe     = start
+            cur_oligo = ""
+
+            # current - start = size of oligo
+            while current - start < self.window_size and probe < len( seq ):
+                if sequence[ probe ] != '-':
+                    cur_oligo += sequence[ probe ]
+                    current   += 1
+                probe += 1
+
+            if len( cur_oligo ) == self.window_size and 'X' not in cur_oligo:
+                new_name = seq.name + "_%d_%d" % ( start, probe )
+                oligos.add( Sequence( name = new_name, sequence = cur_oligo ) )
+
+            start += self.step_size
+        return oligos
+            
+
 
 class Sequence:
     def __init__( self, name = "", sequence = "" ):
@@ -91,6 +122,8 @@ class Sequence:
         return not self.__eq__( other )
     def __str__( self ):
         return '>%s\n%s\n' % ( self.name, self.sequence )
+    def __len__( self ):
+        return len( self.sequence )
     
 
 def write_sequences( filename, library ):
