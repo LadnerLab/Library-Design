@@ -29,8 +29,9 @@ def main():
 
     library = designer.design( seqs )
 
-    print( len( library ) )
+    print( "Number of output Kmers: ", len( library ) )
 
+    write_sequences( args.output, library )
 
 class LibraryDesigner():
     def __init__( self, window_size = 0, step_size = 0 ):
@@ -47,19 +48,17 @@ class LibraryDesigner():
 
         if len( seq ) < self.window_size and 'X' not in seq:
             xmers.add( seq )
-        while end <= len( seq ):
+        while end < len( seq ):
             xmer = seq[ start:end ]
 
             new_name = sequence.name + "_%d_%d" % ( start, end )
-            if not 'X' in xmer:
+            if not 'X' in xmer and '-' not in xmer:
                 xmers.add( Sequence( name = new_name,
                                      sequence = xmer
                                    )
                          )
-            else:
-                print( xmer )
-                start += self.step_size
-            end    = start + self.step_size + self.window_size - 1
+            start += self.step_size
+            end   = start + self.window_size
         return xmers
 
     def design( self, sequences ):
@@ -67,8 +66,7 @@ class LibraryDesigner():
 
         for seq in sequences:
             oligos = self._get_oligos( seq )
-
-            all_oligos.union( oligos )
+            all_oligos |= oligos
         return all_oligos
 
     def _valid_oligo( oligo ):
@@ -95,7 +93,10 @@ class Sequence:
         return '>%s\n%s\n' % ( self.name, self.sequence )
     
 
-               
+def write_sequences( filename, library ):
+    with open( filename, 'w' ) as open_file:
+        for seq in library:
+            open_file.write( str( seq ) )
 
 
 if __name__ == '__main__':
