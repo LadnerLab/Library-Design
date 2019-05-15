@@ -1,0 +1,100 @@
+#!/usr/bin/env python3
+import protein_oligo_library as oligo
+import argparse
+
+
+def main():
+    arg_parser = argparse.ArgumentParser( description = "Simple creation of a library, both gap spanning and non-gap spanning algorithms" )
+
+    arg_parser.add_argument( '-q', '--query', help = "Fasta query file." )
+    arg_parser.add_argument( '-o', '--output', help = "Fasta file to output" )
+    arg_parser.add_argument( '-g', '--gap_span', help = "Fasta query file.", default = False, action = "store_true" )
+    arg_parser.add_argument( '-w', '--window_size', help = "Window Size to use for grabbing oligos.", default = 19 )
+    arg_parser.add_argument( '-s', '--step_size', help = "Number of amino acids to step after each window.", default = 10 )
+
+    args = arg_parser.parse_args()
+
+    names, sequences = oligo.read_fasta_lists( args.query )
+    seqs = list()
+
+    for name, sequence in zip( names, sequences ):
+        seqs.append( Sequence( name = name, sequence = sequence ) )
+
+    print( "Number of input sequences: ", len( seqs ) )
+
+    if args.gap_span:
+        designer = GapSpanningLibraryDesigner()
+    else:
+        designer = LibraryDesigner()
+
+    library = designer.design()
+
+    print( len( library ) )
+
+
+class LibraryDesigner():
+    def __init__( self, window_size = 0, step_size = 0 ):
+        self.window_size = window_size
+        self.step_size   = step_size
+
+    def _get_oligos( self, sequence ):
+        xmers = set()
+
+        start = 0
+        end = self.window_size
+
+        seq = sequence.sequence
+
+        if len( seq ) < window_size and 'X' not in seq:
+            xmers.add( seq )
+        while end <= len( sequence ):
+            xmer = sequence[ start:end ]
+
+            new_name = seq.name + "_%d_%d" % ( start, end )
+            if not 'X' in xmer:
+                xmers.add( Sequence( name = new_name,
+                                     sequence = xmer
+                                   )
+                         )
+            start += step_size
+            end    = start + step_size + window_size - 1
+        return xmers
+
+    def design( sequences ):
+        all_oligos = set()
+
+        for seq in sequences:
+            oligos = self._get_oligos( sequence )
+
+            all_oligos.add( oligos )
+        return all_oligos
+
+    def _valid_oligo( oligo ):
+        return not 'X' in oligo
+        
+class GapSpanningLibraryDesigner( LibraryDesigner ):
+    def __init__( self ):
+        super().__init__()
+
+    def design():
+        pass
+
+class Sequence:
+    def __init__( name = "", sequence = "" ):
+        self.name     = names
+        self.sequence = sequence
+    def __hash__( self ):
+        return hash( self.sequence )
+    def __eq__( self, other ):
+        return self.sequence == other.sequence
+    def __ne__( self, other ):
+        return not self.__eq__( other )
+    def __str__( self ):
+        return '>%s\n%s\n' % ( self.name, self.sequence )
+    
+
+               
+
+
+if __name__ == '__main__':
+    main()
