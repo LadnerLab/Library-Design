@@ -25,7 +25,9 @@ def main():
     orig_stats   = get_fasta_stats( orig_clusters, kmer_sizes )
 
     with open( args.output, 'w' ) as open_file:
-        header = 'Run Name\tFile Name\tNum 30mers in design\tPerc 7mers in design\tPerc 8mers in design\tPerc 9mers in design\tPerc 10mers in design\tPerc 30mers in design\n'
+        header = "Run Name\tFile Name\tNum 7mers in cluster\tNum 7mers in design" + \
+                 "\tNum 8mers in cluster\tNum 8mers in design\tNum 9mers in cluster\t Num 9mers in design" + \
+                 "\tNum 10mers in cluster\tNum 10mers in design\tNum 30mers in cluster\tNum 30mers in design\n"
         open_file.write( header )
 
         run_name = args.design_dir.strip( '/' )
@@ -33,8 +35,15 @@ def main():
             filename = stat.filename
             print( filename )
             print( orig_stats[ index ].filename )
-            write_str  = str( stat.num_kmers[ 30 ] ) + '\t'
-            write_str += '\t'.join( [ str( item ) for item in stat.divide( orig_stats[ index ] ) ] )
+
+            orig_nums   = [ orig_stats[ index ].num_kmers[ item ] for item in orig_stats[ index ].num_kmers.keys() ]
+            stat_nums   = [ stat.num_kmers[ item ] for item in orig_stats[ index ].num_kmers.keys() ]
+            zipped_nums = list( zip( orig_nums, stat_nums ) )
+            zipped_list = list()
+            for tup in zipped_nums:
+                zipped_list.append( str( tup[ 0 ] ) )
+                zipped_list.append( str( tup[ 1 ] ) )
+            write_str = '\t'.join( zipped_list )
             open_file.write( run_name + '\t' + filename + '\t' + write_str + '\n' )
         
 
