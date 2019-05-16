@@ -21,16 +21,21 @@ def main():
 
     kmer_sizes = [ 7, 8, 9, 10, 30 ]
 
-    design_stats = get_fasta_stats( design_clusters[ 0:4 ], kmer_sizes )
-    orig_stats   = get_fasta_stats( orig_clusters[ 0:4 ], kmer_sizes )
+    design_stats = get_fasta_stats( design_clusters, kmer_sizes )
+    orig_stats   = get_fasta_stats( orig_clusters, kmer_sizes )
 
     with open( args.output, 'w' ) as open_file:
-        header = 'Run Name\tFile Name\tNum 7mers\tNum 8mers\tNum 10mers\tNum 30mers\n'
+        header = 'Run Name\tFile Name\tNum 30mers in design\tPerc 7mers in design\tPerc 8mers in design\tPerc 9mers in design\tPerc 10mers in design\tPerc 30mers in design\n'
         open_file.write( header )
 
+        run_name = args.design_dir.strip( '/' )
         for index, stat in enumerate( design_stats ):
-            write_str = '\t'.join( [ str( item ) for item in orig_stats[ index ].divide( stat ) ] )
-            open_file.write( write_str + '\n' )
+            filename = stat.filename
+            print( filename )
+            print( orig_stats[ index ].filename )
+            write_str  = str( stat.num_kmers[ 30 ] ) + '\t'
+            write_str += '\t'.join( [ str( item ) for item in stat.divide( orig_stats[ index ] ) ] )
+            open_file.write( run_name + '\t' + filename + '\t' + write_str + '\n' )
         
 
 
@@ -108,7 +113,7 @@ class FastaStats:
         return out_str + '\n'
 
 def parse_fasta_dir( dirname ):
-    files      = os.listdir( dirname )
+    files      = sorted( os.listdir( dirname ) )
     parser     = FastaParser.get_instance()
     out_fastas = list()
 
