@@ -36,8 +36,8 @@ def main():
             print( filename )
             print( orig_stats[ index ].filename )
 
-            orig_nums   = [ orig_stats[ index ].num_kmers[ item ] for item in orig_stats[ index ].num_kmers.keys() ]
-            stat_nums   = [ stat.num_kmers[ item ] for item in orig_stats[ index ].num_kmers.keys() ]
+            orig_nums   = [ orig_stats[ index ].num_kmers[ item ] for item in sorted( orig_stats[ index ].num_kmers.keys() ) ]
+            stat_nums   = [ stat.num_kmers[ item ] for item in sorted( orig_stats[ index ].num_kmers.keys() ) ]
             zipped_nums = list( zip( orig_nums, stat_nums ) )
             zipped_list = list()
             for tup in zipped_nums:
