@@ -101,7 +101,13 @@ class GapSpanningLibraryDesigner( LibraryDesigner ):
                     current   += 1
                 probe += 1
 
-            if len( cur_oligo ) == self.window_size and 'X' not in cur_oligo:
+            if len( cur_oligo ) >= ( self.window_size - self.step_size + 1 ) and 'X' not in cur_oligo:
+
+                if len( seq.sequence[ probe:: ].replace( '-', '' ) ) < self.window_size:
+                    cur_oligo += seq.sequence[ probe:: ].replace( '-', '' )
+                    probe = len( seq.sequence ) - 1
+                    start = len( seq )
+
                 new_name = seq.name + "_%d_%d" % ( start, probe )
                 oligos.add( Sequence( name = new_name, sequence = cur_oligo ) )
 
