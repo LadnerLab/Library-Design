@@ -89,24 +89,29 @@ class GapSpanningLibraryDesigner( LibraryDesigner ):
         sequence = seq.sequence
         oligos = set()
 
-        while start + self.window_size <= len( seq ):
+        while start + self.window_size <= len( seq.sequence ):
             current   = start
             probe     = start
             cur_oligo = ""
 
             # current - start = size of oligo
-            while current - start < self.window_size and probe < len( seq ):
+            while current - start < self.window_size and probe < len( seq.sequence ):
                 if sequence[ probe ] != '-':
                     cur_oligo += sequence[ probe ]
                     current   += 1
                 probe += 1
 
-            if len( cur_oligo ) >= ( self.window_size - self.step_size + 1 ) and 'X' not in cur_oligo:
+            if len( cur_oligo ) == ( self.window_size ) and 'X' not in cur_oligo:
 
-                if len( sequence[ probe:: ].replace( '-', '' ) ) < self.window_size:
+                if len( sequence[ probe:: ].replace( '-', '' ) ) < self.window_size and \
+                   len( sequence[ probe:: ].replace( '-', '' ) ) > 0:
                     cur_oligo += sequence[ probe:: ].replace( '-', '' )
+                    new_name = seq.name + "_%d_%d" % ( start, probe )
+                    oligos.add( Sequence( name = new_name, sequence  = cur_oligo[ 0:self.window_size ] ) )
+
+                    start += len( cur_oligo ) - self.window_size  
+                    cur_oligo = cur_oligo[ len( cur_oligo ) - self.window_size - 1:: ]
                     probe = len( sequence ) - 1
-                    start = len( sequence ) + 1
 
                 new_name = seq.name + "_%d_%d" % ( start, probe )
                 oligos.add( Sequence( name = new_name, sequence = cur_oligo ) )
