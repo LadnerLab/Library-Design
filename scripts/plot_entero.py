@@ -23,12 +23,23 @@ def main():
                                  do_kmers,
                                  ref_seqs
                               ) 
-    print( ref_kmers[ 0 ] )
+    des_kmers = kmer_dict_wcounts( design_seqs, args.kmer_size )
+    
+def kmer_dict_wcounts( sequences, k ):
+    seqs = [ item.get_seq() for item in sequences ]
+    kmer_dict = {}
 
+    for seq in seqs:
+        kmers = oligo.subset_lists_iter( seq, k, 1 )
+        for km in kmers:
+            if km not in kmer_dict:
+                kmer_dict[ km ] = 0
+            kmer_dict[ km ] += 1
+    return kmer_dict
 
 def parse_fasta( fname ):
     names, sequences = oligo.read_fasta_lists( fname )
-    sequences = [ Sequence( n, s ) for n, s in zip( names, sequences ) ] 
+    sequences = [ Sequence( n, s.replace( '-', '' ) ) for n, s in zip( names, sequences ) ] 
 
     return Collection( data = sequences ) 
 
@@ -49,7 +60,7 @@ def get_kmers_with_locs( str_seq, k ):
                      )
 
         start += 1
-        end += k
+        end += 1
     return xmers
 
     
@@ -101,7 +112,9 @@ class Kmer( Sequence ):
         return hash( self._seq )
 
     def __eq__( self, other ):
-        return self._seq == other.seq
+        return self._seq == other._seq and \
+            self._start == other._start and \
+            self._end == other._end
 
     def __ne__( self, other ):
         return not( self.__eq__( other ) )
