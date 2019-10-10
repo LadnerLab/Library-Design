@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 import argparse
+import matplotlib
+matplotlib.use( 'Agg' )
 import matplotlib.pyplot as plt
 import protein_oligo_library as oligo
+import os
+import numpy as np
 
 def main():
     arg_parser = argparse.ArgumentParser( description = 'Plot coverage depth of the kmers for a reference in a design.' )
@@ -16,7 +20,7 @@ def main():
     ref_seqs    = parse_fasta( args.reference )
 
     do_kmers = lambda x: ( x.get_name(),
-                           Collection( get_kmers_with_locs( x.get_seq(), args.kmer_size ) )
+                           get_kmers_with_locs( x.get_seq(), args.kmer_size )
                          )
     
     ref_kmers = ref_seqs.apply(
@@ -24,7 +28,55 @@ def main():
                                  ref_seqs
                               ) 
     des_kmers = kmer_dict_wcounts( design_seqs, args.kmer_size )
-    
+
+    positional_counts = list()
+    for ref_seq in ref_kmers:
+        name, kmers = ref_seq
+
+        tup = ( name, get_positional_counts( kmers, des_kmers ) ) 
+        positional_counts.append( tup )
+
+    create_figures( positional_counts, args.output, args.kmer_size )
+
+def create_figures( datalist, dir, k ):
+    figures = list()
+    os.mkdir( dir )
+    count = 1
+    to_log = lambda x: np.log10( x ) + 1 if x > 0 else 0
+    for tup in datalist:
+        label, counts = tup
+        x = range( 0, len( counts ) )
+
+        fig = plt.figure( count, figsize = ( 5, 4 ) )
+        ax1 = fig.add_subplot( 111 )
+        ax1.set_title( label + ' (k = %d)' % k, fontsize = 20 )
+        ax1.tick_params( which = 'major', labelsize = 15 )
+        ax1.set_xlim( 0, len( counts ) )
+        ax1.set_ylim( 0, max( [ to_log( x ) for x in counts ] ) + 1 )
+        if min( [ to_log( x ) for x in counts ] ) == 1:
+            print( label )
+        ax1.set_xlabel( 'Position in Sequence', fontsize = 15 ) 
+        ax1.set_ylabel( 'log10(Coverage Depth) + 1', fontsize = 15 )
+        ax1.plot( x, [ to_log( x ) for x in counts ] )
+        count += 1
+
+        plt.savefig( dir + '/' + label + '.pdf', bbox_inches = 'tight' )
+        plt.close( fig )
+        
+def get_positional_counts( kmers, kmer_dict ):
+    size = max( [ item.get_start() for item in kmers ] )
+    counts = [ 0 ] * size
+
+    for k in kmers:
+        try:
+            kseq = k._seq
+
+            kmer_count = kmer_dict[ kseq ]
+            counts[ k.get_start() - 1 ] = kmer_count
+        except KeyError:
+            pass
+    return counts
+
 def kmer_dict_wcounts( sequences, k ):
     seqs = [ item.get_seq() for item in sequences ]
     kmer_dict = {}
