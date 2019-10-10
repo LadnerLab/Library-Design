@@ -73,6 +73,16 @@ def write_samples( output_dir, file_prefix,
 
         write_sample( filename, sample )
 
+def write_sample( fname, sample ):
+    with open( fname, 'w' ) as of:
+        # this only works because iteration is ordered within a run of a program
+        names, sequences = [ seq.get_name() for seq in sample ], \
+                           [ seq.get_seq() for seq in sample  ]
+
+        oligo.write_fastas( names, sequences, fname )
+
+
+
 
 def sample_seqs( sequences,
                  num_samples,
