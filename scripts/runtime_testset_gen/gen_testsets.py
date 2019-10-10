@@ -3,6 +3,7 @@ import sys
 import argparse
 import protein_oligo_library as oligo
 import random
+import math
 import os
 
 
@@ -26,14 +27,15 @@ def main():
                        "of output files produced. The number of digits necessary will be "
                        "determined.", default = "sample"
                      )
-    argp.add_argument( '-n', '--num_sequences', help = "Then number of sequences "
+    argp.add_argument( '-s', '--sample_size', help = "Then number of sequences "
                        "to include in each file.", type = str 
                      )
-    argp.add_argument( '-f', '--num_samples', help = "The number of samples to draw from "
+    argp.add_argument( '-n', '--num_samples', help = "The number of samples to draw from "
                        "the starting set of sequences."
                      )
     args = argp.parse_args()
 
+    get_digits = lambda x: math.floor( math.log10( x ) ) + 1 
 
     try:
         os.mkdir( args.output )
@@ -51,6 +53,11 @@ def main():
             sys.exit( 1 )
 
     input_seqs = set( parse_fasta( args.input ) )
+
+    samples = sample_seqs( input_seqs,
+                           args.num_samples,
+                           args.sample_size
+                         )
 
 def sample_seqs( sequences,
                  num_samples,
