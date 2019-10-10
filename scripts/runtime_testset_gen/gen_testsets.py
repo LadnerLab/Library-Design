@@ -50,6 +50,12 @@ def main():
                  )
             sys.exit( 1 )
 
+    input_seqs = set( parse_fasta( args.input ) )
+
+def parse_fasta( fname ):
+    names, sequences = oligo.read_fasta_lists( fname ) 
+
+    return [ Sequence( a, b ) for a, b in zip( names, sequences ) ]
 
 class Sequence:
     def __init__( self, name, seq ):
