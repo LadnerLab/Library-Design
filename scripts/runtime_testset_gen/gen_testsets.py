@@ -57,6 +57,23 @@ def main():
                            args.sample_size
                          )
 
+    write_samples( args.output, args.prefix,
+                   samples
+                 )
+
+def write_samples( output_dir, file_prefix,
+                   samples
+                 ):
+    num_digits = math.floor( math.log10( len( samples ) ) ) + 1
+
+    digit_str = lambda x: str( x ).zfill( num_digits )
+
+    for index, sample in enumerate( samples ):
+        filename = f'{output_dir}/{file_prefix}_{digit_str( index )}'
+
+        write_sample( filename, sample )
+
+
 def sample_seqs( sequences,
                  num_samples,
                  samplesize,
