@@ -51,5 +51,31 @@ def main():
             sys.exit( 1 )
 
 
+class Sequence:
+    def __init__( self, name, seq ):
+        self._name = name
+        self._seq = seq
+
+    def __hash__( self ):
+        return hash( seq )
+
+    def __eq__( self, other ):
+        return self.z_seq == other._seq
+
+    def __ne__( self, other ):
+        return not ( self == other )
+
+    def get_name( self ):
+        return self._name
+
+    def get_seq( self ):
+        return self._seq
+
+    def set_seq( self, seq ):
+        self._seq = seq
+
+    def set_name( self, name ):
+        self._name = name
+
 if __name__ == '__main__':
     main()
