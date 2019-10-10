@@ -77,15 +77,19 @@ def write_sample( fname, sample ):
 
     # this is cursed 
     write_fasta = lambda x, y, z: list( map( lambda x, a, b: \
-                                             x.write( '\n'.join( [ '>' + a, b ] ) ), \
+                                             x.write( '\n'.join( [ '>' + a, b ] ) + '\n' ), \
                                              [ x ] * len( y ), y, z
                                            )
                                       )
                                              
     with open( fname, 'w' ) as of:
-        # this only works because iteration is ordered within a run of a program
-        names, sequences = [ seq.get_name() for seq in sample ], \
-                           [ seq.get_seq()  for seq in sample ]
+        names, sequences = list(), list()
+        list( map( lambda x: [ names.append( x.get_name() ),
+                               sequences.append( x.get_seq()  )
+                             ],
+                   sample
+                 )
+            )
 
         write_fasta( of, names, sequences )
 
