@@ -52,6 +52,38 @@ def main():
 
     input_seqs = set( parse_fasta( args.input ) )
 
+def sample_seqs( sequences,
+                 num_samples,
+                 samplesize,
+                 replacement = False
+               ):
+
+    return_sets = list()
+    # we don't want to sample more than we have
+    total_sample_size = min( len( sequences ),
+                             num_samples * samplesize
+                           )
+
+    if replacement:
+        pass
+    else:
+        random.sample( sequences, total_sample_size )
+
+    for index in range( 0, total_sample_size, samplesize ):
+        sample = set( sequences[ index : index + samplesize ] )
+        return_sets.append( sample )
+
+    # fewer sequences than samples? 
+    if total_sample_size == len( sequences ):
+        remainder = len( sequences ) % samplesize
+        # grab the last sequences
+        last_sample = set( sequences[ -1 : -( remainder + 1 ) : -1 ] )
+        return_sets.append( last_sample )
+
+    return return_sets
+
+    
+
 def parse_fasta( fname ):
     names, sequences = oligo.read_fasta_lists( fname ) 
 
