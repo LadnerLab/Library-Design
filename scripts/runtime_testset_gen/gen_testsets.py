@@ -78,7 +78,8 @@ def write_sample( fname, sample ):
     # this is cursed 
     write_fasta = lambda x, y, z: list( map( lambda x, a, b: \
                                              x.write( '\n'.join( [ '>' + a, b ] ) + '\n' ), \
-                                             [ x ] * len( y ), y, z
+                                             # y copies of a reference to x
+                                             [ x ] * len( y ), y, z 
                                            )
                                       )
                                              
@@ -118,16 +119,7 @@ def sample_seqs( sequences,
         sample = set( total_sample[ index : index + samplesize ] )
         return_sets.append( sample )
 
-    # fewer sequences than samples? 
-    if total_sample_size == len( sequences ):
-        remainder = len( total_sample ) % samplesize
-        # grab the last sequences
-        last_sample = set( total_sample[ -1 : -( remainder + 1 ) : -1 ] )
-        return_sets.append( last_sample )
-
     return return_sets
-
-    
 
 def parse_fasta( fname ):
     names, sequences = oligo.read_fasta_lists( fname ) 
