@@ -74,12 +74,20 @@ def write_samples( output_dir, file_prefix,
         write_sample( filename, sample )
 
 def write_sample( fname, sample ):
+
+    # this is cursed 
+    write_fasta = lambda x, y, z: list( map( lambda x, a, b: \
+                                             x.write( '\n'.join( [ '>' + a, b ] ) ), \
+                                             [ x ] * len( y ), y, z
+                                           )
+                                      )
+                                             
     with open( fname, 'w' ) as of:
         # this only works because iteration is ordered within a run of a program
         names, sequences = [ seq.get_name() for seq in sample ], \
-                           [ seq.get_seq() for seq in sample  ]
+                           [ seq.get_seq()  for seq in sample ]
 
-        oligo.write_fastas( names, sequences, fname )
+        write_fasta( of, names, sequences )
 
 
 
