@@ -28,14 +28,12 @@ def main():
                        "determined.", default = "sample"
                      )
     argp.add_argument( '-s', '--sample_size', help = "Then number of sequences "
-                       "to include in each file.", type = str 
+                       "to include in each file.", type = int 
                      )
     argp.add_argument( '-n', '--num_samples', help = "The number of samples to draw from "
-                       "the starting set of sequences."
+                       "the starting set of sequences.", type = int
                      )
     args = argp.parse_args()
-
-    get_digits = lambda x: math.floor( math.log10( x ) ) + 1 
 
     try:
         os.mkdir( args.output )
@@ -72,19 +70,20 @@ def sample_seqs( sequences,
                            )
 
     if replacement:
+        # TODO
         pass
     else:
-        random.sample( sequences, total_sample_size )
+        total_sample = random.sample( sequences, total_sample_size )
 
     for index in range( 0, total_sample_size, samplesize ):
-        sample = set( sequences[ index : index + samplesize ] )
+        sample = set( total_sample[ index : index + samplesize ] )
         return_sets.append( sample )
 
     # fewer sequences than samples? 
     if total_sample_size == len( sequences ):
-        remainder = len( sequences ) % samplesize
+        remainder = len( total_sample ) % samplesize
         # grab the last sequences
-        last_sample = set( sequences[ -1 : -( remainder + 1 ) : -1 ] )
+        last_sample = set( total_sample[ -1 : -( remainder + 1 ) : -1 ] )
         return_sets.append( last_sample )
 
     return return_sets
@@ -102,7 +101,7 @@ class Sequence:
         self._seq = seq
 
     def __hash__( self ):
-        return hash( seq )
+        return hash( self._seq )
 
     def __eq__( self, other ):
         return self.z_seq == other._seq
