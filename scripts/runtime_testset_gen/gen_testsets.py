@@ -128,6 +128,7 @@ def sample_seqs( sequences,
                ):
 
     return_sets = list()
+    sequences = list( sequences )
     # we don't want to sample more than we have
     total_sample_size = num_samples * samplesize
 
@@ -141,7 +142,7 @@ def sample_seqs( sequences,
         total_sample = random.sample( sequences, total_sample_size )
 
     for index in range( 0, total_sample_size, samplesize ):
-        sample = set( total_sample[ index : index + samplesize ] )
+        sample = total_sample[ index : index + samplesize ]
         return_sets.append( sample )
 
     return return_sets
