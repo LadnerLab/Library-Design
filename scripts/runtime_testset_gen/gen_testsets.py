@@ -129,9 +129,10 @@ def sample_seqs( sequences,
 
     return_sets = list()
     # we don't want to sample more than we have
-    total_sample_size = min( len( sequences ),
-                             num_samples * samplesize
-                           )
+    total_sample_size = num_samples * samplesize
+
+    while len( sequences ) < total_sample_size:
+        sequences += random.sample( sequences, len( sequences ) )
 
     if replacement:
         # TODO
