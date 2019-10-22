@@ -33,6 +33,14 @@ def main():
     argp.add_argument( '-n', '--num_samples', help = "The number of samples to draw from "
                        "the starting set of sequences.", type = int
                      )
+    argp.add_argument( '--species', help = "Choose to only sample from sequences of a certain "
+                       "species.", default = '', type = str
+                     )
+    argp.add_argument( '-m', '--min_length', help = "The minimum length of sequence to "
+                       "consider when adding sequences to samples. If zero, sequences of any "
+                       "length can be added.", type = int, default = 0
+                     )
+                       
     args = argp.parse_args()
 
     try:
@@ -51,6 +59,12 @@ def main():
             sys.exit( 1 )
 
     input_seqs = set( parse_fasta( args.input ) )
+
+    if args.species:
+        pass
+
+    if args.min_length != 0:
+        pass
 
     samples = sample_seqs( input_seqs,
                            args.num_samples,
