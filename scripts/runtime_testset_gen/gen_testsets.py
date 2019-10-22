@@ -5,6 +5,7 @@ import protein_oligo_library as oligo
 import random
 import math
 import os
+import re
 
 
 def main():
@@ -60,11 +61,20 @@ def main():
 
     input_seqs = set( parse_fasta( args.input ) )
 
-    if args.species:
-        pass
-
     if args.min_length != 0:
-        pass
+        cond = lambda x: len( x.get_seq() ) >= args.min_length
+        input_seqs = list( filter( cond, input_seqs ) )
+
+    if args.species:
+        cond = lambda x: get_id( x ) == args.species
+        input_seqs = list( filter( cond, input_seqs ) )
+
+    if len( input_seqs ) == 0:
+        print( "ERROR: No sequences fulfill the requirements of:\n"
+               f"\tSpecies ID:     {args.species}\n"
+               f"\tMinimum length: {args.min_length}\n"
+             )
+        sys.exit( 1 )
 
     samples = sample_seqs( input_seqs,
                            args.num_samples,
@@ -139,6 +149,16 @@ def parse_fasta( fname ):
     names, sequences = oligo.read_fasta_lists( fname ) 
 
     return [ Sequence( a, b ) for a, b in zip( names, sequences ) ]
+
+def get_id( sequence ):
+    name = sequence.get_name()
+
+    oxxpat = re.compile( "OXX=(\d+),(\d*),(\d*),(\d*)" ) 
+
+    try:
+        return oxxpat.search( name ).group( 2 )
+    except:
+        return ''
 
 class Sequence:
     def __init__( self, name, seq ):
