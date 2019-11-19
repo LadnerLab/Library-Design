@@ -3,12 +3,8 @@ import protein_oligo_library as oligo
 from glob import glob
 import os
 import sys
-import argparse
 
 def main():
-    argp = argparse.ArgumentParser( "Count the number of kmers in each file in a directory " 
-                                    "for each directory in a starting directory."
-                                  )
 
     if len( sys.argv ) != 4:
         print( "USAGE: get_kmer_counts in_dir k out_file")
@@ -35,17 +31,11 @@ def count_kmers_in_dir( out_fh, list_of_files, k ):
 
 def count_kmers_in_file( filename, k ):
     names, sequences = oligo.read_fasta_lists( filename )
-    kmers = dict()
-    leng = 0
+    kmers = set()
 
     for seq in sequences:
-        kmer_set = oligo.subset_lists_iter( seq, k, 1 )
-
-        for km in kmer_set:
-            if km not in kmers:
-                kmers[ km ] = 0
-            kmers[ km ] += 1
-    return sum( kmers.values()  ) / len( kmers ) 
+        kmers |= oligo.subset_lists_iter( seq, k, 1 )
+    return len( kmers )
 
 if __name__ == '__main__':
     main()
