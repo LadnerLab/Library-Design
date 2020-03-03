@@ -87,10 +87,10 @@ def main():
 
     # convert the swisskb file to the FASTA format
     sequences = db_parser.parse()
-
-    # write the output file to args.outfile
-    write_outputs( args.output, sequences )
-        
+    with open( args.output, 'w' ) as of:
+        for sequence in db_parser.parse():
+            # write the output file to args.outfile
+            of.write( str( sequence ) )
 
     sys.exit( 1 )
 
@@ -121,8 +121,7 @@ class DBParser:
 
         with open( self._db_filename, 'r' ) as open_file:
             seq_flag = False
-
-            seqs = list()
+            current_seq = None
 
             for line in open_file:
                 split_line = line.split()
@@ -132,8 +131,9 @@ class DBParser:
                     if seq_flag:
                         current_seq.add_seq_data( ''.join( split_line ) )
                     elif tag_name == 'ID':
+                        if current_seq:
+                            yield current_seq
                         current_seq = Sequence()
-                        seqs.append( current_seq )
 
                         new_tag = DBParser.get_line_data(
                             tag_name,
@@ -173,10 +173,6 @@ class DBParser:
 
                 else:
                     seq_flag = False
-
-        return seqs
-                            
-
 
     @staticmethod
     def get_line_data( str_tag_name, list_line, list_of_tags,
