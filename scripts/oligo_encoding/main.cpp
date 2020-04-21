@@ -280,69 +280,47 @@ int main(int argc, char * const argv[])
             len = file_data.data.length();
 
             Encoding *current = NULL;
-            std::unordered_set<std::string> this_pep_encodings;
-            double start = omp_get_wtime();
 
             // trials
-            #pragma omp parallel for private( current_trial, current, current_aa ) shared( trials, encodings, len, t, this_pep_encodings ) schedule( dynamic )
+            #pragma omp parallel for private( current_trial, current, current_aa ) shared( trials, encodings, len, t ) schedule( static )
             for ( current_trial = 0; current_trial < trials; ++current_trial)
                 {
                     current = new Encoding();
-                    bool encoding_created = false;
 
                             // keep track of nucleotide and codon ratios
                     current->original = file_data;
 
-                    while( !encoding_created )
+                    // calculate result string
+                    for ( current_aa = 0; current_aa < len; ++current_aa )
                         {
-            
-                            // calculate result string
-                            for ( current_aa = 0; current_aa < len; ++current_aa )
+                            double r = xoroshiro::uniform();
+                            const char aa = file_data.data[current_aa];
+                           
+                            codon** cod = t[aa];
+                            double accum = (*cod)->w;
+                           
+                            while ( accum < r )
                                 {
-                                    double r = xoroshiro::uniform();
-                                    const char aa = file_data.data[current_aa];
-                           
-                                    codon** cod = t[aa];
-                                    double accum = (*cod)->w;
-                           
-                                    while ( accum < r )
-                                        {
-                                            accum += (*++cod)->w;
-                                        }
-                           
-                                    for ( i = 0; i < 4; ++i )
-                                        {
-                                            current->nucleotides[ i ] += (*cod)->nucleotides[i];
-                                        }
-                                    ++current->codons[(*cod)->index];
-                                    current->encoding.append( (*cod)->c, CODON_SIZE );
-            
+                                    accum += (*++cod)->w;
                                 }
-
-                            #pragma omp critical
-                            {
-                                auto found_pep = this_pep_encodings.find( current->encoding );
-
-                                if( found_pep == this_pep_encodings.end() )
-                                    {
-                                        this_pep_encodings.insert( current->encoding );
-                                        encoding_created = true;
-                                    }
-                                else
-                                    {
-                                        current->encoding.clear();
-                                    }
-                            }
-                            current->calc_gc_ratio();
-                            current->total_codons = len;
-
-                            current->gc_dist_abs = fabs( current->gc_ratio - gc_target_ratio );
-
-                            encodings[ current_trial ] = current;
+                           
+                            for ( i = 0; i < 4; ++i )
+                                {
+                                    current->nucleotides[ i ] += (*cod)->nucleotides[i];
+                                }
+                            ++current->codons[(*cod)->index];
+                            current->encoding.append( (*cod)->c, CODON_SIZE );
+            
                         }
+
+                    current->calc_gc_ratio();
+                    current->total_codons = len;
+
+                    current->gc_dist_abs = fabs( current->gc_ratio - gc_target_ratio );
+
+                    encodings[ current_trial ] = current;
                 }
 
-            this_pep_encodings.clear();
             uint64_t num_encodings = trials;
 
             // sort the encodings according to gc_ratio
