@@ -121,7 +121,7 @@ def get_n_best_encodings( seqs_dataframe, key, n, cores ):
 
     unique_seqs = get_unique_seqs( seqs_dataframe, key )
     for index, seq in enumerate( unique_seqs ):
-        args.append( ( seqs_dataframe, key, n, seq ) )
+        args.append( ( seqs_dataframe, 'AA Peptide', n, seq ) )
 
     start = timer()
     result = pool.map( get_n_best_encodings_parr,
@@ -143,11 +143,12 @@ def get_n_best_encodings_parr( arg ):
     seq_id         = arg[ 3 ]
     total_start = timer()
     out_frame = pandas.DataFrame()
-    unique_seqs = get_unique_seqs( seqs_dataframe, key )
 
     desired = seqs_dataframe[ key ] == seq_id 
     relevant_data = seqs_dataframe[ desired ]
-    sorted_data   = relevant_data.sort_values( 'predicted_dev' )
+    unique_seqs = relevant_data.drop_duplicates( subset = 'Nucleotide Encoding' )
+    print( len( unique_seqs ) )
+    sorted_data   = unique_seqs.sort_values( 'predicted_dev' )
     out_frame     = out_frame.append( sorted_data.iloc[ 0:n ] )
 
     total_end = timer()
