@@ -6,6 +6,10 @@ The script uses the ```OXX``` tag that is introduced by [swiss_kb_to_fasta](READ
 **Note**: This script does not consider the position of the identifiers, it parses out all of the IDs, 
 and any sequence whose ids overlap with those in the target are included in the output. 
 
+## Script location:
+[get_seqs_with_id.py](../get_seqs_with_id.py "The script can be found here")
+
+
 ## Usage: 
 ```
 usage: get_seqs_with_id.py [-h] [-i IDS] [-f FASTA]
