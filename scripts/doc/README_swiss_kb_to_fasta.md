@@ -4,6 +4,9 @@ This script is used to translate data files that are downloaded from Uniprot int
 Different options enable control over the output sequences, including the different tags that will be placed in the name of 
 each output sequence. 
 
+## Script location:
+[swiss_kb_to_fasta.py](../swisskb_to_fasta.py "The script can be found here")
+
 ## Usage:
 
 ```
