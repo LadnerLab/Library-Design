@@ -29,16 +29,14 @@
 
 #define DEBUG_INPUT 0
 
-namespace size_values
-{
-    const uint64_t DEFAULT_TRIALS = 10000;
-    const uint16_t DEFAULT_NUM_SUBSAMPLE = 10000;
-    const uint8_t NUM_AMINO_ACIDS = 20;
-    const uint8_t NUM_CODONS_POSSIBLE = 64;
-    const uint8_t NUM_NUCLEOTIDES = 4;
-    const uint8_t DEFAULT_NUM_THREADS = 1;
-    uint16_t max_line_length = 128;
-}
+
+const uint64_t DEFAULT_TRIALS = 10000;
+const uint16_t DEFAULT_NUM_SUBSAMPLE = 10000;
+const uint8_t NUM_AMINO_ACIDS = 20;
+const uint8_t NUM_CODONS_POSSIBLE = 64;
+const uint8_t NUM_NUCLEOTIDES = 4;
+const uint8_t DEFAULT_NUM_THREADS = 1;
+const uint16_t MAX_LENGTH = 128;
 
 class FileInput
 {
@@ -68,7 +66,7 @@ FileInput::FileInput()
 
 }
 
-int valid_line( char *input_line );
+int valid_line( char *input_line, uint16_t max_line_length );
 void report_bad_line( char *line, int lineno );
 
 class Encoding
@@ -78,19 +76,18 @@ class Encoding
 
     std::string encoding;
 
-    double gc_ratio = 0;
-    double gc_dist_abs = 0;
-    uint8_t nucleotides[ 4 ] = { 0 };
-    uint8_t codons[ 64 ]     = { 0 };
-    uint16_t total_codons = 0;
+    long double gc_ratio = 0;
+    long double gc_dist_abs = 0;
+    uint32_t nucleotides[ 4 ] = { 0 };
+    uint32_t codons[ 64 ]     = { 0 };
+    uint32_t total_codons = 0;
 
     double calc_gc_ratio( void )
     {
-        uint8_t g_and_c = nucleotides[ G_INDEX ] + nucleotides[ C_INDEX ];
-        uint8_t t_and_a = nucleotides[ T_INDEX ] + nucleotides[ A_INDEX ] + g_and_c;
+        uint64_t g_and_c = nucleotides[ G_INDEX ] + nucleotides[ C_INDEX ];
+        uint64_t t_and_a = nucleotides[ T_INDEX ] + nucleotides[ A_INDEX ] + g_and_c;
 
-        gc_ratio = (double) g_and_c / (double) t_and_a;
-
+        gc_ratio = (long double) g_and_c / (long double) t_and_a;
         return gc_ratio;
     }
 
@@ -129,9 +126,10 @@ uint64_t count_lines_in_file( const char *filename );
 int main(int argc, char * const argv[])
 {
     // default values
-    uint64_t trials = size_values::DEFAULT_TRIALS;
-    uint16_t num_to_subsample = size_values::DEFAULT_NUM_SUBSAMPLE;
-    uint8_t num_threads = size_values::DEFAULT_NUM_THREADS;
+    uint64_t trials = DEFAULT_TRIALS;
+    uint16_t num_to_subsample = DEFAULT_NUM_SUBSAMPLE;
+    uint8_t num_threads = DEFAULT_NUM_THREADS;
+    uint16_t max_line_length = MAX_LENGTH;
     double gc_target_ratio = 0.55;
     const char* input_file = nullptr;
     const char* seq_output_file = nullptr;
@@ -154,10 +152,10 @@ int main(int argc, char * const argv[])
                 case 't': trials = atoi(optarg); break;
                 case 'g': gc_target_ratio = atof( optarg ); break;
                 case 'h':
-                case 'l': size_values::max_line_length = atoi( optarg ); break;
+                case 'l': max_line_length = atoi( optarg ); break;
                 case '?':
                     printf("usage: codon_sampling -i input_file -s seq_output_file -r ratio_output_file -p probability_file -n num_to_subsample -g gc_target_ratio [-t num_trials ] -l max_line_length\n");
-                    printf("   input_file: lines must be formatted as {identifier},{sequence}, with at most characters per line.\n");
+                    printf("   input_file: lines must be formatted as {identifier},{sequence}, with at most 65,535 characters per line.\n");
                     printf("   seq_output_file: path to sequence output file (will be overwritten if it exists).\n");
                     printf("   ratio_output_file: path to ratios output file (will be overwritten if it exists).\n");
                     printf("   probability_file: lines must be formatted as {letter},{nucleotides,3},{weighting},{index}. The weightings do not need to sum to 1. Codon indices must range from 0 to 63.\n");
@@ -175,7 +173,7 @@ int main(int argc, char * const argv[])
     assert(input_file && probability_file, "Parameter error: need two input files. Type 'codon_sampling -h' for help.\n");
     assert(seq_output_file && ratio_output_file, "Parameter error: output file missing. Type 'codon_sampling -h' for help.\n");
     assert(trials >= 0, "Parameter error: number of trials must be non-negative. Type 'codon_sampling -h' for help.\n");
-    assert(size_values::max_line_length < 65536 && size_values::max_line_length > 0, "Parameter error: max line length must not exceed 65,535.\n");
+    assert(max_line_length < 65536 && max_line_length > 0, "Parameter error: max line length must not exceed 65,535.\n");
 
     // start
     double begin  = omp_get_wtime();
@@ -206,8 +204,8 @@ int main(int argc, char * const argv[])
     uint64_t loop_index = 0;
     uint64_t index = 0;
 
-    char line[size_values::max_line_length] = {0};
-    char line_copy[ size_values::max_line_length ] = {0};
+    char line[max_line_length] = {0};
+    char line_copy[ max_line_length ] = {0};
     std::vector<FileInput> file_data_arr;
     std::vector<std::string> results;
 
@@ -218,7 +216,7 @@ int main(int argc, char * const argv[])
 
     for( loop_index = 0; loop_index < lines; ++loop_index )
     {
-        fgets( line, size_values::max_line_length, fin );
+        fgets( line, max_line_length, fin );
         // replace trailing newline with terminator so we can use strlen
         line[strcspn(line, "\n")] = '\0';
 
@@ -237,7 +235,7 @@ int main(int argc, char * const argv[])
             )
           )
             {
-                if( valid_line( line ) )
+                if( valid_line( line, max_line_length ) )
                     {
                         FileInput new_input( name, input );
                         file_data_arr.push_back( new_input );
@@ -300,7 +298,7 @@ int main(int argc, char * const argv[])
                     for ( current_aa = 0; current_aa < len; ++current_aa )
                         {
                             double r = xoroshiro::uniform();
-                            const char aa = file_data.data[current_aa];
+                            const uint16_t aa = file_data.data[current_aa];
 
                             codon** cod = t[aa];
                             double accum = (*cod)->w;
@@ -347,11 +345,11 @@ int main(int argc, char * const argv[])
                             std::stringstream digit_str;
                             std::string gc_content;
                             std::string gc_dev;
-                            char gc_content_c[ size_values::max_line_length ] = {0};
-                            char gc_dev_c[ size_values::max_line_length ] = {0};
+                            char gc_content_c[ max_line_length ] = {0};
+                            char gc_dev_c[ max_line_length ] = {0};
 
-                            sprintf( gc_content_c, "%f", best_encodings[ index ]->gc_ratio );
-                            sprintf( gc_dev_c, "%f", best_encodings[ index ]->gc_dist_abs );
+                            sprintf( gc_content_c, "%Lf", best_encodings[ index ]->gc_ratio );
+                            sprintf( gc_dev_c, "%Lf", best_encodings[ index ]->gc_dist_abs );
 
                             gc_dev = gc_dev_c;
                             gc_content = gc_content_c;
@@ -545,9 +543,9 @@ int valid_input( char *input )
     return 0;
 }
 
-int valid_line( char *input_line )
+int valid_line( char *input_line, uint16_t max_line_length )
 {
-    char copy_str[ size_values::max_line_length ];
+    char copy_str[ max_line_length ];
     strcpy( copy_str, input_line );
 
     // line consists of name,input
