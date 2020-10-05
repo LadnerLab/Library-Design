@@ -44,9 +44,9 @@ class FileInput
     std::string name;
     std::string data;
 
-    uint8_t aa_total = 0;
+    uint32_t aa_total = 0;
     uint8_t aa_counts[ 20 ] = {0};
-    uint16_t total_nucleotides = 0;
+    uint64_t total_nucleotides = 0;
 
     FileInput( const char *, const char* );
     FileInput();
@@ -78,15 +78,14 @@ class Encoding
 
     long double gc_ratio = 0;
     long double gc_dist_abs = 0;
-    uint32_t nucleotides[ 4 ] = { 0 };
-    uint32_t codons[ 64 ]     = { 0 };
-    uint32_t total_codons = 0;
+    uint64_t nucleotides[ 4 ] = { 0 };
+    uint64_t codons[ 64 ]     = { 0 };
+    uint64_t total_codons = 0;
 
     double calc_gc_ratio( void )
     {
         uint64_t g_and_c = nucleotides[ G_INDEX ] + nucleotides[ C_INDEX ];
         uint64_t t_and_a = nucleotides[ T_INDEX ] + nucleotides[ A_INDEX ] + g_and_c;
-
         gc_ratio = (long double) g_and_c / (long double) t_and_a;
         return gc_ratio;
     }
@@ -99,7 +98,7 @@ int encoding_compar( const void *first, const void *second )
     Encoding **first_ptr  = (Encoding**) first;
     Encoding **second_ptr = (Encoding**) second;
 
-    double diff = (*first_ptr)->gc_dist_abs - (*second_ptr)->gc_dist_abs;
+    long double diff = (*first_ptr)->gc_dist_abs - (*second_ptr)->gc_dist_abs;
 
     if( diff > 0 )
         {return 1;
@@ -152,10 +151,10 @@ int main(int argc, char * const argv[])
                 case 't': trials = atoi(optarg); break;
                 case 'g': gc_target_ratio = atof( optarg ); break;
                 case 'h':
-                case 'l': max_line_length = atoi( optarg ); break;
+                case 'l': max_line_length = atoi( optarg ) + 1; break;
                 case '?':
                     printf("usage: codon_sampling -i input_file -s seq_output_file -r ratio_output_file -p probability_file -n num_to_subsample -g gc_target_ratio [-t num_trials ] -l max_line_length\n");
-                    printf("   input_file: lines must be formatted as {identifier},{sequence}, with at most 65,535 characters per line.\n");
+                    printf("   input_file: lines must be formatted as {identifier},{sequence}, with at most 65,534 characters per line.\n");
                     printf("   seq_output_file: path to sequence output file (will be overwritten if it exists).\n");
                     printf("   ratio_output_file: path to ratios output file (will be overwritten if it exists).\n");
                     printf("   probability_file: lines must be formatted as {letter},{nucleotides,3},{weighting},{index}. The weightings do not need to sum to 1. Codon indices must range from 0 to 63.\n");
@@ -163,7 +162,7 @@ int main(int argc, char * const argv[])
                     printf("   number of threads to use for operations, default is 1\n");
                     printf("   gc_target_ratio: ratio GC to AT to target for encodings.\n" );
                     printf("   trials: number of nucleotide sequences to generate for each input sequence. The default is 10,000.\n");
-                    printf("   max_line_length: max number of characters allowed in sequence. The default is 128.\n" );
+                    printf("   max_line_length: max number of characters allowed in input line. Max line length must not exceed 65,534. Default is 127.\n" );
                     exit(EXIT_SUCCESS);
                 default: break;
                 }
@@ -173,7 +172,8 @@ int main(int argc, char * const argv[])
     assert(input_file && probability_file, "Parameter error: need two input files. Type 'codon_sampling -h' for help.\n");
     assert(seq_output_file && ratio_output_file, "Parameter error: output file missing. Type 'codon_sampling -h' for help.\n");
     assert(trials >= 0, "Parameter error: number of trials must be non-negative. Type 'codon_sampling -h' for help.\n");
-    assert(max_line_length < 65536 && max_line_length > 0, "Parameter error: max line length must not exceed 65,535.\n");
+    // 65534 + 1 to account for the newline char
+    assert(max_line_length > 0 && max_line_length < 65536, "Parameter error: max line length must not be 0 or exceed 65,534. Type 'codon_sampling -h' for help.\n" );
 
     // start
     double begin  = omp_get_wtime();
@@ -187,6 +187,11 @@ int main(int argc, char * const argv[])
     // open files
     FILE* fin = fopen(input_file, "r");
     FILE *foutr = fopen( ratio_output_file, "w" );
+    if( fin == nullptr )
+    {
+        fprintf( stderr, "Error opening input file. Verify the file path exists.\n" );
+        exit( 1 );
+    }
     std::ofstream out_file_seqs;
     auto t = table(probability_file);
 
@@ -199,12 +204,12 @@ int main(int argc, char * const argv[])
     acid_map['T'] = 16; acid_map['V'] = 17; acid_map['W'] = 18; acid_map['Y'] = 19;
 
     // process line by line
-    uint64_t lines = count_lines_in_file( input_file );
-    uint64_t new_lines = lines;
-    uint64_t loop_index = 0;
-    uint64_t index = 0;
+    uint16_t lines = count_lines_in_file( input_file );
+    uint16_t new_lines = lines;
+    uint16_t loop_index = 0;
+    uint16_t index = 0;
 
-    char line[max_line_length] = {0};
+    char line[ max_line_length ] = {0};
     char line_copy[ max_line_length ] = {0};
     std::vector<FileInput> file_data_arr;
     std::vector<std::string> results;
@@ -216,8 +221,18 @@ int main(int argc, char * const argv[])
 
     for( loop_index = 0; loop_index < lines; ++loop_index )
     {
-        fgets( line, max_line_length, fin );
+        char* get_line = fgets( line, max_line_length, fin );
+        if( get_line == nullptr )
+        {
+            fprintf( stderr, "Error reading input file.\n" );
+            exit( 1 );
+        }
         // replace trailing newline with terminator so we can use strlen
+        if( strchr( line, '\n' ) == nullptr )
+        {
+            fprintf( stderr, "Parameter Error: max line length provided has overflowed or is less than provided sequence: %s.\n", strtok( line, "," ) );
+            exit( 1 );
+        }
         line[strcspn(line, "\n")] = '\0';
 
         strcpy( line_copy, line );
@@ -253,7 +268,7 @@ int main(int argc, char * const argv[])
                       );
                 --new_lines;
             }
-
+        *line = 0;
     }
 
     lines = new_lines;
@@ -278,7 +293,7 @@ int main(int argc, char * const argv[])
 
             uint64_t current_aa    = 0;
             uint64_t current_trial = 0;
-            uint16_t len = 0;
+            uint64_t len = 0;
             uint64_t i = 0;
 
             len = file_data.data.length();
@@ -494,7 +509,7 @@ int main(int argc, char * const argv[])
 
     fclose(fin);
 
-    printf("Processed %lu lines x %lu trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
+    printf("Processed %u lines x %lu trials, time elapsed %f s\n", lines, trials, omp_get_wtime() - begin );
 
     return EXIT_SUCCESS;
 }

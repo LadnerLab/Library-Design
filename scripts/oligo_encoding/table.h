@@ -25,7 +25,7 @@ struct codon {
     char c[3];
     double w        = 0.0;
     uint8_t index   = 0;
-    uint16_t nucleotides[4] = {0};
+    uint8_t nucleotides[4] = {0};
 };
 
 
