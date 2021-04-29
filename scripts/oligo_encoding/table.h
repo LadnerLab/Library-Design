@@ -25,7 +25,7 @@ struct codon {
     char c[3];
     double w        = 0.0;
     uint8_t index   = 0;
-    uint16_t nucleotides[4] = {0};
+    uint8_t nucleotides[4] = {0};
 };
 
 
@@ -33,11 +33,11 @@ struct table
 {
 private:
     codon* map['Z'][MAX_CODONS] = {};
-    
+
 public:
-    
+
     table(const char* file) {
-        
+
         // read lines from file
         {
             int n, ln = 0; char aa; codon c;
@@ -53,14 +53,14 @@ public:
                         {
                             printf("Unable to read data from line %d, skipping...\n", ln);
                         }
-                
+
                     codon** ptr = &map[ (int) aa][0];
                     while (*ptr) ++ptr;
                     *ptr = new codon(c);
                 }
             fclose(f);
         }
-        
+
         uint8_t aa = 0;
         uint8_t i  = 0;
         uint8_t j  = 0;
@@ -74,14 +74,14 @@ public:
                     {
                         total += (*ptr++)->w;
                     }
-            
+
                 // divide each by total
                 ptr = &map[aa][0];
                 while (*ptr && ptr < &map[aa+1][0])
                     {
                         (*ptr++)->w /= total;
                     }
-            
+
                 // add up nucleotide occurrences
                 for (i = 0; i < MAX_CODONS; ++i)
                     {
@@ -119,7 +119,7 @@ public:
             }
     }
 
-    
+
     ~table()
     {
         for (int i = 0; i < 'Z'; ++i)
@@ -130,7 +130,7 @@ public:
                     }
             }
     }
-    
+
     codon** operator[](char index)
     {
         return &map[ (unsigned int) index ][ 0 ];
