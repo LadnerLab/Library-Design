@@ -75,8 +75,9 @@ def main():
             if eachY in ycD:
                 del(ycD[eachY])
         
-    with open(args.out, "w") as fout:
-        fout.write("\n".join(newPeps))
+    if newPeps:
+        with open(args.out, "w") as fout:
+            fout.write("%s\n" % ("\n".join(newPeps)))
 
 #----------------------End of main()
 
