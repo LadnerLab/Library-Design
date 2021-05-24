@@ -21,59 +21,59 @@ def main():
     reqArgs.add_argument("-i", "--inp", help="Input file name. Should contain target protein sequences from which to design peptides.", required=True)
     reqArgs.add_argument("-o", "--out", help="Output file name. Will be a list of peptides, 1 per line.", required=True)
     reqArgs.add_argument("-x", "--xMerSize", type=int, help="Size of Xmers, which represent potential linear epitopes contained within peptides/Yemrs.", required=True)
-    reqArgs.add_argument("-y", "--yMerSize", type=int, help="Size of Ymers, which represent potential linear epitopes contained within peptides/Yemrs.", required=True)
+    reqArgs.add_argument("-y", "--yMerSize", type=int, help="Size of Ymers, which represent potential peptides for inclusion in the assay.", required=True)
 
     args = parser.parse_args()
     
     #Create set of characters to exclude
     exSet = set(args.exclude)
     
-    # Generate dict with kmer counts
-    ycD = defaultdict(int)
+    # Generate dict with xmer counts
+    xcD = defaultdict(int)
     
     tN, tS = ft.read_fasta_lists(args.inp)
-    for s in tS:
-        yL = kt.kmerList(s, args.yMerSize)
-        for y in yL:
-            if len(set(y).intersection(exSet)) == 0:
-                ycD[y]+=1
-    
-    #Save count of total ymers in targets
-    totalY = len(ycD)
-    
-    # If pre-designed peptides are provided, remove any contained ymers from the ycD
-    if args.pre:
-        for each in args.pre.split(","):
-            pN, pS = ft.read_fasta_lists(each)
-            for s in pS:
-                yL = kt.kmerList(s, args.yMerSize)
-                for y in yL:
-                    if y in ycD:
-                        del(ycD[y])
-            
-    # Read in all xMers in targets
-    xsD = {}
     for s in tS:
         xL = kt.kmerList(s, args.xMerSize)
         for x in xL:
             if len(set(x).intersection(exSet)) == 0:
-                xsD[x] = 0
+                xcD[x]+=1
+    
+    #Save count of total xmers in targets
+    totalX = len(xcD)
+    
+    # If pre-designed peptides are provided, remove any contained xmers from the xcD
+    if args.pre:
+        for each in args.pre.split(","):
+            pN, pS = ft.read_fasta_lists(each)
+            for s in pS:
+                xL = kt.kmerList(s, args.xMerSize)
+                for x in xL:
+                    if x in xcD:
+                        del(xcD[x])
+            
+    # Read in all yMers in targets
+    ysD = {}
+    for s in tS:
+        yL = kt.kmerList(s, args.yMerSize)
+        for y in yL:
+            if len(set(x).intersection(exSet)) == 0:
+                ysD[y] = 0
     
     # Design peptides
     newPeps = []
     
-    while (1-(len(ycD)/totalY)) < args.target:
+    while (1-(len(xcD)/totalX)) < args.target:
         
-        thisPep = choosePep(xsD, ycD, args)
+        thisPep = choosePep(ysD, xcD, args)
         newPeps.append(thisPep)
         
-        #Remove selected peptide from xsD
-        del(xsD[thisPep])
+        #Remove selected peptide from ysD
+        del(ysD[thisPep])
         
-        #Remove covered yMers from ycD
-        for eachY in kt.kmerList(thisPep, args.yMerSize):
-            if eachY in ycD:
-                del(ycD[eachY])
+        #Remove covered xMers from xcD
+        for eachX in kt.kmerList(thisPep, args.xMerSize):
+            if eachX in xcD:
+                del(xcD[eachX])
         
     if newPeps:
         with open(args.out, "w") as fout:
@@ -81,15 +81,15 @@ def main():
 
 #----------------------End of main()
 
-def choosePep(xsD, ycD, args):
+def choosePep(ysD, xcD, args):
     #Calculate scores for xMers
-    for x in xsD:
-        theseYs = kt.kmerList(x, args.yMerSize)
-        xsD[x] = sum([ycD[y] for y in theseYs if y in ycD])
+    for y in ysD:
+        theseXs = kt.kmerList(y, args.xMerSize)
+        ysD[y] = sum([xcD[x] for x in theseXs if x in xcD])
 
     #Dict by score
     scoreD = defaultdict(list)
-    for k,v in xsD.items():
+    for k,v in ysD.items():
         scoreD[v].append(k)
     
     #Choose peptide
