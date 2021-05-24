@@ -15,6 +15,7 @@ def main():
     parser.add_argument("-p", "--pre", help="Comma-sep list of fasta files containing previously designed peptides. Xmers contained in these sequecnes will not contribute to Ymer scoring in design.")
     parser.add_argument("-t", "--target", default=1, type=float, help="Target ymer coverage. Algorithm will continue until at least this proportion of total Ymers are in the design. If '--pre' option is used, Ymers in these predesigned peptides will also be considered in this threshold.")
     parser.add_argument("-e", "--exclude", default="X-", help="Any Xmers or yMers containing these chaarcters will be excluded.")
+    parser.add_argument("--outputXmerTables", default=False, action="store_true", help="Use this flag to write out Xmer tables pre- and post- removal of Xmers from pre-selected Ymers.")
 #    parser.add_argument("--includeTerminalDashes", default=True, action="store_false", help="By default, terminal '-' characters will not be considered in consensus generation.")
 
     reqArgs = parser.add_argument_group('required arguments')
@@ -38,6 +39,10 @@ def main():
             if len(set(x).intersection(exSet)) == 0:
                 xcD[x]+=1
     
+    # Write out tsv with xmer counts, if requested
+    if args.outputXmerTables:
+        writeXmerDict(xcD, "initialXmerCounts.tsv")
+    
     #Save count of total xmers in targets
     totalX = len(xcD)
     
@@ -50,7 +55,11 @@ def main():
                 for x in xL:
                     if x in xcD:
                         del(xcD[x])
-            
+        
+        # Write out tsv with xmer counts, if requested
+        if args.outputXmerTables:
+            writeXmerDict(xcD, "preRemovedXmerCounts.tsv")
+
     # Read in all yMers in targets
     ysD = {}
     for s in tS:
@@ -99,6 +108,11 @@ def choosePep(ysD, xcD, args):
     
     return thisChoice
 
+def writeXmerDict(xD, outname):
+    with open(outname, "w") as fout:
+        fout.write("Xmer\tCount\n")
+        for k,v in xD.items():
+            fout.write("%s\t%d\n" % (k, v))
 
 ###------------------------------------->>>>    
 
