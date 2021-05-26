@@ -65,7 +65,7 @@ def main():
     for s in tS:
         yL = kt.kmerList(s, args.yMerSize)
         for y in yL:
-            if len(set(x).intersection(exSet)) == 0:
+            if len(set(y).intersection(exSet)) == 0:
                 ysD[y] = 0
     
     # Design peptides
