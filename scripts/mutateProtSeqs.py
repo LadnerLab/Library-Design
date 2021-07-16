@@ -8,6 +8,7 @@ def main():
     arg_parser = argparse.ArgumentParser( description = "Mutate input sequences to generate diverse datasets.", formatter_class=argparse.ArgumentDefaultsHelpFormatter )
 
     arg_parser.add_argument( '-n', '--num', help = "Number of mutated sequences to output per input sequence.", default = 30, type = int )
+    arg_parser.add_argument( '-r', '--reps', help = "Number of replicate datasets to generate for each level of divergence.", default = 1, type = int )
 
     reqArgs = arg_parser.add_argument_group('Required Arguments')
     reqArgs.add_argument( '-i', '--input', help = "Fasta file contianing the protein sequence(s) to mutate.", required=True )
@@ -26,26 +27,30 @@ def main():
     iD = ft.read_fasta_dict_upper(args.input)
     
     for d in divergs:
-        outN = []
-        outS = []
+        r=0
+        while r<args.reps:
+            r+=1
+        
+            outN = []
+            outS = []
     
-        for n,s in iD.items():
-            newS = s
-            c=0
-            muts = int(d*len(s))
-            while c<args.num:
-                c+=1
+            for n,s in iD.items():
+                newS = s
+                c=0
+                muts = int(d*len(s))
+                while c<args.num:
+                    c+=1
                 
-                sites = random.choices(range(len(s)), k=muts)
-                for site in sites:
-                    subAAs = AAs[::]
-                    subAAs.remove(newS[site])
-                    newS = newS[:site] + random.choice(subAAs) + newS[site+1:]
+                    sites = random.choices(range(len(s)), k=muts)
+                    for site in sites:
+                        subAAs = AAs[::]
+                        subAAs.remove(newS[site])
+                        newS = newS[:site] + random.choice(subAAs) + newS[site+1:]
                 
-                outS.append(newS)
-                outN.append("%s_d%.3f_%03d" % (n, d, c))
+                    outS.append(newS)
+                    outN.append("%s_d%.3f_%03d" % (n, d, c))
             
-        ft.write_fasta(outN, outS, "%s_d%.3f.fasta" % (args.output, d))
+            ft.write_fasta(outN, outS, "%s_d%.3f_r%03d.fasta" % (args.output, d, r))
     
 if __name__ == '__main__':
     main()
