@@ -62,19 +62,26 @@ def main():
 
     # Read in all yMers in targets
     ysD = {}
-    for s in tS:
+    yNameD = {}
+    for i,s in enumerate(tS):
+#    for s in tS:
         yL = kt.kmerList(s, args.yMerSize)
-        for y in yL:
+        for j, y in enumerate(yL):
+#        for y in yL:
             if len(set(y).intersection(exSet)) == 0:
                 ysD[y] = 0
+                yNameD[y] = "%s_%04d" % (tN[i], j)
     
     # Design peptides
     newPeps = []
+    newNames = []
     
     while (1-(len(xcD)/totalX)) < args.target:
         
         thisPep = choosePep(ysD, xcD, args)
+        thisName = yNameD[thisPep]
         newPeps.append(thisPep)
+        newNames.append(thisName)
         
         #Remove selected peptide from ysD
         del(ysD[thisPep])
@@ -84,9 +91,8 @@ def main():
             if eachX in xcD:
                 del(xcD[eachX])
         
-    if newPeps:
-        with open(args.out, "w") as fout:
-            fout.write("%s\n" % ("\n".join(newPeps)))
+    # Write out peptides
+    ft.write_fasta(newNames, newPeps, args.out)
 
 #----------------------End of main()
 
