@@ -1,24 +1,50 @@
 #!/usr/bin/env python3
 
 import fastatools as ft  # Available here: https://github.com/jtladner/Modules
-import argparse
+import argparse, os
 
 
 def main():
     arg_parser = argparse.ArgumentParser( description = "Peptide design using a sliding window approach.", formatter_class=argparse.ArgumentDefaultsHelpFormatter )
+
+    arg_parser.add_argument( "inputs", help="One or more input target fasta files. Facilitates batch processing. Output names will be generated using each input file name.", nargs="*")
+    arg_parser.add_argument( "-u", "--summary", help="Name for a tab-delimited output file summarizing the number of peptides designed for each input set of targets.")
+    arg_parser.add_argument( '-t', '--targets', help = "Fasta file contianing target protein sequences. Can be used along with -o if designing for a single target set.")
+    arg_parser.add_argument( '-o', '--output', help = "Name for output file containing designed peptides (fasta format). Can be used along with -t if designing for a single target set." )
 
     arg_parser.add_argument( '-w', '--window_size', help = "Length of desired peptides.", default = 30, type = int )
     arg_parser.add_argument( '-s', '--step_size', help = "Number of amino acids to move between each window.", default = 1, type = int )
     arg_parser.add_argument( '-g', '--gap_span', help = "Use this flag if you want to use the gap-spanning approach for peptide design.", default = False, action = "store_true" )
     arg_parser.add_argument( '-q', '--quiet', help = "Use this flag if you do not want any info printed to screen during run time.", default = False, action = "store_true" )
 
-    reqArgs = arg_parser.add_argument_group('Required Arguments')
-    reqArgs.add_argument( '-t', '--targets', help = "Fasta file contianing target protein sequences.", required=True )
-    reqArgs.add_argument( '-o', '--output', help = "Name for output file containing designed peptides (fasta format).", required=True )
+#    reqArgs = arg_parser.add_argument_group('Required Arguments')
 
     args = arg_parser.parse_args()
 
-    names, sequences = ft.read_fasta_lists( args.targets )
+    # Open output summary file for writing, if requested
+    if args.summary:
+        fout = open(args.summary, "w")
+        fout.write("File\tNumPeps\n")
+
+    #Run sliding analyses
+    for each in args.inputs:
+        numPep = design(each, "%s_SW-s%d-w%d.fasta" % (os.path.basename(each), args.step_size, args.window_size), args)
+
+        if args.summary:
+            fout.write("%s\t%d\n" % (each, numPep))
+    
+    if args.targets and args.output:
+        numPep = design(args.targets, args.output, args)
+
+        if args.summary:
+            fout.write("%s\t%d\n" % (args.inp, numPep))
+
+
+#----------------------End of main()
+
+def design(inp, out, args):
+
+    names, sequences = ft.read_fasta_lists( inp )
     seqs = list()
 
     for name, sequence in zip( names, sequences ):
@@ -39,7 +65,9 @@ def main():
 
     outD = {e.name:e.sequence for e in library}
     namesSorted = sorted(list(outD.keys()))
-    ft.write_fasta(namesSorted, [outD[n] for n in namesSorted], args.output)
+    ft.write_fasta(namesSorted, [outD[n] for n in namesSorted], out)
+
+    return len(namesSorted)
 
 class LibraryDesigner():
     def __init__( self, window_size = 0, step_size = 0 ):
