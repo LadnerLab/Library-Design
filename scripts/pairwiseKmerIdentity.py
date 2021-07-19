@@ -4,7 +4,7 @@ import argparse
 import itertools as it
 import fastatools as ft        #Available at https://github.com/jtladner/Modules
 import kmertools as kt        #Available at https://github.com/jtladner/Modules
-
+import numpy as np
 from collections import defaultdict
 
 def main():
@@ -23,7 +23,7 @@ def main():
     exSet = set(args.exclude)
     
     with open(args.out, "w") as fout:
-        fout.write("File\tAvgPropShared\tMinPropShared\tMaxPropShared\n")
+        fout.write("File\tAvgPropShared\tMedianPropShared\tMinPropShared\tMaxPropShared\n")
         
         #Step through input files
         for eachF in args.inputs:
@@ -36,7 +36,7 @@ def main():
             for s1, s2 in it.combinations(seqs, 2):
                 propIDs.append(kt.compSeqs(s1, s2, args.kmer_size, filter=exSet))
         
-            fout.write("%s\t%.3f\t%.3f\t%.3f\n" % (eachF, sum(propIDs)/len(propIDs), min(propIDs), max(propIDs)))
+            fout.write("%s\t%.3f\t%.3f\t%.3f\t%.3f\n" % (eachF, np.mean(propIDs), np.median(propIDs), min(propIDs), max(propIDs)))
     
 
 #----------------------End of main()
