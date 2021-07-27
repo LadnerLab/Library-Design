@@ -25,7 +25,7 @@ def main():
     
     #Create set of characters to exclude
     args.exSet = set(args.exclude)
-
+    
     # Open output summary file for writing, if requested
     if args.summary:
         fout = open(args.summary, "w")
@@ -49,14 +49,14 @@ def main():
 def design(inp, out, args):
 
     # Generate dict with xmer counts
-    xcD = defaultdict(int)
+    xcD = {}
     
     tN, tS = ft.read_fasta_lists(inp)
     for s in tS:
         xL = kt.kmerList(s, args.xMerSize)
         for x in xL:
             if len(set(x).intersection(args.exSet)) == 0:
-                xcD[x]+=1
+                xcD[x] = xcD.get(x, 0) + 1
 
     #Save count of total xmers in targets
     totalX = len(xcD)
@@ -67,7 +67,7 @@ def design(inp, out, args):
     repN = ""
     for i,s in enumerate(tS):
         theseXs = kt.kmerList(s, args.xMerSize)
-        thisScore = sum([xcD[x] for x in theseXs])
+        thisScore = sum([xcD[x] for x in theseXs if x in xcD])
         if thisScore > maxScore:
             maxScore = thisScore
             repS = s
@@ -182,6 +182,11 @@ class Sequence:
 
 
 def choosePep(ysD, xcD, args):
+    
+#    print(len(ysD), len(xcD))
+#    if len(xcD) == 15:
+#        print (xcD)
+    
     #Calculate scores for xMers
     for y in ysD:
         theseXs = kt.kmerList(y, args.xMerSize)
