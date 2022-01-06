@@ -27,8 +27,8 @@ url: "https://ladnerlab.github.io/" # the base hostname & protocol for your site
 twitter_username:
 github_username: jtladner
 github:
-  repository_url: https://github.com/LadnerLab/PepSIRF
-  zip_url: https://github.com/LadnerLab/PepSIRF/archive/master.zip
+  repository_url: https://github.com/LadnerLab/Library-Design
+  zip_url: https://github.com/LadnerLab/Library-Design/archive/master.zip
 
 # Build settings
 theme: jekyll-theme-slate
