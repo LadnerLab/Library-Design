@@ -21,8 +21,7 @@
 title: PepDesign
 #email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Set of scripts to aid design of synthetic Oligonucleotide libraries using a
-  Slurm-based HPC cluster
+  Kmer-Based Protein Oligo Library Design
 baseurl: "/PepDesign" # the subpath of your site, e.g. /blog
 url: "https://ladnerlab.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username:
