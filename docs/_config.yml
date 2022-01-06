@@ -18,11 +18,12 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: PepSIRF
-email: your-email@example.com
+title: PepDesign
+#email: your-email@example.com
 description: >- # this means to ignore newlines until "baseurl:"
-  Peptide-based Serological Immune Response Framework
-baseurl: "/PepSIRF" # the subpath of your site, e.g. /blog
+  Set of scripts to aid design of synthetic Oligonucleotide libraries using a
+  Slurm-based HPC cluster
+baseurl: "/PepDesign" # the subpath of your site, e.g. /blog
 url: "https://ladnerlab.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username:
 github_username: jtladner
