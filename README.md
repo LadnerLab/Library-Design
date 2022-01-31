@@ -1,3 +1,5 @@
+Visit our github pages website: https://ladnerlab.github.io/Library-Design/
+
 # Kmer-Based Protein Oligo Library Design
 Set of scripts to aid design of synthetic Oligonucleotide libraries using a Slurm-based HPC cluster
 ### Dependencies- Can be located either locally or be in your path:
@@ -38,7 +40,7 @@ testing:
 For each of the above thresholds, run the following command from the directory outside
 of your clusters:
 ```
-./copy_clusters.sh a b 
+./copy_clusters.sh a b
 ```
 where a is the lower bound (inclusive), and b is the upper bound (exclusive).
 For each of the above thresholds, the original cluster directory now contains subdirectories
@@ -49,7 +51,7 @@ of the form clusters_a_b.
 [this link.](https://github.com/LadnerLab/C-KmerOligo)
 
 Edit the `srun` line in [do_clust.sh](scripts/monsoon_scripts/do_clust.sh) with the parameters
-you prefer. 
+you prefer.
 
 For each of the directories containing groups of clusters, do the following:
 - Obtain the number of clusters are contained in the grouped directory:
@@ -78,18 +80,12 @@ remove them with:
 ```
 remove_duplicate_oligos.py combined_file.fasta
 ```
-This will produce the file combined_file.fasta_unique 
+This will produce the file combined_file.fasta_unique
 
-### Step 4 (Optional): Produce map file 
+### Step 4 (Optional): Produce map file
 A map file contains entries that pair every produced oligonucleotide
 with every sequence from the input containing a shared 7-mer.
 
 ```
 sbatch validate_maponly.sh combined_file.fasta_unique unclustered_complete_input.fasta
 ```
-
-      
-
-
-
-
