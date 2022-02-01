@@ -43,8 +43,8 @@ from the command line, or through Xcode itself. Once you have these installed,
 follow the instructions for Linux.
 #### Linux
 ```
-git clone https://github.com/LadnerLab/C-KmerOligo.git
-cd C-KmerOligo
+git clone https://github.com/LadnerLab/Library-Design.git
+cd setCover/c/
 make optimized
 ```
 This produces the set_cover executable, which can be used as described above, with the options described below.
