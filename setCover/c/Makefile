@@ -3,9 +3,9 @@ CC=gcc
 
 MODE?=NONE
 
-setCover: setCover.o protein_oligo_library.o dynamic_string.o hash_table.o array_list.o set.o 
+setCover: set_cover.o protein_oligo_library.o dynamic_string.o hash_table.o array_list.o set.o 
 	$(CC) $(CFLAGS) -D$(MODE) -o $@ $^
-setCover.o: setCover.c protein_oligo_library.h hash_table.h array_list.h set.h
+set_cover.o: set_cover.c protein_oligo_library.h hash_table.h array_list.h set.h
 	$(CC) $(CFLAGS) -D$(MODE) -c -o $@ $<
 
 protein_oligo_library.o: protein_oligo_library.c protein_oligo_library.h hash_table.h array_list.h set.h
