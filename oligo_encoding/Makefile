@@ -1,7 +1,7 @@
-CFLAGS= -O0 -Wall -fopenmp 
+CFLAGS= -O0 -Wall -fopenmp
 CC= g++
 
-main: main.o 
+oligo_encoding: main.o
 	$(CC) $(CFLAGS) main.o -o main
 main.o: main.cpp xoroshiro.h table.h
 	$(CC) $(CFLAGS) main.cpp -c -o main.o
@@ -9,17 +9,17 @@ main.o: main.cpp xoroshiro.h table.h
 
 .PHONY: clean optimized debug profile
 
-clean: 
-	rm -f *.o main *.gch
+clean:
+	rm -f *.o oligo_ecoding *.gch
 
-optimized: CFLAGS+= -O3 -mtune=native 
+optimized: CFLAGS+= -O3 -mtune=native
 optimized: clean
-optimized: main
+optimized: oligo_ecoding
 
-profile: CFLAGS+= -pg 
+profile: CFLAGS+= -pg
 profile: clean
-profile: main
+profile: oligo_ecoding
 
 debug: clean
 debug: CFLAGS+= -g
-debug: main
+debug: oligo_ecoding
