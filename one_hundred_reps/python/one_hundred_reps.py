@@ -1,6 +1,57 @@
 #!/usr/bin/env python3
 import argparse                        # For parsing command-line arguments
-import protein_oligo_library as oligo  # for operations on Fasta files
+#import protein_oligo_library as oligo  # for operations on Fasta files
+from collections import defaultdict
+
+#Functions previously imported from protein_oligo_library
+
+def read_fasta_lists( file_to_read ):
+    """
+       Reads a list of fastas from file_to_read
+    
+       Returns:
+        names- a list of names of the sequences found in the fasta file
+        sequences- a list of the sequences found in the fasta file
+    """
+
+    file_in = open( file_to_read, 'r' )
+    count = 0
+
+    names = []
+    sequences = []
+    current_sequence = ''
+
+    for line in file_in:
+        line = line.strip()
+        if line and line[ 0 ] == '>':
+            count += 1
+            names.append( line[ 1: ] )
+            if count > 1:
+                sequences.append( current_sequence )
+            current_sequence = ''
+
+        else:
+            current_sequence += line
+
+    sequences.append( current_sequence )
+    file_in.close()
+
+    return names, sequences
+
+def get_unique_seqs( names_list, sequence_list ):
+    sequence_dict = {}
+    out_names, out_seqs = list(), list()
+
+    for i, seq in enumerate( sequence_list ):
+        sequence_dict[ sequence_list[i] ] = names_list[i]
+
+    for sequence, name in sequence_dict.items():
+        out_names.append( name )
+        out_seqs.append( sequence )
+    return out_names, out_seqs, ident_dict
+
+
+
 def main():
     arg_parser = argparse.ArgumentParser( description = "Find and choose the 100% representative sequences from a fasta." )
 
@@ -70,7 +121,7 @@ class FastaParser:
 
     def parse( self ):
 
-        names, sequences = oligo.read_fasta_lists( self.filename )
+        names, sequences = read_fasta_lists( self.filename )
 
         return self.seq_factory.create_seq_list( names, sequences )
             
@@ -96,7 +147,7 @@ def get_one_hundred_reps( seq_list, indexer, do_map = False ):
         out_map = out_dict
 
     unique_seqs = get_unique_sequences( seq_list )
-
+    
     indexed_seqs = indexer.index( unique_seqs, reverse = True )
     out_seqs     = set()
 
@@ -119,9 +170,10 @@ def get_unique_sequences( seq_list ):
     names_list = [ item.name for item in seq_list ]
     seq_list   = [ item.seq for item in seq_list ]
 
-    new_names, new_seqs = oligo.get_unique_sequences( names_list, seq_list )
+#    new_names, new_seqs = get_unique_seqs( names_list, seq_list )
 
-    return seq_fact.create_seq_list( new_names, new_seqs )
+#    return seq_fact.create_seq_list( new_names, new_seqs )
+    return seq_fact.create_seq_list( names_list, seq_list )
 
 def write_outputs( seq_file, seq_list, map_file, out_map ):
     if seq_file:

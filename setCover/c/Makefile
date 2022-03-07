@@ -3,7 +3,7 @@ CC=gcc
 
 MODE?=NONE
 
-set_cover: set_cover.o protein_oligo_library.o dynamic_string.o hash_table.o array_list.o set.o 
+setCover: set_cover.o protein_oligo_library.o dynamic_string.o hash_table.o array_list.o set.o 
 	$(CC) $(CFLAGS) -D$(MODE) -o $@ $^
 set_cover.o: set_cover.c protein_oligo_library.h hash_table.h array_list.h set.h
 	$(CC) $(CFLAGS) -D$(MODE) -c -o $@ $<
@@ -31,11 +31,11 @@ set.o: set.c set.h
 .PHONY: debug clean optimized profile time_trial
 debug: CFLAGS+= -g -O0
 debug: clean
-debug: set_cover
+debug: setCover
 
 optimized: CFLAGS += -O3  -ffast-math
 optimized: clean
-optimized: set_cover
+optimized: setCover
 
 time_trial: clean
 time_trial: MODE=TIME_TRIAL
@@ -43,8 +43,8 @@ time_trial: optimized
 
 profile: CFLAGS += -pg -g
 profile: clean
-profile: set_cover
+profile: setCover
 
 
 clean:
-	rm -rf *.o *.gch set_cover
+	rm -rf *.o *.gch setCover
