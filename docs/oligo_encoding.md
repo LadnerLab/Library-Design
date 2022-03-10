@@ -6,7 +6,7 @@ permalink: /oligo_ecoding/
 # Oligo Encoding
 
 ## Overview
-Generate nucleotide encoding for all designed peptides [Step 1: [oligo_ecoding], Step 2: oligo_encoding.py].
+Generate nucleotide encoding for all designed peptides [Step 1: oligo_encoding, Step 2: encoding_with_nn.py].
 
 ### Tutorial/Use
 
@@ -19,10 +19,10 @@ main \
     -r output_ratio.csv \
     -s out_seq.csv \
     -n 300 \
-    -c 2
+    -c 2 \
     -p Library-Design/scripts/oligo_encoding/codon_weights_test.csv \
     -i POX_encodable.csv \
-    -t 10000
+    -t 10000 \
     -g 0.55
 ```
 
@@ -37,7 +37,7 @@ encoding_with_nn.py \
   -r output_ratio \
   -s out_seqs \
   -o POX_best_encoding.csv \
-  --subsample 300
+  --subsample 300 \
   --read_per_loop 10 \
   -n 3
 ```
