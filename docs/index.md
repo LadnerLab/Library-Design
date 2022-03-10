@@ -4,4 +4,4 @@ title: Home
 permalink: /
 ---
 # Kmer-Based Protein Oligo Library Design
-A set of scripts to aid design of synthetic Oligonucleotide libraries using a Slurm-based HPC cluster
+A set of scripts to aid in the design of synthetic oligonucleotides for use in PepSeq library synthesis
