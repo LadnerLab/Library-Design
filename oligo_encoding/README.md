@@ -6,10 +6,9 @@ Scripts to encode a library of peptides as oligonucleotides for PepSeq library s
 Visit our [GitHub Pages website](https://ladnerlab.github.io/Library-Design/oligo_ecoding/)
 
 ### System requirements
-- MacOS or Linux
+- Linux
 
 #### Tested versions
-- MacOS: 10.14, 10.15, 11
 - Linux: Mint 19.3, CentOS 7
 
 ### Software dependencies

@@ -1,8 +1,8 @@
-# Sliding window + Set cover peptide design algorithm
+# Script for removing exact replicates (or substrings) from amino acid fasta files
 
 ## GPL-3.0-or-later
 
-Visit our [GitHub Pages website](https://ladnerlab.github.io/Library-Design/SW_SC/)
+Visit our [GitHub Pages website](https://ladnerlab.github.io/Library-Design/one_hundred_reps/)
 
 ### System requirements
 - MacOS or Linux
@@ -13,16 +13,14 @@ Visit our [GitHub Pages website](https://ladnerlab.github.io/Library-Design/SW_S
 
 ### Software dependencies
 - Python 3
-- [kmertools](https://github.com/jtladner/Modules/blob/main/kmertools.py) python module
-- [fastatools](https://github.com/jtladner/Modules/blob/main/fastatools.py) python module
 
 ### Installation
 
-- See [here](https://ladnerlab.github.io/Library-Design/SW_SC/) for SW-SC installation guide.
+- See [here](https://ladnerlab.github.io/Library-Design/one_hundred_reps/) for one\_hundred\_reps installation guide.
 
 - Typical installation time <5 minutes. 
 
 ### Tutorials
 
-- See [here](https://ladnerlab.github.io/Library-Design/SW_SC/) for SW-SC tutorials.
+- See [here](https://ladnerlab.github.io/Library-Design/one_hundred_reps/) for one\_hundred\_reps tutorials.
 
