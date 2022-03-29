@@ -34,13 +34,22 @@ There is one optional output, a tab-delimited map file, which relates all remove
 
 ## Tutorial/Use
 
+In this tutorial, our [input file](https://github.com/LadnerLab/Library-Design/blob/master/examples/poxviridae_unaligned_30AA.fasta) will contain a set of 84,162 protein sequences dowloaded from UniProt. 
 
+The [output](https://github.com/LadnerLab/Library-Design/blob/master/examples/expectedOutputs/onehundredreps/poxviridae_unaligned_30AA_100rep.fasta) should contain 14,505 unique representatives from this input file.
 
-Command:
+Command (Python version):
 ```
-onehundredreps.py \
+one_hundred_reps.py \
   -f poxviridae_unaligned_30AA.fasta \
   -r poxviridae_unaligned_30AA_100rep.fasta \
   -m 100_rep_map.txt
 ```
 
+Command (C version, using 2 threads):
+```
+one_hundred_reps \
+  -f poxviridae_unaligned_30AA.fasta \
+  -n 2 \
+  -m 100_rep_map.txt
+```
