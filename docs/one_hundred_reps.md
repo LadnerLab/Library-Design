@@ -30,7 +30,7 @@ There is one optional output, a tab-delimited map file, which relates all remove
     - Download the [source files from GitHub](https://github.com/LadnerLab/Library-Design/tree/master/one_hundred_reps/c)
     - Through the terminal, change your working directory to the location of the source files on your computer.
     - Enter the following command: `make`
-    - If successful, this should generate an executable names "one\_hundred\_reps"
+    - If successful, this should generate an executable named `one\_hundred\_reps`
 
 ## Tutorial/Use
 
