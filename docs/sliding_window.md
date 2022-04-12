@@ -7,4 +7,8 @@ permalink: /sliding_window/
 
 ## Overview
 
+Coming soon!
+
 ## Installation
+
+Coming soon!

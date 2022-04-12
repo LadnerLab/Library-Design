@@ -7,4 +7,9 @@ permalink: /set_cover/
 
 ## Overview
 
+Coming soon!
+
 ## Installation
+
+Coming soon!
+
