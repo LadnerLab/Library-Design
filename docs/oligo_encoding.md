@@ -4,9 +4,31 @@ title: Oligo Encoding
 permalink: /oligo_ecoding/
 ---
 # Oligo Encoding
-
 ## Overview
-Generate nucleotide encoding for all designed peptides [Step 1: oligo_encoding, Step 2: encoding_with_nn.py].
+
+The *oligo_encoding* scripts can be used generate nucleotide encoding for all designed peptides [Step 1: oligo_encoding, Step 2: encoding_with_nn.py].
+
+This script is split into two scripts: Step 1 a [Python version](https://github.com/LadnerLab/Library-Design/blob/master/oligo_encoding/encoding_with_nn.py) and Step 2 a [C version](https://github.com/LadnerLab/Library-Design/tree/master/oligo_encoding). The C version is recommended for large datasets.
+
+## Inputs
+
+The only required input is a fasta-formatted file containing a set of peptides of equal length.
+
+## Outputs
+
+There is one required output, a fasta-formatted file containing the unique, representative sequences from the input. 
+
+There is one optional output, a tab-delimited map file, which relates all removed sequences to the representatives to which they are identical (one line per unique representative).
+
+## Installation
+
+- Because Python is an interpreted language, there is no installation required for the Python version of this script. The only requirement is Python 3. 
+
+- To install the C version of One Hundred Reps:
+    - Download the [source files from GitHub](https://github.com/LadnerLab/Library-Design/tree/master/oligo_encoding)
+    - Through the terminal, change your working directory to the location of the source files on your computer.
+    - Enter the following command: `make`
+    - If successful, this should generate an executable named `oligo_encoding`
 
 ### Tutorial/Use
 
@@ -41,5 +63,3 @@ encoding_with_nn.py \
   --read_per_loop 10 \
   -n 3
 ```
-
-## Installation
