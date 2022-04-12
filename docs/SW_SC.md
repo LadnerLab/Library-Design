@@ -33,5 +33,3 @@ Command:
 fasta_to_encodable.py -i poxviridae_id70_all_SWSC-x9y30.fasta \
   -o POX_encodable.csv -p POX -m POX_map.csv
 ```
-
-## Installation
