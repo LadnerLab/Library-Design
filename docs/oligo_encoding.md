@@ -37,7 +37,7 @@ In step 1 of this example, a user defined number of possible encodings are rando
 
 Command:
 ```
-main \
+oligo_encoding \
     -r output_ratio.csv \
     -s out_seq.csv \
     -n 300 \
