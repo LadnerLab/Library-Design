@@ -31,26 +31,32 @@ There is one optional output, a tab-delimited summary file, which shows the numb
     - Enter the following command: `make`
     - If successful, this should generate an executable named `setCover`
 
-## Tutorial/Use
+## Use
 
-In this tutorial, our [input file](https://github.com/LadnerLab/Library-Design/blob/master/examples/poxviridae_unaligned_min30AA.fasta) will contain a set of 17,786 protein sequences dowloaded from UniProt. 
+In this example, our [input directory](https://github.com/LadnerLab/Library-Design/tree/master/examples/clusters) will contain ten files of aligned clusters created from a downsampled set of proteins from Poxviridae. (see full tutorial for creation of these files)
 
-The [output](https://github.com/LadnerLab/Library-Design/blob/master/examples/expectedOutputs/onehundredreps/poxviridae_unaligned_min30AA_100rep.fasta) should contain 14,505 unique representatives from this input file.
+The [output](https://github.com/LadnerLab/Library-Design/tree/master/examples/expectedOutputs/setCover) should contain ten files with 30 amino acid long peptides covering the input sequences along with a summary file showing the number of peptides designed for each cluster file. The ten peptide containing fasta files can then be concatenated into a single fasta file.
 
 Command (Python version):
-```SW_SC.py \
--u ./clusters/id_70_SW_w30_s22_sumStats.tsv \
--o poxviridae_id70_all_SW-w30s22.fasta \
+```
+setCover.py \
+-u poxviridae_id_70_SC_x9_y30_sumStats.tsv \
 -x 9 \
 -y 30 \
-clusters/* 
+clusters/POX* 
 ```
 
     - This real world example took <2 min to complete on a Macbook Pro laptop (Apple M1, macOS v11.6.4). 
 
 Command (C version, using 2 threads):
 ```
-
+Coming Soon!
 ```
 
     - This real world example took ~# min to complete on a Macbook Pro laptop (Apple M1, macOS v11.6.4). 
+    
+The resulting peptide containing fasta files will need to be concatenated into one file containing all of the peptides.
+
+Example Command (Linux):
+```cat *.fasta > poxviridae_id70_all_SC-x9y30.fasta 
+```

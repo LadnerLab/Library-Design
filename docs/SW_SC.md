@@ -22,13 +22,19 @@ There is one optional output, a tab-delimited summary file, which shows the numb
 
 - Because Python is an interpreted language, there is no installation required for the Python version of this script. The only requirement is Python 3. 
 
-### Tutorial/Use
+### Use
 
- The input is the directory where the cluster files are located. Here we will run SW_SC.py on all files located in the clusters folder. The -e flag can be used to exclude any peptides that contain any non-AA characters such as “X”. To ensure complete coverage of all epitopes of a certain size in the sliding window design, the ideal step size will be: window size - (number of AA in target epitope - 1). Here, our target epitope size is 9. [SW_SC.py]
+In this example, our [input directory](https://github.com/LadnerLab/Library-Design/tree/master/examples/clusters) will contain ten files of aligned clusters created from a downsampled set of proteins from Poxviridae. (see full tutorial for creation of these files)
+
+The [output](https://github.com/LadnerLab/Library-Design/tree/master/examples/expectedOutputs/SW_SC)should contain ten files with 30 amino acid long peptides tiling across the input sequences along with a summary file showing the number of peptides designed for each cluster file. The ten peptide containing fasta files can then be concatenated into a single fasta file.
 
 Command:
 ```
 SW_SC.py \
   -u  /clusters/id_70_SW_SC_w30_s22_x9_sumStats.tsv \
-  -e x -s 22 -x 9 -y 30  clusters/*
+  -e x \
+  -s 22 \
+  -x 9 \
+  -y 30  \
+  clusters/*
 ```

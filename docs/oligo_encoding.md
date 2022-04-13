@@ -30,10 +30,10 @@ There is one optional output, a tab-delimited map file, which relates all remove
     - Enter the following command: `make`
     - If successful, this should generate an executable named `oligo_encoding`
 
-### Tutorial/Use
+### Use
 
 Step 1:
-In step 1, a user defined number of possible encodings are randomly generated for each peptide and then the top n encodings are selected depending on the user-specified target GG content.
+In step 1 of this example, a user defined number of possible encodings are randomly generated for each peptide and then the top n encodings are selected depending on the user-specified target GG content.
 
 Command:
 ```

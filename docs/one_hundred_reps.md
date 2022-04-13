@@ -32,11 +32,11 @@ There is one optional output, a tab-delimited map file, which relates all remove
     - Enter the following command: `make`
     - If successful, this should generate an executable named `one\_hundred\_reps`
 
-## Tutorial/Use
+## Use
 
-In this tutorial, our [input file](https://github.com/LadnerLab/Library-Design/blob/master/examples/poxviridae_unaligned_min30AA.fasta) will contain a set of 17,786 protein sequences dowloaded from UniProt. 
+In this example, our [input file](https://github.com/LadnerLab/Library-Design/blob/master/examples/poxviridae_unaligned_min30AA.fasta) will contain a set of 17,786 protein sequences dowloaded from UniProt. 
 
-The [output](https://github.com/LadnerLab/Library-Design/blob/master/examples/expectedOutputs/onehundredreps/poxviridae_unaligned_min30AA_100rep.fasta) should contain 14,505 unique representatives from this input file.
+The [output](https://github.com/LadnerLab/Library-Design/tree/master/examples/expectedOutputs/onehundredreps) should contain 14,505 unique representatives from this input file.
 
 Command (Python version):
 ```
