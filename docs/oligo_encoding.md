@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Oligo Encoding
-permalink: /oligo_ecoding/
+permalink: /oligo_encoding/
 ---
 # Oligo Encoding
 ## Overview
