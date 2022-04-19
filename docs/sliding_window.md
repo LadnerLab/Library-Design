@@ -29,7 +29,7 @@ There is one optional output, a tab-delimited summary file, which shows the numb
 
 In this example, our [input directory](https://github.com/LadnerLab/Library-Design/tree/master/examples/clusters/aligned) will contain ten files of aligned clusters created from a downsampled set of proteins from Poxviridae. (see full tutorial for creation of these files)
 
-The [output](https://github.com/LadnerLab/Library-Design/tree/master/examples/expectedOutputs/slidingWindow)should contain ten files with 30 amino acid long peptides tiling across the input sequences along with a summary file showing the number of peptides designed for each cluster file. The ten peptide containing fasta files can then be concatenated into a single fasta file.
+The [output](https://github.com/LadnerLab/Library-Design/tree/master/examples/expectedOutputs/slidingWindow) should contain ten files with 30 amino acid long peptides tiling across the input sequences along with a summary file showing the number of peptides designed for each cluster file. The ten peptide containing fasta files can then be concatenated into a single fasta file.
 
 Command:
 ```
