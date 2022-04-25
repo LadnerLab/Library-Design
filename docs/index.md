@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Home
-permalink: /home/
+permalink: /
 ---
 # Peptide design and oligonucleotide encoding
 This website provides usage information for a variety of scripts that were written to aid in the design of synthetic oligonucleotides for use in PepSeq library synthesis. Example files for running commands have been supplied for each script, and a full length tutorial walking through the full process from starting dataset of full length proteins to a final library of DNA oligonucleotides encoding that can be used to create a full library of PepSeq probes.
