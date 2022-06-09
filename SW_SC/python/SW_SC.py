@@ -10,11 +10,9 @@ def main():
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("inputs", help="One or more input target fasta files. Facilitates batch processing. Output names will be generated using each input file name.", nargs="*")
-    parser.add_argument( "-u", "--summary", help="Name for a tab-delimited output file summarizing the number of peptides designed for each input set of targets.")
-    parser.add_argument("-i", "--inp", help="Input file name. Should contain target protein sequences from which to design peptides. Can be used along with -o if designing for a single target set.")
-    parser.add_argument("-o", "--out", help="Output file name. Will be a list of peptides, 1 per line. Can be used along with -i if designing for a single target set.")
-    parser.add_argument( '-s', '--step_size', help = "Number of amino acids to move between each window.", default = 1, type = int )
-    parser.add_argument("-t", "--target", default=1, type=float, help="Target xmer coverage. Algorithm will continue until at least this proportion of total Xmers are in the design. If '--pre' option is used, Xmers in these predesigned peptides will also be considered in this threshold.")
+    parser.add_argument("-u", "--summary", help="Name for a tab-delimited output file summarizing the number of peptides designed for each input set of targets.")
+    parser.add_argument("-s", "--step_size", help = "Number of amino acids to move between each window.", default = 1, type = int )
+    parser.add_argument("-t", "--targets", default="0.5,0.75,1", help="Target thresholds for xmer coverage (comma-separated). Algorithm will continue until at least the max proportion of total Xmers are in the design, but will write the design out once each threshold is met.")
     parser.add_argument("-e", "--exclude", default="X-", help="Any Xmers or yMers containing these chaarcters will be excluded.")
 
     reqArgs = parser.add_argument_group('required arguments')
@@ -23,30 +21,35 @@ def main():
 
     args = parser.parse_args()
     
+    #Parse target thresholds
+    targetThresh = sorted(list(set([float(x) for x in args.targets.split(",")])))
+    maxThresh = targetThresh[-1]
+    otherThresh = targetThresh[:-1]
+    
     #Create set of characters to exclude
     args.exSet = set(args.exclude)
     
     # Open output summary file for writing, if requested
     if args.summary:
         fout = open(args.summary, "w")
-        fout.write("File\tNumPeps\n")
+        fout.write("File\tXmerThreshold\tNumPeps\n")
     
     #Run set cover analyses
-    for each in args.inputs:
-        numPep = design(each, "%s_SWSC-x%d-y%d.fasta" % (os.path.basename(each), args.xMerSize, args.yMerSize), args)
+    for each in args.inputs:   #Step through each input file
+        #Run the design
+        numPepsD = design(each, maxThresh, otherThresh[::], args)
 
         if args.summary:
-            fout.write("%s\t%d\n" % (each, numPep))
-    
-    if args.inp and args.out:
-        numPep = design(args.inp, args.out, args)
+            for k,v in numPepsD.items():
+                fout.write("%s\t%.3f\t%d\n" % (each, k, v))
 
-        if args.summary:
-            fout.write("%s\t%d\n" % (args.inp, numPep))
 
 #----------------------End of main()
 
-def design(inp, out, args):
+def design(inp, maxThresh, otherThresh, args):
+
+    # Dictionary that will be used to keep track of the number of peptides in each design
+    numPepD = {}
 
     # Generate dict with xmer counts
     xcD = {}
@@ -61,11 +64,11 @@ def design(inp, out, args):
     #Save count of total xmers in targets
     totalX = len(xcD)
 
-    # Score each target sequence by summing contained xmer scores
+    # Score each target sequence by summing contained xmer scores. This is to choose the representative for the sliding window portion of the design
     maxScore = 0
     repS = ""
     repN = ""
-    for i,s in enumerate(tS):
+    for i,s in enumerate(tS):   # Stepping through each target sequence
         theseXs = kt.kmerList(s, args.xMerSize)
         thisScore = sum([xcD[x] for x in theseXs if x in xcD])
         if thisScore > maxScore:
@@ -104,7 +107,16 @@ def design(inp, out, args):
     newSeqs = []
     newNames = []
     
-    while (1-(len(xcD)/totalX)) < args.target:
+    while (1-(len(xcD)/totalX)) < maxThresh:
+        
+        if len(otherThresh) > 0:
+            if (1-(len(xcD)/totalX)) >= otherThresh[0]:
+                # Write out peptides for "this" thresh design
+                ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "%s_SWSC-x%d-y%d-t%.3f.fasta" % (os.path.basename(inp), args.xMerSize, args.yMerSize, otherThresh[0]))
+                #Add peptide count to dictionary
+                numPepD[otherThresh[0]] = len(repSeqs+newSeqs)
+                #Delete this threshold from otherThresh list
+                del(otherThresh[0])
         
         thisPep = choosePep(ysD, xcD, args)
         thisName = yNameD[thisPep]
@@ -119,10 +131,11 @@ def design(inp, out, args):
             if eachX in xcD:
                 del(xcD[eachX])
 
-    # Write out peptides
-    ft.write_fasta(repNames+newNames, repSeqs+newSeqs, out)
+    # Write out peptides for maxThresh design
+    ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "%s_SWSC-x%d-y%d-t%.3f.fasta" % (os.path.basename(inp), args.xMerSize, args.yMerSize, maxThresh))
+    numPepD[maxThresh] = len(repSeqs+newSeqs)
     
-    return len(repSeqs+newSeqs)
+    return numPepD
 
 class LibraryDesigner():
     def __init__( self, window_size = 0, step_size = 0 ):
