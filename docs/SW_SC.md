@@ -32,7 +32,6 @@ Command:
 ```
 SW_SC.py \
   -u  /clusters/id_70_SW_SC_w30_s22_x9_sumStats.tsv \
-  -e x \
   -s 22 \
   -x 9 \
   -y 30  \
