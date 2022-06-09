@@ -14,7 +14,7 @@ def main():
     parser.add_argument("-i", "--inp", help="Input file name. Should contain target protein sequences from which to design peptides. Can be used along with -o if designing for a single target set.")
     parser.add_argument("-o", "--out", help="Output file name. Will be a list of peptides, 1 per line. Can be used along with -i if designing for a single target set.")
     parser.add_argument( '-s', '--step_size', help = "Number of amino acids to move between each window.", default = 1, type = int )
-    parser.add_argument("-t", "--target", default=1, type=float, help="Target ymer coverage. Algorithm will continue until at least this proportion of total Ymers are in the design. If '--pre' option is used, Ymers in these predesigned peptides will also be considered in this threshold.")
+    parser.add_argument("-t", "--target", default=1, type=float, help="Target xmer coverage. Algorithm will continue until at least this proportion of total Xmers are in the design. If '--pre' option is used, Xmers in these predesigned peptides will also be considered in this threshold.")
     parser.add_argument("-e", "--exclude", default="X-", help="Any Xmers or yMers containing these chaarcters will be excluded.")
 
     reqArgs = parser.add_argument_group('required arguments')
