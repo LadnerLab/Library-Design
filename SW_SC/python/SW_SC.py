@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import argparse, random, os
+import argparse, random, os, glob
 import fastatools as ft        #Available at https://github.com/jtladner/Modules
 import kmertools as kt        #Available at https://github.com/jtladner/Modules
 
@@ -47,6 +47,11 @@ def main():
         if args.summary:
             for k,v in numPepsD.items():
                 fout.write("%s\t%.3f\t%d\n" % (each, k, v))
+                
+    # Generate concatenated output files for each threshold
+    for thr in targetThresh:
+        ft.combine_fastafiles(glob.glob("%.3f/*fasta" % (thr)), "SWSC-x%d-y%d-t%.3f.fasta" % (args.xMerSize, args.yMerSize, thr))
+        
 
 
 #----------------------End of main()
