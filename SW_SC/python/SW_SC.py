@@ -28,8 +28,8 @@ def main():
     
     #Generate directories for each threshold
     for thr in targetThresh:
-        if not os.path.isdir("%.3f" % (thr)):
-            os.mkdir("%.3f" % (thr))
+        if not os.path.isdir("t%.3f" % (thr)):
+            os.mkdir("t%.3f" % (thr))
     
     #Create set of characters to exclude
     args.exSet = set(args.exclude)
@@ -122,7 +122,7 @@ def design(inp, maxThresh, otherThresh, args):
         if len(otherThresh) > 0:
             if (1-(len(xcD)/totalX)) >= otherThresh[0]:
                 # Write out peptides for "this" thresh design
-                ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "%.3f/%s_SWSC-x%d-y%d-t%.3f.fasta" % (otherThresh[0], os.path.basename(inp), args.xMerSize, args.yMerSize, otherThresh[0]))
+                ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "t%.3f/%s_SWSC-x%d-y%d-t%.3f.fasta" % (otherThresh[0], os.path.basename(inp), args.xMerSize, args.yMerSize, otherThresh[0]))
                 #Add peptide count to dictionary
                 numPepD[otherThresh[0]] = len(repSeqs+newSeqs)
                 #Delete this threshold from otherThresh list
@@ -148,12 +148,12 @@ def design(inp, maxThresh, otherThresh, args):
             xcD={}
         
     # Write out peptides for maxThresh design
-    ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "%.3f/%s_SWSC-x%d-y%d-t%.3f.fasta" % (maxThresh, os.path.basename(inp), args.xMerSize, args.yMerSize, maxThresh))
+    ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "t%.3f/%s_SWSC-x%d-y%d-t%.3f.fasta" % (maxThresh, os.path.basename(inp), args.xMerSize, args.yMerSize, maxThresh))
     numPepD[maxThresh] = len(repSeqs+newSeqs)
     
     # Write out peptides for any remaining other thresholds (will happen, for example, if there is just one target seq and therefore, the SW portion covers all Xmers)
     for every in otherThresh:
-        ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "%.3f/%s_SWSC-x%d-y%d-t%.3f.fasta" % (every, os.path.basename(inp), args.xMerSize, args.yMerSize, every))
+        ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "t%.3f/%s_SWSC-x%d-y%d-t%.3f.fasta" % (every, os.path.basename(inp), args.xMerSize, args.yMerSize, every))
         numPepD[every] = len(repSeqs+newSeqs)
     
     return numPepD
@@ -234,7 +234,10 @@ def choosePep(ysD, xcD, args):
     #Choose peptide
     try:
         thisMax = max(scoreD.keys())
-        thisChoice = random.choice(scoreD[thisMax])
+        if thisMax == 0:
+            thisChoice=None
+        else:
+            thisChoice = random.choice(scoreD[thisMax])
     
     except:
         thisChoice=None
