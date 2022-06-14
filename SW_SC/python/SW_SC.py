@@ -50,7 +50,7 @@ def main():
                 
     # Generate concatenated output files for each threshold
     for thr in targetThresh:
-        ft.combine_fastafiles(glob.glob("%.3f/*fasta" % (thr)), "SWSC-x%d-y%d-t%.3f.fasta" % (args.xMerSize, args.yMerSize, thr))
+        ft.combine_fastafiles(glob.glob("t%.3f/*fasta" % (thr)), "SWSC-x%d-y%d-t%.3f.fasta" % (args.xMerSize, args.yMerSize, thr))
         
 
 
