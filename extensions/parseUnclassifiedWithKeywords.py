@@ -15,7 +15,7 @@ def main():
     arg_parser.add_argument('--orgHeader', default="Organism", help = "Header name for subname in 'info' file.")
     arg_parser.add_argument('--cats', default="host", help = "Categories to parse for keywords. Comma-separated")
     arg_parser.add_argument('--delim', default="|", help = "Delimiter for parsing subtype and subname.")
-    arg_parser.add_argument('--delimList', default=[" ", "_", "(", ")", "|"], help = "Delimiters for parsing host and organism strings.")
+    arg_parser.add_argument('--delimList', default=[" ", "_", "(", ")", "|", ","], help = "Delimiters for parsing host and organism strings.")
 
     reqArgs = arg_parser.add_argument_group('Required Arguments')
     reqArgs.add_argument( '-f', '--fasta', help = "Fasta file contianing the protein sequence(s) downloaded from GenBank. First piece of info in the name should be the accession", required=True )
@@ -52,33 +52,43 @@ def main():
     excludeD = defaultdict(int)
     
     # Step through each seq and look for keywords
-    for acc, org in orgD.items():
-        infoTypes = {k:i for i,k in enumerate(subTypeD[acc].split(args.delim))}
-        infoNames = subNameD[acc].split(args.delim)
-        
+    for acc, sn in acc2fasD.items():
         match = 0
         exclMatch = 0
         
-        #Parse host info, etc. 
-        for k,i in infoTypes.items():
-            if k in catD:
-                thisInfo = [x.upper() for x in splitMultiDelim(infoNames[i], args.delimList)]
-                for each in thisInfo:
-                    if each in kwD:
-                        match += 1
-                    if each in exD:
-                        exclMatch += 1
+        if acc in orgD:
+            org = orgD[acc]
+            infoTypes = {k:i for i,k in enumerate(subTypeD[acc].split(args.delim))}
+            infoNames = subNameD[acc].split(args.delim)
+        
+            #Parse host info, etc. 
+            for k,i in infoTypes.items():
+                if k in catD:
+                    thisInfo = [x.upper() for x in splitMultiDelim(infoNames[i], args.delimList)]
+                    for each in thisInfo:
+                        if each in kwD:
+                            match += 1
+                        if each in exD:
+                            exclMatch += 1
 
-                if exclMatch == 0 and match ==0:
-                    excludeD[infoNames[i]] += 1
+                    if exclMatch == 0 and match ==0:
+                        excludeD[infoNames[i]] += 1
 
-        # Parse organism info
-        thisInfo = [x.upper() for x in splitMultiDelim(org, args.delimList)]
-        for each in thisInfo:
-            if each in kwD:
-                match += 1
-            if each in exD:
-                exclMatch += 1
+            # Parse organism info
+            thisInfo = [x.upper() for x in splitMultiDelim(org, args.delimList)]
+            for each in thisInfo:
+                if each in kwD:
+                    match += 1
+                if each in exD:
+                    exclMatch += 1
+
+        else:
+            thisInfo = [x.upper() for x in splitMultiDelim(sn, args.delimList)]
+            for each in thisInfo:
+                if each in kwD:
+                    match += 1
+                if each in exD:
+                    exclMatch += 1
 
         if match > exclMatch:
             seqName = acc2fasD[acc]
