@@ -13,10 +13,11 @@ def main():
     parser.add_argument("-u", "--summary", help="Name for a tab-delimited output file summarizing the number of peptides designed for each input set of targets.")
     parser.add_argument("-s", "--step_size", help = "Number of amino acids to move between each window.", default = 1, type = int )
     parser.add_argument("-t", "--targets", default="0.5,0.75,1", help="Target thresholds for xmer coverage (comma-separated). Algorithm will continue until at least the max proportion of total Xmers are in the design, but will write the design out once each threshold is met.")
-    parser.add_argument("-e", "--exclude", default="X-", help="Any Xmers or yMers containing these chaarcters will be excluded.")
+    parser.add_argument("-e", "--exclude", default="X-", help="Any Xmers or yMers containing these chaarcters will be excluded. By default this will be done for both the SW and SC portions of the design. However, the behavior for C residues will be different in the SW portion, when used in combination with '--swCtoS'.")
+    parser.add_argument("--swCtoS", default=False, action="store_true", help="If this flag is provided, Cysteine residues will be converted to Serine residues in the SW portion of the design")
 
     reqArgs = parser.add_argument_group('required arguments')
-    reqArgs.add_argument("-x", "--xMerSize", type=int, help="Size of Xmers, which represent potential linear epitopes contained within peptides/Yemrs.", required=True)
+    reqArgs.add_argument("-x", "--xMerSize", type=int, help="Size of Xmers, which represent potential linear epitopes contained within peptides/Ymers.", required=True)
     reqArgs.add_argument("-y", "--yMerSize", type=int, help="Size of Ymers, which represent potential peptides for inclusion in the assay.", required=True)
 
     args = parser.parse_args()
@@ -91,7 +92,10 @@ def design(inp, maxThresh, otherThresh, args):
     designer = LibraryDesigner( window_size = args.yMerSize, step_size = args.step_size )
     library = designer.design( rep )
 
-    repD = {e.name:e.sequence for e in library}
+    if args.swCtoS:
+        repD = {e.name:e.sequence.replace("C", "S") for e in library}
+    else:
+        repD = {e.name:e.sequence for e in library if len(set(e.sequence).intersection(args.exSet)) == 0}
     repNames = sorted(list(repD.keys()))
     repSeqs = [repD[n] for n in repNames]
 
