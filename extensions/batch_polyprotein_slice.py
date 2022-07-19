@@ -58,4 +58,4 @@ for blast, query in blasts.items():
         else:
             ft.write_fasta_dict(outD,'%s_%s'%(proteins[blast], os.path.basename(query)))
     else:
-        print("No matches")
+        print("No matches for %s and %s" % (proteins[blast], os.path.basename(query)))
