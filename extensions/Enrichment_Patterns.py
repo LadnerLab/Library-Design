@@ -15,6 +15,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d','--input_directory',required=True,help='Input directory with raw enrichment files.')
+parser.add_argument('-o','--output', default="output.txt" ,help='Input directory with raw enrichment files.')
 parser.add_argument('-f','--file_template',required=True,help='Files to be read in (Ex. "XX*.txt".)')
 parser.add_argument('-m','--matches',required=True,help='File of protein/peptide matches.')
 #parser.add_argument('-l','--lengths',required=True,help='File of protein lengths.')
@@ -129,5 +130,5 @@ Data234["Enrich/Match"]=Data234["Enrichment"]/Data234["Matches"]
 #Data234["Match/Length"]=Data234["Matches"]/Data234["Length"]
 Data234["Frequency"]=Data234["Samples"]/len(enrF)
 
-Data234.to_csv(r'output.txt',index=False,header=True,sep='\t')
+Data234.to_csv(args.output,index=False,header=True,sep='\t')
 
