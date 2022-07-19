@@ -51,7 +51,7 @@ for ref,blast in blasts.items():
     with open(blast,'r')as fin:
         fd=pd.read_csv(fin,sep='\t',header=0)
         fd["Subject_Ratio"]=(fd["Subject End"]-fd["Subject Start"]+1)/fd["Subject Length"]
-        fd=fd[fd["Subject_Ratio"]>=.67]
+        fd=fd[fd["Subject_Ratio"]>=subject_ratio]
         for p in proteins:
             if p in blast:
                 fd["Protein"]=p
@@ -67,7 +67,7 @@ for ref,blast in blasts.items():
         seqs=[]
         for x in combo2:
             names.append(x[0])
-            seqs.append(refD[x[1]][x[2]:x[3]])
+            seqs.append(refD[x[1]][x[2]-1:x[3]])
             
         new_entry=dict(zip(names,seqs))
        
