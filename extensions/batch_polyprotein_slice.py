@@ -6,6 +6,7 @@ import pandas as pd
 import fastatools as ft
 import inout as io
 import argparse, os
+from collections import defaultdict
 
 parser = argparse.ArgumentParser()
 #parser.add_argument('-u','--unassigned_filename',required=True, help="FASTA file of sequences with unassigned regions.")
@@ -24,6 +25,10 @@ if args.outputSubDirs:
     for p in set(proteins.values()):
         if not os.path.isdir(p):
             os.mkdir(p)
+
+#Create dictionary to keep track of clusters with no matches for certain proteins
+noMatches = defaultdict(list)
+
 
 # Step through each blast result file
 for blast, query in blasts.items():
@@ -51,6 +56,7 @@ for blast, query in blasts.items():
         #Add to output dictionary
         outD[n] = s
     
+    
     #Write out fasta file with subset sequences, but only if some good hits were found
     if len(outD) > 1:
         if args.outputSubDirs:
@@ -58,4 +64,9 @@ for blast, query in blasts.items():
         else:
             ft.write_fasta_dict(outD,'%s_%s'%(proteins[blast], os.path.basename(query)))
     else:
-        print("No matches for %s and %s" % (proteins[blast], os.path.basename(query)))
+        noMatches[os.path.basename(query)].append(proteins[blast])
+
+if len(noMatches) >0:
+    print("No matches found for the following:")
+    for k,v in noMatches.items():
+        print("%s:\t%s" % (k, "\t".join(v)))
