@@ -41,7 +41,8 @@ proteins=io.fileListHeader(metadata_file, "Protein")
 proteindict={prot:{}for prot in proteins}
 
 
-
+polyprotein=(unassigned_file)
+taxa="_".join(polyprotein.split("_", 2)[:2])
 
 
 
@@ -76,13 +77,4 @@ for ref,blast in blasts.items():
                     for names, seqs in new_entry.items():
                         proteindict[p][names]=[seqs]
                         new_fasta.update(proteindict[p])
-                        ft.write_fasta_dict(proteindict[p],'%s.fasta'%p)
-            
-                        
-
-
-
-
-
-
-
+                        ft.write_fasta_dict(proteindict[p],'%s_%s.fasta'%(taxa,p))
