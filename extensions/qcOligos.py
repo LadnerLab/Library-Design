@@ -140,7 +140,7 @@ def findIdentical(fasta, fout, trimTo=False):
     for k, v in seqD.items():
         if len(v) != 1:
             if len(set(v)) != 1:
-                print(k, v)
+                fout.write("Non-unique seqs!  %s: %s " % (k, ", ".join(v)))
                 multiPeps+=1
             else:
                 uniquePeps+=1
