@@ -65,7 +65,20 @@ def design(inp, maxThresh, otherThresh, args):
     # Generate dict with xmer counts
     xcD = {}
     
+    # Read in target sequences
     tN, tS = ft.read_fasta_lists(inp)
+    
+    # Remove sequences shorter than the ymer length
+    seqLens = [len(s) for s in tS]
+    tN = [n for i, n in enumerate(tN) if seqLens[i] >= args.yMerSize]
+    tS = [s for i, s in enumerate(tS) if seqLens[i] >= args.yMerSize]
+    
+    # If there are no sequences >= yMerSize
+    if len(tN) == 0:
+        print("%s does not contain sequences >= %d amino acids in length. Therefore, no peptides were designed for this cluster." % (inp, args.yMerSize))
+        numPepD = {t:0 for t in otherThresh + [maxThresh]}
+        return numPepD
+        
     for s in tS:
         xL = kt.kmerList(s, args.xMerSize)
         for x in xL:
