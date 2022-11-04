@@ -85,12 +85,14 @@ def design(inp, args):
             for x in xL:
                 if len(set(x).intersection(args.exSet)) == 0:
                     xcD[x] = xcD.get(x, 0) + 1
-
+        
         #Save count of total xmers in targets
         totalX = len(xcD)
+        if totalX == 0:
+            totalX = 1
 
         # Score each target sequence by summing contained xmer scores. This is to choose the representative for the sliding window portion of the design
-        maxScore = 0
+        maxScore = -1
         repS = ""
         repN = ""
         for i,s in enumerate(tS):   # Stepping through each target sequence
@@ -162,9 +164,16 @@ def design(inp, args):
                 xcD={}
         
         # Write out peptides for target thresh
-        ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "%s_SWSC-x%d-y%d-t%.3f.fasta" % (os.path.basename(inp), args.xMerSize, args.yMerSize, args.target))
         numPep = len(repSeqs+newSeqs)
-        
+        if numPep > 0:
+            rmvMani = 0
+            ft.write_fasta(repNames+newNames, repSeqs+newSeqs, "%s_SWSC-x%d-y%d-t%.3f.fasta" % (os.path.basename(inp), args.xMerSize, args.yMerSize, args.target))
+        else:
+            rmvMani = 1
+    
+    if rmvMani:
+        os.remove("%s_SWSC-x%d-y%d-manifest.tsv" % (os.path.basename(inp), args.xMerSize, args.yMerSize))
+    
     return numPep
 
 class LibraryDesigner():
