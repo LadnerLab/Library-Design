@@ -5,8 +5,10 @@
 # Reads in results from SW_SC.py and combines together designs from multiple clusters by implementing dynamic Xmer coverage thresholds based on cluster redundancy
 
 import argparse, glob, os
+import numpy as np
 import inout as io               #Available at https://github.com/jtladner/Modules
 import fastatools as ft          #Available at https://github.com/jtladner/Modules
+import kmertools as kt          #Available at https://github.com/jtladner/Modules
 
 # Generate a list of peptide names to include, given an Xmer coverage threshold
 def subsetPepFastaD(fastaF, manifestF, thresh):
