@@ -35,7 +35,7 @@ elif "," in args.targets:
 	for a in b:
 		targetPaths.append(a.strip())
 else:
-	print("Error: --targets must be provided as a directory, a list of files or a singular file.")
+	targetPaths.append(args.targets)
 
 #Reading in metafile and storing each file pair in a dictionary; keys are the path to the original target file, values are the path to file containing designed peptides
 # metaDict = defaultdict(str)
