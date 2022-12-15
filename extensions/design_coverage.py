@@ -4,9 +4,9 @@ import argparse, os
 import kmertools as kt		#Available at https://github.com/jtladner/Modules
 import fastatools as ft		#Available at https://github.com/jtladner/Modules
 import numpy as np
-#from collections import defaultdict
+from collections import defaultdict
 
-#Example command:
+#Example command: /Users/colleenung/Documents/GitHub/Library-Design/extensions/design_coverage.py -d /Users/colleenung/OneDrive\ -\ Northern\ Arizona\ University/PepSeq_Designs/PM1/Design/PM1combo_v1v2_rr10-30.fasta -t /Users/colleenung/OneDrive\ -\ Northern\ Arizona\ University/PepSeq_Designs/PM1/Design/targetVerification --swCtoS -k 9
 
 parser = argparse.ArgumentParser(description='A script that will calculate the coverage of given target(s) within the design. Coverage will be calculated on a per sequence basis and overall.')
 
@@ -44,31 +44,38 @@ else:
 # 		line= line.strip().split("\t")
 # 		metaDict[line[0]]= line[1]
 
-
 #Creating set of all unique kmers within design file
 designkSet= kt.kmerSetFasta(args.design, args.ksize, filter=[])
+ct=0
 
 for targetF in targetPaths:
 	targetkmers=[]
-	#Reading in target fasta file. Returns dictionary containing name:sequence
-	targetseqD= ft.read_fasta_dict_upper(targetF)
-
-	#Initializing dictionary with seq names as keys, and empty strings for values— which will be later replaced with the % kmer coverage
-	coverageperseqD= {n:"" for n in targetseqD.keys()}
-	#Calculating coverage at a sequence level
-	for name, sequence in targetseqD.items():
-		if args.swCtoS:
-			sequence= sequence.replace("C", "S")
-		#Creating set of all unique kmers within sequence
-		sSet= kt.kmerSet(sequence, args.ksize, filter=["X"])
-		
-		if len(sSet)>0:
-			xmersCovered= sSet.intersection(designkSet)
-			percentCovered= (len(xmersCovered) / len(sSet))*100
-			coverageperseqD[name]= float(percentCovered)
-		else:
-			coverageperseqD.pop(name)
 	
+	#Reading in target fasta file. Returns dictionary containing name:sequence. Values in dict are formatted as a list in case of duplicate names.
+	targetseqD= defaultdict(list)
+	names, seqs = ft.read_fasta_lists(targetF)
+	seqs = [x.upper() for x in seqs]
+	c=0
+	for n in names:
+		targetseqD[n].append(seqs[c])
+		c+=1
+	
+	#Calculating coverage at a sequence level
+	coverageperseqD= defaultdict(list)
+	for name, s in targetseqD.items():
+		for sequence in s:
+			if args.swCtoS:
+				sequence= sequence.replace("C", "S")
+			#Creating set of all unique kmers within sequence
+			sSet= kt.kmerSet(sequence, args.ksize, filter=["X"])
+		
+			if len(sSet)>0:
+				xmersCovered= sSet.intersection(designkSet)
+				percentCovered= (len(xmersCovered) / len(sSet))*100
+				coverageperseqD[name].append(float(percentCovered))
+			else:
+				coverageperseqD[name].append("N/A")
+
 	#Calculating overall coverage
 	t= kt.kmerSetFasta(targetF, args.ksize, filter=["X"])		#Creating set of all unique kmers within target file
 	if args.swCtoS:
@@ -83,16 +90,24 @@ for targetF in targetPaths:
 	#Writing out tsv file with per seq kmer coverage
 	outputName= "coverage-per-seq.tsv"
 	with open(outputName, "a") as fout:
-		header= "Target\tSequence Name\t%dmer coverage in design\n" % args.ksize
-		fout.write(header)
-	
-		for name, coverageProp in coverageperseqD.items():
-			fout.write("%s\t%s\t%.3f\n" % (targetF, name, coverageProp))
-	
+		if ct == 0:
+			header= "Target\tSequence Name\t%dmer coverage in design\n" % args.ksize
+			fout.write(header)
+		
+		for name, coverage in coverageperseqD.items():
+			for c in coverage:
+				if c != "N/A":
+					fout.write("%s\t%s\t%.3f\n" % (targetF, name, c))
 	
 	#Writing out file with descriptive statistics
 	statsoutputName= os.path.splitext(os.path.basename(targetF))[0] + "_coverage-stats.tsv"
-	coverageperseqL= list(coverageperseqD.values())
+	#Preparing coverageperseqD to perform numpy functions
+	coverageperseqL=[]
+	for coverage in coverageperseqD.values():
+		for c in coverage:
+			if c != "N/A":
+				coverageperseqL.append(c)
+	
 	with open(statsoutputName, "w") as fout:
 		fout.write("Per sequence coverage summary:\n")
 		header= "Maximum\tQ3\tMedian\tQ1\tMinimum\tIQR\tMean"
@@ -110,3 +125,5 @@ for targetF in targetPaths:
 		fout.write(line2)
 		line3= "\nOverall coverage: %.3f" % overallcoverage
 		fout.write(line3)
+	ct+=1
+
