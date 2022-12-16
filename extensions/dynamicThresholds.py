@@ -133,9 +133,6 @@ def main():
                         axm = avgXmerD[k]
             
                 thisFastaD = subsetPepFastaD(v, maniD[k], getThresh(axm, threshMapD))
-                if k == "1980413_id_70_27":
-                    print(k, axm, getThresh(axm, threshMapD), len(thisFastaD))
-                    print(v)
                 
                 # If requested, write out number of peptides selected for this cluster
                 if args.pepsPerCluster:
