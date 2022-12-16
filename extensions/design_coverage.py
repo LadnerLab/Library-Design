@@ -14,6 +14,7 @@ parser.add_argument("-k", "--ksize", default=9, type=int, metavar='\b', help="Km
 #parser.add_argument("-o", "--output", default="coverage_per_seq.tsv", metavar='\b', help="Name of output tsv file with calculated kmer coverage for each sequence in input file. [default: coverage_per_seq.tsv]")
 #parser.add_argument("-s", "--statsoutput", default="coverage_per_seq_stats.txt", metavar='\b', help="Name of output txt file with descriptive statistics. [default: coverage_per_seq_stats.txt]")
 parser.add_argument("--swCtoS", default=False, action="store_true", help="Use this flag if Cysteine residues were converted to Serine residues in the SW portion of the design.")
+parser.add_argument("-e", "--extensions", default=".fasta, .fna, .ffn, .faa, .frn, .fa", metavar='\b', help="Only target files with these following file extensions will be grabbed. [default: .fasta, .fna, .ffn, .faa, .frn, .fa]")
 
 #New argument group to underscore that these arguments are required despite being provided with flags
 reqArgs = parser.add_argument_group("required arguments")
@@ -28,7 +29,7 @@ targetPaths=[]
 if os.path.isdir(args.targets):
 	for name in os.listdir(args.targets):
 		a= args.targets + "/" + name
-		if os.path.isfile(a):
+		if os.path.isfile(a) and a.endswith(tuple(args.extensions))
 			targetPaths.append(a)
 elif "," in args.targets:
 	b= args.targets.split(",")
