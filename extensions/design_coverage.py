@@ -29,7 +29,7 @@ targetPaths=[]
 if os.path.isdir(args.targets):
 	for name in os.listdir(args.targets):
 		a= args.targets + "/" + name
-		if os.path.isfile(a) and a.endswith(tuple(args.extensions))
+		if os.path.isfile(a) and a.endswith(tuple(args.extensions)):
 			targetPaths.append(a)
 elif "," in args.targets:
 	b= args.targets.split(",")
