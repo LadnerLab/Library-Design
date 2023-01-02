@@ -48,6 +48,7 @@ def main():
     p = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     p.add_argument('--pepsPerCluster', help='Use this option if you want to output a file recoridng the number of peptides included per cluster. The argument should be the file path to use for the output.')
+    p.add_argument('--metaOut', help='Use this option if you want to output a file containing peptide-level metadata. The argument should be the file path to use for the output.')
     p.add_argument('-f', '--pepFasSuffix', default=".fasta", help='Expected suffix for fasta files containing designed peptides (from SW_SC.py).')
     p.add_argument('-m', '--manifestSuffix', default="-manifest.tsv", help='Expected suffix for manifest files containing Xmer thresh info for designed peptides (from SW_SC.py).')
     p.add_argument('-t', '--xmerThreshMap', help='File containing Xmer coverage thresholds to use for clusters based on Xmer redundancy in each cluster. Should be tab delimited and each row should have three columns: Starting XmerProp, Ending XmerProp, XmerThresh. If not provided, a default set of thresholds will be used. No header row is expected. Order must be as specified here. **If NOT provided, the script assumes the clusters used to design the peptides are one directory back from the designs.')
@@ -87,7 +88,13 @@ def main():
     if args.pepsPerCluster:
         perPep = open(args.pepsPerCluster, "w")
         perPep.write("Cluster\tNumPeptidesInDesign\n")
-    
+
+    # Open optional metadata file, if requested
+    if args.metaOut:
+        metaOut = open(args.metaOut, "w")
+        metaOut.write("PeptideName\tGroup\tGroupTaxID\tProtein\tSequenceAccession\tCluster\tPeptideSequence\n")
+#        print("Opened metadata file for writing.")
+
     #Determine if dir option is a sinlge dir or a file with multiple dir paths
     if os.path.isfile(args.dir):
         dirPaths = io.fileList(args.dir, header=False)
@@ -137,10 +144,32 @@ def main():
                 # If requested, write out number of peptides selected for this cluster
                 if args.pepsPerCluster:
                     perPep.write("%s\t%s\n" % (k, len(thisFastaD)))
-            
+                
+                # Extract info that will be needed for metadata file, if requested
+                pathParts = v.split("/")
+                groupID, groupName = pathParts[-4].split("_")
+                protName = pathParts[-3]
+                
                 for n,s in thisFastaD.items():
                     comboFastaD[n] = s
+                    
+                    # If requested, write out metadata for each peptide
+                    if args.metaOut:
+                        accession = n.split()[0]
+                        metaOut.write(f"{n}\t{groupName}\t{groupID}\t{protName}\t{accession}\t{k}\t{s}\n")
+
+                    
                 clustersAdded+=1
+    
+    
+    #Close files
+    if args.pepsPerCluster:
+        perPep.close()
+#        print("Closed peps per cluster file")
+    if args.metaOut:
+        metaOut.close()
+#        print("Closed metadata file")
+
     
     #Write out combo fasta file
     ft.write_fasta_dict(comboFastaD, args.out)
