@@ -87,7 +87,7 @@ def main():
     # Open optional output file, if requested
     if args.pepsPerCluster:
         perPep = open(args.pepsPerCluster, "w")
-        perPep.write("Cluster\tNumPeptidesInDesign\n")
+        perPep.write("Cluster\tNumPeptidesInDesign\tXmerThreshold\n")
 
     # Open optional metadata file, if requested
     if args.metaOut:
@@ -138,12 +138,13 @@ def main():
                         axm = 1
                     else:
                         axm = avgXmerD[k]
-            
-                thisFastaD = subsetPepFastaD(v, maniD[k], getThresh(axm, threshMapD))
+                
+                thisThresh = getThresh(axm, threshMapD)
+                thisFastaD = subsetPepFastaD(v, maniD[k], thisThresh)
                 
                 # If requested, write out number of peptides selected for this cluster
                 if args.pepsPerCluster:
-                    perPep.write("%s\t%s\n" % (k, len(thisFastaD)))
+                    perPep.write(f"{k}\t{len(thisFastaD)}\t{thisThresh}\n")
                 
                 # Extract info that will be needed for metadata file, if requested
                 pathParts = v.split("/")
