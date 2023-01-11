@@ -51,6 +51,12 @@ else:
 designkSet= kt.kmerSetFasta(args.design, args.ksize, filter=[])
 ct=0
 
+#Opening output files
+perseqoutputName= str(args.ksize) + "mer-" + args.perseqoutput
+statsoutputName= str(args.ksize) + "mer-" + args.statsoutput
+fout1= open(perseqoutputName, "w")
+fout2= open(statsoutputName, "w")
+
 for targetF in targetPaths:
 	targetkmers=[]
 	
@@ -97,23 +103,19 @@ for targetF in targetPaths:
 	overallcoverage= (intersect/len(targetkSet))*100
 
 	#Writing out tsv file with per seq kmer coverage
-	perseqoutputName= str(args.ksize) + "mer-" + args.perseqoutput
-	with open(perseqoutputName, "a") as fout:
-		if ct == 0:
-			header= "Target\tSequence Name\t# of unique %dmers\t%dmer coverage in design\n" % (args.ksize,args.ksize)
-			fout.write(header)
-		
-		for name, coverage in coverageperseqD.items():
-			d=0
-			for c in coverage:
-				if c == "NA":
-					d+=1
-				else:
-					uniquekmerct= int(uniquekmerctD[name][d])
-					fout.write("%s\t%s\t%d\t%.3f\n" % (targetF, name, uniquekmerct, c))
-					d+=1
+	if ct == 0:
+		header= "Target\tSequence Name\t# of unique %dmers\t%dmer coverage in design\n" % (args.ksize,args.ksize)
+		fout1.write(header)
+	for name, coverage in coverageperseqD.items():
+		d=0
+		for c in coverage:
+			if c == "NA":
+				d+=1
+			else:
+				uniquekmerct= int(uniquekmerctD[name][d])
+				fout1.write("%s\t%s\t%d\t%.3f\n" % (targetF, name, uniquekmerct, c))
+				d+=1
 	
-	#Writing out file with descriptive statistics
 	#statsoutputName= os.path.splitext(os.path.basename(targetF))[0] + "_coverage-stats.tsv"
 	#Preparing coverageperseqD to perform numpy functions
 	coverageperseqL=[]
@@ -122,23 +124,22 @@ for targetF in targetPaths:
 			if c != "NA":
 				coverageperseqL.append(c)
 	
-	statsoutputName= str(args.ksize) + "mer-" + args.statsoutput
-	with open(statsoutputName, "a") as fout:
-		if ct == 0:
-			header= "Target\tMaximum*\tQ3*\tMedian*\tQ1*\tMinimum*\tIQR*\tMean*\tOverall coverage\t\t*Per seq %dmer coverage" % args.ksize
-			fout.write(header)
-		
-		
-		maximum= max(coverageperseqL)
-		q3= np.percentile(coverageperseqL, 75, interpolation = 'midpoint')
-		median= np.percentile(coverageperseqL, 50, interpolation = 'midpoint')
-		q1= np.percentile(coverageperseqL, 25, interpolation = 'midpoint')
-		minimum= min(coverageperseqL)
-		IQR= q3-q1
-		mean= np.mean(coverageperseqL)
+	#Writing out file with descriptive statistics
+	if ct == 0:
+		header= "Target\tMaximum*\tQ3*\tMedian*\tQ1*\tMinimum*\tIQR*\tMean*\tOverall coverage\t\t*Per seq %dmer coverage" % args.ksize
+		fout2.write(header)
+	maximum= max(coverageperseqL)
+	q3= np.percentile(coverageperseqL, 75, interpolation = 'midpoint')
+	median= np.percentile(coverageperseqL, 50, interpolation = 'midpoint')
+	q1= np.percentile(coverageperseqL, 25, interpolation = 'midpoint')
+	minimum= min(coverageperseqL)
+	IQR= q3-q1
+	mean= np.mean(coverageperseqL)
 	
-		line2= "\n%s\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%.3f" % (targetF,maximum,q3,median,q1,minimum,IQR,mean,overallcoverage)		
-		fout.write(line2)
+	line2= "\n%s\t%f\t%f\t%f\t%f\t%f\t%f\t%f\t%.3f" % (targetF,maximum,q3,median,q1,minimum,IQR,mean,overallcoverage)		
+	fout2.write(line2)
 
 	ct+=1
 
+fout1.close()
+fout2.close()
