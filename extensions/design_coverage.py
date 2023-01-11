@@ -14,7 +14,7 @@ parser.add_argument("-k", "--ksize", default=9, type=int, metavar='\b', help="Km
 parser.add_argument("-p", "--perseqoutput", default="coverage-per-seq.tsv", metavar='\b', help="Name of output tsv file with calculated kmer coverage for each sequence (> in length than ksize) in input file. [default: coverage-per-seq.tsv]")
 parser.add_argument("-s", "--statsoutput", default="coverage-stats.tsv", metavar='\b', help="Name of output tsv file with descriptive statistics for per seq coverage and calculated overall coverage. [default: coverage-stats.tsv]")
 parser.add_argument("--swCtoS", default=False, action="store_true", help="Use this flag if Cysteine residues were converted to Serine residues in the SW portion of the design.")
-parser.add_argument("-e", "--extensions", default=".fasta, .fna, .ffn, .faa, .frn, .fa", metavar='\b', help="Only target files with these following file extensions will be grabbed. [default: .fasta, .fna, .ffn, .faa, .frn, .fa]")
+parser.add_argument("-e", "--extensions", default=".fasta,.fna,.ffn,.faa,.frn,.fa", metavar='\b', help="Only target files with these following file extensions will be grabbed. [default: .fasta, .fna, .ffn, .faa, .frn, .fa]")
 
 #New argument group to underscore that these arguments are required despite being provided with flags
 reqArgs = parser.add_argument_group("required arguments")
@@ -24,6 +24,8 @@ reqArgs.add_argument("-t", "--targets", required=True, metavar='\b', help="Targe
 args = parser.parse_args()
 
 targetPaths=[]
+
+args.extensions = args.extensions.split(",")
 
 #Determine if targets were provided as a single dir or as a list of paths
 if os.path.isdir(args.targets):
@@ -37,7 +39,7 @@ elif "," in args.targets:
 		targetPaths.append(a.strip())
 else:
 	targetPaths.append(args.targets)
-
+	
 #Reading in metafile and storing each file pair in a dictionary; keys are the path to the original target file, values are the path to file containing designed peptides
 # metaDict = defaultdict(str)
 # with open(args.metafile, "r") as fin:
@@ -125,6 +127,7 @@ for targetF in targetPaths:
 		if ct == 0:
 			header= "Target\tMaximum*\tQ3*\tMedian*\tQ1*\tMinimum*\tIQR*\tMean*\tOverall coverage\t\t*Per seq %dmer coverage" % args.ksize
 			fout.write(header)
+		
 		
 		maximum= max(coverageperseqL)
 		q3= np.percentile(coverageperseqL, 75, interpolation = 'midpoint')
