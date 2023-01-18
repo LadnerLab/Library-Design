@@ -2,9 +2,7 @@
 
 # Add or remove modules here
 import argparse
-import fastatools as ft		   #Available at https://github.com/jtladner/Modules
-import kmertools as kt		  #Available at https://github.com/jtladner/Modules
-import glob, os, shutil
+#import fastatools as ft		   #Available at https://github.com/jtladner/Modules
 import pandas as pd
 
 from collections import defaultdict
@@ -16,8 +14,8 @@ def main():
 	parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 	# These are optional arguments
-	parser.add_argument("-f", "--filler", default="XXXXXXXXXXXXXXXXXXXXXXX", help="Sequence to use as filler for designs.")
-	parser.add_argument("-s", "--spacer", default="XXXXXXXXXXXXXXXXXXXXXXXX", help="Sequence to use as spacer for designs.")
+	parser.add_argument("-f", "--filler", default="..............................", help="Sequence to use as filler for designs.")
+	parser.add_argument("-s", "--spacer", default=",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,", help="Sequence to use as spacer for designs.")
 	
 	# These are arguments that the user is required to provide
 	reqArgs = parser.add_argument_group('required arguments')
@@ -33,41 +31,41 @@ def main():
 	
 	epi = pd.read_csv(args.input,sep="\t").sort_values('Seropostive Count', ascending=False)
 	pepList = []
-	category = []
 	
 	for index,row in epi.iterrows():
-			for item, fillLen in {"10mer": 23, "14mer": 19, "18mer": 15,"42mer": 0}.items():
-				category = "Linear" + "(" + item + ")"
-				if item == "42mer":
-					pepList.append((row['Parent ID'],row[item],"S" + row[item] + "S",category))
-				else:
-					pepList.append((row['Parent ID'],row[item],args.filler[:fillLen] + TEV + "S" + row[item] + "S",category))
-				print(pepList)
-			for item, fillLen in {"10mer": 23, "14mer": 19, "18mer": 15,"42mer": 0}.items():
-				category = "Cyclic" + "(" + item + ")"
-				if item == "42mer":
-					pepList.append((row['Parent ID'],row[item],"C" + row[item] + "C",category))
-				else:
-					pepList.append((row['Parent ID'],row[item],args.filler[:fillLen] + TEV + "C" + row[item] + "C",category))
+			
+			# Generate linear and cyclic peptides
+			for item, fillLen in {"10mer": 23, "14mer": 19, "18mer": 15}.items():
+				epi = row[item]
+				fill = args.filler[:fillLen]
+				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}S{epi}S", f"Linear_{item}"))
+				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}C{epi}C", f"Cyclic_{item}"))
+			# Full length epitope, no TEV site
+			epi = row["42mer"]
+			pepList.append((row['Parent ID'], epi, f"S{epi}S", f"Linear_42mer"))
+			pepList.append((row['Parent ID'], epi, f"C{epi}C", f"Cyclic_42mer"))
+			
+			# Generate the tandem peptides
 			for item, spaceLen in {"10mer": 24, "14mer": 16, "18mer": 8}.items():
-				category = "Tandem" + "(" + item + ")"
-				pepList.append((row['Parent ID'],row[item],row[item] + args.spacer[:spaceLen] + row[item],category))
+				epi = row[item]
+				space = args.spacer[:spaceLen]
+				pepList.append((row['Parent ID'], epi, f"{epi}{space}{epi}", f"Tandem_{item}"))
+			
+			#Generate y-shaped peptide designs
 			for item, spaceLen in {"10mer": 8, "14mer": 4, "18mer": 0}.items():
-				category = "Y-shaped" + "(" + item + ")"
-				pepList.append((row['Parent ID'],row[item],row[item] + args.spacer[:spaceLen] + "C" + THR + row[item] + args.spacer[:spaceLen] + "C",category))
-			for item, spaceLen in {"10mer": 8, "14mer": 4, "18mer": 0}.items():
-				category = "Y-shaped(S-control)" + "(" + item + ")"
-				pepList.append((row['Parent ID'],row[item],row[item] + args.spacer[:spaceLen] + "S" + THR + row[item] + args.spacer[:spaceLen] + "S",category))
-			for item, spaceLen in {"10mer": 8, "14mer": 4, "18mer": 0}.items():
-				category = "Y-shaped (C-reversed)" + "(" + item + ")"
-				pepList.append((row['Parent ID'],row[item],row[item] + args.spacer[:spaceLen] + "C" + THR + row[item][::-1] + args.spacer[:spaceLen] + "C",category))
-			for item, spaceLen in {"10mer": 8, "14mer": 4, "18mer": 0}.items():
-				category = "Y-shaped (C-reversed; S-control)" + "(" + item + ")"
-				pepList.append((row['Parent ID'],row[item],row[item] + args.spacer[:spaceLen] + "S" + THR + row[item][::-1] + args.spacer[:spaceLen] + "S",category))
+				epi = row[item]
+				space = args.spacer[:spaceLen]
+				# Regular Y-shaped
+				pepList.append((row['Parent ID'], epi, f"{epi}{space}C{THR}{epi}{space}C", f"Y-shaped_{item}"))
+				# Control for Y-shaped
+				pepList.append((row['Parent ID'], epi, f"{epi}{space}S{THR}{epi}{space}S", f"Y-shaped_S-control_{item}"))
+				# C-reversed Y-shaped
+				pepList.append((row['Parent ID'], epi, f"{epi}{space}C{THR}{epi[::-1]}{space}C", f"Y-shaped_C-reversed_{item}"))
+				# Control for C-reversed Y-shaped
+				pepList.append((row['Parent ID'], epi, f"{epi}{space}S{THR}{epi[::-1]}{space}S", f"Y-shaped_C-reversed-S-control_{item}"))
 
-	
 	write_tsv(pepList,args.output)
-	
+
 #----------------------End of main()
 
 # Put any other function definitions here
