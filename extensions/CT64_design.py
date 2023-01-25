@@ -36,6 +36,8 @@ def main():
 			
 			# Generate linear and cyclic peptides
 			for item, fillLen in {"14mer": 39, "30mer": 23, "42mer": 11, "50mer": 3}.items():
+				if fillLen > len(args.filler):
+					print("WARNING length of user specified filler too short. Final peptides will not all be the same length.")
 				epi = row[item]
 				fill = args.filler[:fillLen]
 				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}S{epi}S", f"Linear_{item}"))
@@ -47,6 +49,8 @@ def main():
 			
 			# Generate the tandem peptides
 			for item, spaceLen in {"14mer": 36, "30mer": 4}.items():
+				if spaceLen > len(args.spacer):
+					print("WARNING length of user specified spacer too short. Final peptides will not all be the same length.")
 				epi = row[item]
 				space = args.spacer[:spaceLen]
 				pepList.append((row['Parent ID'], epi, f"{epi}{space}{epi}", f"Tandem_{item}"))
@@ -72,7 +76,7 @@ def main():
 				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}{space}S{THR}{epi[::-1]}{space}S", f"Y-shaped_C-reversed-S-control_{item}"))
 			# Generate y-shaped peptides with no filler/TEV sites
 			epi = row["18mer"]
-			space = space = args.spacer[:10]
+			space = args.spacer[:10]
 			pepList.append((row['Parent ID'], epi, f"{epi}{space}C{THR}{epi}{space}C", f"Y-shaped_{item}"))
 			pepList.append((row['Parent ID'], epi, f"{epi}{space}S{THR}{epi}{space}S", f"Y-shaped_S-control_{item}"))
 			pepList.append((row['Parent ID'], epi, f"{epi}{space}C{THR}{epi[::-1]}{space}C", f"Y-shaped_C-reversed_{item}"))
