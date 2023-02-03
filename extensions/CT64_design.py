@@ -28,8 +28,9 @@ def main():
 	# Add code for script here
 	TEV = "GENLYFQGA"
 	THR = "LVPRGS"
-	
-	epi = pd.read_csv(args.input,sep="\t").sort_values('Seropostive Count', ascending=False)
+		
+	#epi = pd.read_csv(args.input,sep="\t").sort_values('Seropostive Count', ascending=False)
+	epi = pd.read_csv(args.input,sep="\t")
 	pepList = []
 	
 	for index,row in epi.iterrows():
