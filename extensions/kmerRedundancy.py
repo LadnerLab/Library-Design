@@ -26,6 +26,7 @@ def main():
     p.add_argument('--redRepOut', help='Optional, reduced representation output fasta.')
     p.add_argument('--rro_kRange', default="9,30", help='Range of kmer sizes to consider for reduced representation output.')
     p.add_argument('--rro_prop', default=1, type=int, help='Proportion of redundant kmers needed to be eliminated in reduced representation output.')
+    p.add_argument('-p', '--priorityStr', default="", help='User can provide a set of comma-separated strings strings that can be used to identify seqs to prioritize for removal, if redundant.')
 
     reqArgs = p.add_argument_group('required arguments')
     reqArgs.add_argument('-i', '--inp', help='Either a path to directory containing designs from SW_SC.py OR a path to a file containing multiple directory paths with designs.', required=True)
@@ -36,6 +37,10 @@ def main():
     # Parse kmer sizes
     kSizes = [int(x) for x in args.kmers.split(",")]
     
+    # Parse priority strings
+    if args.priorityStr:
+        args.priorityStr = args.priorityStr.split(",")
+    
     # Read in metadata, if provided
     if args.metadata:
         metaD = io.fileDictHeader(args.metadata, args.nameHeader, args.groupHeader)
@@ -44,38 +49,6 @@ def main():
     
     # Read in sequence fasta
     fD = ft.read_fasta_dict_upper(args.inp)
-    
-    #Dict to hold redundant peptides
-#     redunD = defaultdict(list)
-#     
-#     # Step through each kmer size
-#     for k in kSizes:
-#         
-#         #Generate a dictionary of all unique kmers and their counts
-#         kD = kt.kmerDictCountFasta(args.inp, k)
-#         
-#         #Step through each sequence individually
-#         for n,s in fD.items():
-#             #Get all unique kmers for this specific sequence
-#             kSet = kt.kmerSet(s, k)
-#             #Calculate number of redundant kmers
-#             numRedund = sum([1 for kmer in kSet if kD[kmer]>1])
-#             propRedund = numRedund/len(kSet)
-#             # Check to see if this sequence should be flagged
-#             if propRedund >= args.redundThresh:
-#                 redunD[k].append(n)
-#                 if args.metadata:
-#                     groupD[metaD[n]].append(n)
-#             totalD[metaD[n]]+=1
-#     
-#     # Summarize results
-#     for k, v in redunD.items():
-#         print(f"{k}\t{len(v)}")
-#         if args.groupInfoOut and args.metadata:
-#             with open(f"{k}_{args.groupInfoOut}", "w") as fout:
-#                 fout.write("Group\tPropRedund\tRedundSeqs\tTotalSeqs\n")
-#                 for g, l in groupD.items():
-#                     fout.write(f"{g}\t{len(l)/totalD[g]}\t{len(l)}\t{totalD[g]}")
     
     # Generate set of sequences that minimize redundancy
     if args.redRepOut:
@@ -110,6 +83,8 @@ def main():
                 #Find the max score
                 maxScore = max(scoreD.values())
                 maxSeqs = [k for k,v in scoreD.items() if v==maxScore]
+                if args.priorityStr:
+                    maxSeqs = prioritize(maxSeqs, args.priorityStr)
                 toRmv = random.choice(maxSeqs)
 
                 #Remove selected sequence from fasta dict and score dict
@@ -136,13 +111,17 @@ def main():
         
         ft.write_fasta_dict(fD, args.redRepOut)
             
-    # **** Write set cover style algorithm to remove sequences one by one in a way that attempts to remove those that are most redundant first
-    # Start with very large kmer sizes, work down to smaller kmer sizes
-    # Calculate a score for each sequence that will be the sum of the counts associated with their kmers
-    # If a certain proportion of the kmers in a seq are redundant and it has the highest score among redundat seqs, it goes and scores are recalculated
-    # Keep going until there aren't any full redundent peptide, switch to next k
-    
 ###-----------------End of main()--------------------------->>>
+
+def prioritize(maxSeqs, strs):
+    topSeqs = []
+    for each in maxSeqs:
+        if sum([1 for i in strs if i in each])>0:
+            topSeqs.append(each)
+    if len(topSeqs) > 1:
+        return topSeqs
+    else:
+        return maxSeqs
 
 ###------------->>>
 
