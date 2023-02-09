@@ -45,6 +45,10 @@ def main():
 def design(inp, out, args):
 
     names, sequences = ft.read_fasta_lists( inp )
+
+    if min([len(s) for s in sequences]) < args.window_size:
+        print(inp)
+
     seqs = list()
 
     for name, sequence in zip( names, sequences ):
