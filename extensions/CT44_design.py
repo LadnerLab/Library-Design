@@ -14,8 +14,8 @@ def main():
 	parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
 	# These are optional arguments
-	parser.add_argument("-f", "--filler", default="..............................", help="Sequence to use as filler for designs.")
-	parser.add_argument("-s", "--spacer", default=",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,", help="Sequence to use as spacer for designs.")
+	parser.add_argument("-f", "--filler", default="..............................", help="Sequence to use as filler for designs. Will not be present in mature PepSeq probes.")
+	parser.add_argument("-s", "--spacer", default=",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,", help="Sequence to use as spacer for designs. Will be present in mature PepSeq probes.")
 	
 	# These are arguments that the user is required to provide
 	reqArgs = parser.add_argument_group('required arguments')
