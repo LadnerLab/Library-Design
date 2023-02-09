@@ -46,7 +46,8 @@ def make_new_dir(dirpath):
 def main():
 
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-p", "--propThresh", default=0.5, type=float, help="Minimum proportion of seqs in cluster with target TaxID for cluster to be selected.")
+    parser.add_argument("-p", "--propThresh", default=0.8, type=float, help="Minimum proportion of seqs in cluster with target TaxID for cluster to be selected.")
+    parser.add_argument("-m", "--minClustSize", default=1, type=float, help="Minimum number of seqs in cluster to be selected.")
     parser.add_argument("--copyClusters", default=False, action="store_true", help="Use this option if you want the identified clusters to be moved to a different location.")
     parser.add_argument("-w", "--warnings", default="warnings.txt", help="File to which warnings will be written.")
 
@@ -123,7 +124,8 @@ def main():
 
                 #Add accession list to dictionary, if any GenBank Accessions were found
                 if accL:
-                    accD[tid][protName][fp] = accL
+                    if len(accL) >= args.minClustSize:
+                        accD[tid][protName][fp] = accL
                 else:
                     warnOut.write(f"No GenBank accessions found for {fp}\n")
                     warnOut.write(f"{fD.keys()}\n\n")
