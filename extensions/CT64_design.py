@@ -63,25 +63,25 @@ def main():
 				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}{space}{epi}", f"Tandem_{item}"))
 			
 			# Generate y-shaped peptide designs
-			for spaceFillLen, item in {(0,11):"18mer", (5,1):"18mer"}.items():
+			for item, fillLen in {"18mer":11,"21mer":5}.items():
+			#for fillLen, item in {(0,11):"18mer", (5,1):"18mer"}.items():
 				epi = row[item]
-				space = args.spacer[:spaceFillLen[0]]
-				fill = args.filler[:spaceFillLen[1]]
+				fill = args.filler[:fillLen]
 				# Regular Y-shaped
-				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}{space}C{THR}{epi}{space}C", f"Y-shaped_{item}"))
+				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}C{THR}{epi}C", f"Y-shaped_{item}"))
 				# Control for Y-shaped
-				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}{space}S{THR}{epi}{space}S", f"Y-shaped_S-control_{item}"))
+				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}S{THR}{epi}S", f"Y-shaped_S-control_{item}"))
 				# C-reversed Y-shaped
-				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}{space}C{THR}{epi[::-1]}{space}C", f"Y-shaped_C-reversed_{item}"))
+				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}C{THR}{epi[::-1]}C", f"Y-shaped_C-reversed_{item}"))
 				# Control for C-reversed Y-shaped
-				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}{space}S{THR}{epi[::-1]}{space}S", f"Y-shaped_C-reversed-S-control_{item}"))
+				pepList.append((row['Parent ID'], epi, f"{fill}{TEV}{epi}S{THR}{epi[::-1]}S", f"Y-shaped_C-reversed-S-control_{item}"))
 			# Generate y-shaped peptides with no filler/TEV sites
-			epi = row["18mer"]
-			space = args.spacer[:10]
-			pepList.append((row['Parent ID'], epi, f"{epi}{space}C{THR}{epi}{space}C", f"Y-shaped_{item}"))
-			pepList.append((row['Parent ID'], epi, f"{epi}{space}S{THR}{epi}{space}S", f"Y-shaped_S-control_{item}"))
-			pepList.append((row['Parent ID'], epi, f"{epi}{space}C{THR}{epi[::-1]}{space}C", f"Y-shaped_C-reversed_{item}"))
-			pepList.append((row['Parent ID'], epi, f"{epi}{space}S{THR}{epi[::-1]}{space}S", f"Y-shaped_C-reversed-S-control_{item}"))
+			epi = row["28mer"]
+			item = "28mer"
+			pepList.append((row['Parent ID'], epi, f"{epi}C{THR}{epi}C", f"Y-shaped_{item}"))
+			pepList.append((row['Parent ID'], epi, f"{epi}S{THR}{epi}S", f"Y-shaped_S-control_{item}"))
+			pepList.append((row['Parent ID'], epi, f"{epi}C{THR}{epi[::-1]}C", f"Y-shaped_C-reversed_{item}"))
+			pepList.append((row['Parent ID'], epi, f"{epi}S{THR}{epi[::-1]}S", f"Y-shaped_C-reversed-S-control_{item}"))
 
 	write_tsv(pepList,args.output)
 
