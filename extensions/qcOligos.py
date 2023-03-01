@@ -67,6 +67,9 @@ def main():
         checkFasta(opts.nucFastaAdapt, fout)
         checkAdapters(opts.nucFastaAdapt, fout)
         identNames(opts.nucFastaAdapt, fout)
+        
+        if opts.nucFasta:
+            checkNucsMatch(opts.nucFasta, opts.nucFastaAdapt, fout)
     
 
     if makePlot:
@@ -96,6 +99,20 @@ def main():
     fout.close()
     
 ###------------------------End of main()--------------------------------
+
+def checkNucsMatch(ntF, adF, fout):
+    ntD = ft.read_fasta_dict_upper(ntF)
+    adD = ft.read_fasta_dict_upper(adF)
+    
+    matchCount=0
+    for name, ntS in ntD.items():
+        if adD[name][19:-19] != ntS:
+            fout.write("%s does not match %s\n" % (ntS, adD[name][19:-19]))
+        else:
+            matchCount+=1
+    
+    if matchCount == len(ntD):
+        fout.write("All encodings with adapters (%d) match the encodings without adapters.\n\n" % (matchCount))
 
 def checkFasta(fasta, fout, trimTo=False):
     names, seqs = ft.read_fasta_lists(fasta)
@@ -196,7 +213,7 @@ def checkTranslation(aaF, ntF, fout):
         expAA = str(Seq(ntS).translate())
         aaName = name.split("-")[0]
         if expAA != aaD[aaName]:
-            fout.write("%s does not translate to %s" % (ntS, aaD[aaName]))
+            fout.write("%s does not translate to %s\n" % (ntS, aaD[aaName]))
         else:
             matchCount+=1
     
