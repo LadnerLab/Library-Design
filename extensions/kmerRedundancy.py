@@ -27,6 +27,7 @@ def main():
     p.add_argument('--rro_kRange', default="9,30", help='Range of kmer sizes to consider for reduced representation output.')
     p.add_argument('--rro_prop', default=1, type=int, help='Proportion of redundant kmers needed to be eliminated in reduced representation output.')
     p.add_argument('-p', '--priorityStr', default="", help='User can provide a set of comma-separated strings strings that can be used to identify seqs to prioritize for removal, if redundant.')
+    p.add_argument('--reportFreq', default=100, type=int, help='Report progress to screen each time this many seqs are removed.')
 
     reqArgs = p.add_argument_group('required arguments')
     reqArgs.add_argument('-i', '--inp', help='Either a path to directory containing designs from SW_SC.py OR a path to a file containing multiple directory paths with designs.', required=True)
@@ -106,7 +107,7 @@ def main():
                         scoreD[n] = sum([kD[each] for each in indivKmerSets[n]])
 
                 rmvCount+=1
-                if rmvCount%25==0:
+                if rmvCount%args.reportFreq==0:
                     print(rmvCount, len(fD))
         
         ft.write_fasta_dict(fD, args.redRepOut)
