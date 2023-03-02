@@ -13,7 +13,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>
-#include </opt/homebrew/opt/libomp/include/omp.h>
+#include <omp.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ios>
