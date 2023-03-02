@@ -13,7 +13,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <omp.h>
+#include </opt/homebrew/opt/libomp/include/omp.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ios>
@@ -204,10 +204,10 @@ int main(int argc, char * const argv[])
     acid_map['T'] = 16; acid_map['V'] = 17; acid_map['W'] = 18; acid_map['Y'] = 19;
 
     // process line by line
-    uint16_t lines = count_lines_in_file( input_file );
-    uint16_t new_lines = lines;
-    uint16_t loop_index = 0;
-    uint16_t index = 0;
+    uint64_t lines = count_lines_in_file( input_file );
+    uint64_t new_lines = lines;
+    uint64_t loop_index = 0;
+    uint64_t index = 0;
 
     char line[ max_line_length ] = {0};
     char line_copy[ max_line_length ] = {0};
