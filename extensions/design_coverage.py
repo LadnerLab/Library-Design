@@ -58,7 +58,6 @@ fout1= open(perseqoutputName, "w")
 fout2= open(statsoutputName, "w")
 
 for targetF in targetPaths:
-	targetkmers=[]
 	
 	#Reading in target fasta file. Returns dictionary containing name:sequence. Values in dict are formatted as a list in case of duplicate names.
 	targetseqD= defaultdict(list)
@@ -90,7 +89,8 @@ for targetF in targetPaths:
 			else:
 				coverageperseqD[name].append("NA")
 				uniquekmerctD[name].append("NA")
-
+	
+	targetkmers=[]
 	#Calculating overall coverage
 	t= kt.kmerSetFasta(targetF, args.ksize, filter=["X"])		#Creating set of all unique kmers within target file
 	if args.swCtoS:
@@ -98,7 +98,9 @@ for targetF in targetPaths:
 			if "C" in seq:
 				seq= seq.replace("C", "S")
 			targetkmers.append(seq)
-	targetkSet= set(targetkmers)
+		targetkSet= set(targetkmers)
+	else:
+		targetkSet=t
 	intersect= len(targetkSet.intersection(designkSet))
 	overallcoverage= (intersect/len(targetkSet))*100
 
