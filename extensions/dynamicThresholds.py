@@ -147,9 +147,10 @@ def main():
                     perPep.write(f"{k}\t{len(thisFastaD)}\t{thisThresh}\n")
                 
                 # Extract info that will be needed for metadata file, if requested
-                pathParts = v.split("/")
-                groupID, groupName = pathParts[-4].split("_")
-                protName = pathParts[-3]
+                if args.metaOut:
+                    pathParts = v.split("/")
+                    groupID, groupName = pathParts[-4].split("_")
+                    protName = pathParts[-3]
                 
                 for n,s in thisFastaD.items():
                     comboFastaD[n] = s
