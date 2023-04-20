@@ -298,10 +298,11 @@ int main(int argc, char * const argv[])
                 {
                     if ( !(threads > 0) ) 
                     {
+                        --current_trial;
                         continue;
                     }
 
-                    std::thread( [&]{
+                    std::thread curr_thread = std::thread( [&]{
                         threads--;
                         current = new Encoding();
 
@@ -347,6 +348,8 @@ int main(int argc, char * const argv[])
 
                         threads++;
                     } );
+
+                    curr_thread.join();
                 }
 
             uint64_t num_encodings = trials;
