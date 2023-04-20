@@ -19,6 +19,7 @@
 #include <unordered_set>
 #include <string>
 #include <thread>
+#include <mutex>
 
 #include "table.h"
 #include "xoroshiro.h"
@@ -287,6 +288,7 @@ int main(int argc, char * const argv[])
 
             Encoding *current = NULL;
 
+            std::mutex mtx;
 
             unsigned short int threads = num_threads;
 
@@ -311,7 +313,7 @@ int main(int argc, char * const argv[])
                             {
                                 double r = xoroshiro::uniform();
                                 const uint16_t aa = file_data.data[current_aa];
-
+                                
                                 codon** cod = t[aa];
                                 double accum = (*cod)->w;
 
@@ -322,9 +324,14 @@ int main(int argc, char * const argv[])
 
                                 for ( i = 0; i < 4; ++i )
                                     {
+                                        mtx.lock();
                                         current->nucleotides[ i ] += (*cod)->nucleotides[i];
+                                        mtx.unlock();
                                     }
+                                mtx.lock();
                                 ++current->codons[(*cod)->index];
+                                mtx.unlock();
+                                
                                 current->encoding.append( (*cod)->c, CODON_SIZE );
 
                             }
@@ -334,7 +341,9 @@ int main(int argc, char * const argv[])
 
                         current->gc_dist_abs = fabs( current->gc_ratio - gc_target_ratio );
 
+                        mtx.lock();
                         encodings[ current_trial ] = current;
+                        mtx.unlock();
 
                         threads++;
                     } );
