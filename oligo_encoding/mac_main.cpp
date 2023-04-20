@@ -18,6 +18,7 @@
 #include <limits.h>
 #include <unordered_set>
 #include <string>
+#include <thread>
 
 #include "table.h"
 #include "xoroshiro.h"
@@ -286,44 +287,57 @@ int main(int argc, char * const argv[])
 
             Encoding *current = NULL;
 
+
+            unsigned short int threads = num_threads;
+
             // trials
             //#pragma omp parallel for private( current_trial, current, current_aa ) shared( trials, encodings, len, t ) schedule( static )
             for ( current_trial = 0; current_trial < trials; ++current_trial)
                 {
-                    current = new Encoding();
+                    if ( !(threads > 0) ) 
+                    {
+                        continue;
+                    }
+
+                    std::thread( [&]{
+                        threads--;
+                        current = new Encoding();
 
                             // keep track of nucleotide and codon ratios
-                    current->original = file_data;
+                        current->original = file_data;
 
-                    // calculate result string
-                    for ( current_aa = 0; current_aa < len; ++current_aa )
-                        {
-                            double r = xoroshiro::uniform();
-                            const uint16_t aa = file_data.data[current_aa];
+                        // calculate result string
+                        for ( current_aa = 0; current_aa < len; ++current_aa )
+                            {
+                                double r = xoroshiro::uniform();
+                                const uint16_t aa = file_data.data[current_aa];
 
-                            codon** cod = t[aa];
-                            double accum = (*cod)->w;
+                                codon** cod = t[aa];
+                                double accum = (*cod)->w;
 
-                            while ( accum < r )
-                                {
-                                    accum += (*++cod)->w;
-                                }
+                                while ( accum < r )
+                                    {
+                                        accum += (*++cod)->w;
+                                    }
 
-                            for ( i = 0; i < 4; ++i )
-                                {
-                                    current->nucleotides[ i ] += (*cod)->nucleotides[i];
-                                }
-                            ++current->codons[(*cod)->index];
-                            current->encoding.append( (*cod)->c, CODON_SIZE );
+                                for ( i = 0; i < 4; ++i )
+                                    {
+                                        current->nucleotides[ i ] += (*cod)->nucleotides[i];
+                                    }
+                                ++current->codons[(*cod)->index];
+                                current->encoding.append( (*cod)->c, CODON_SIZE );
 
-                        }
+                            }
 
-                    current->calc_gc_ratio();
-                    current->total_codons = len;
+                        current->calc_gc_ratio();
+                        current->total_codons = len;
 
-                    current->gc_dist_abs = fabs( current->gc_ratio - gc_target_ratio );
+                        current->gc_dist_abs = fabs( current->gc_ratio - gc_target_ratio );
 
-                    encodings[ current_trial ] = current;
+                        encodings[ current_trial ] = current;
+
+                        threads++;
+                    } );
                 }
 
             uint64_t num_encodings = trials;
@@ -369,7 +383,7 @@ int main(int argc, char * const argv[])
                             out_string.append( "," );
                             out_string.append( gc_dev );
                             out_string.append( "\n" );
-                }
+                } 
 
             out_file_seqs << out_string;
 
