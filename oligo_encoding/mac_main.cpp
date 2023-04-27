@@ -294,16 +294,17 @@ int main(int argc, char * const argv[])
 
             // trials
             //#pragma omp parallel for private( current_trial, current, current_aa ) shared( trials, encodings, len, t ) schedule( static )
-            for ( current_trial = 0; current_trial < trials; ++current_trial)
+            for ( current_trial = 0; current_trial < trials;)
                 {
-                    if ( !(threads > 0) ) 
-                    {
-                        --current_trial;
-                        continue;
-                    }
 
                     std::thread curr_thread = std::thread( [&]{
-                        threads--;
+                        mtx.lock();
+                        if (threads == 0) {
+                            return;
+                        }
+                        --threads;
+                        ++current_trial;
+                        mtx.unlock();
                         current = new Encoding();
 
                             // keep track of nucleotide and codon ratios
