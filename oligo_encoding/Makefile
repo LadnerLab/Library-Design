@@ -11,7 +11,7 @@ main.o: main.cpp xoroshiro.h table.h
 .PHONY: clean optimized debug profile
 
 mac: mac_main.cpp xoroshiro.h table.h
-	$(CC) $(CPPFLAGS) main.cpp -o mac_main
+	$(CC) $(CPPFLAGS) mac_main.cpp -o mac_main
 
 clean:
 	rm -f *.o oligo_ecoding *.gch
