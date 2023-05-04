@@ -136,7 +136,7 @@ int main(int argc, char * const argv[])
                 case 'c': num_threads = atoi( optarg ); break;
                 case 't': trials = atoi(optarg); break;
                 case 'g': gc_target_ratio = atof( optarg ); break;
-                case 'h':
+                case 'h': 
                 case 'l': max_line_length = atoi( optarg ) + 1; break;
                 case '?':
                     printf("usage: codon_sampling -i input_file -s seq_output_file -r ratio_output_file -p probability_file -n num_to_subsample -g gc_target_ratio [-t num_trials ] -l max_line_length\n");
@@ -290,11 +290,13 @@ int main(int argc, char * const argv[])
 
             std::mutex mtx;
 
+            //std::mutex mtx;
+
             unsigned short int threads = num_threads;
 
             // trials
             //#pragma omp parallel for private( current_trial, current, current_aa ) shared( trials, encodings, len, t ) schedule( static )
-            for ( current_trial = 0; current_trial < trials;)
+            for ( current_trial = 0; current_trial < trials; ++current_trial)
                 {
 
                     std::thread curr_thread = std::thread( [&]{
@@ -309,6 +311,7 @@ int main(int argc, char * const argv[])
 
                             // keep track of nucleotide and codon ratios
                         current->original = file_data;
+
 
                         // calculate result string
                         for ( current_aa = 0; current_aa < len; ++current_aa )
@@ -352,6 +355,10 @@ int main(int argc, char * const argv[])
 
                     curr_thread.join();
                 }
+            //block until entire for loop is complete
+            while ( current_trial != (trials - 1)) {
+                
+            }
 
             uint64_t num_encodings = trials;
 
