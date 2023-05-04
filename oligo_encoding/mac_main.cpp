@@ -357,7 +357,7 @@ int main(int argc, char * const argv[])
                 }
             //block until entire for loop is complete
             while ( current_trial != (trials - 1)) {
-                
+
             }
 
             uint64_t num_encodings = trials;
