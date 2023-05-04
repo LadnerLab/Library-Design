@@ -1,5 +1,5 @@
 CFLAGS= -O0 -Wall -fopenmp
-CPPFLAGS= -O0 -Wall
+CPPFLAGS= -O0 -Wall -std=c++11
 CC= g++
 
 oligo_encoding: main.o
