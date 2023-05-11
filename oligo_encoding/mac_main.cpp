@@ -290,80 +290,99 @@ int main(int argc, char * const argv[])
 
             std::mutex mtx;
 
-            //std::mutex mtx;
-
-            unsigned short int threads = num_threads;
+            short int threads = num_threads;
 
             // trials
             //#pragma omp parallel for private( current_trial, current, current_aa ) shared( trials, encodings, len, t ) schedule( static )
-            for ( current_trial = 0; current_trial < trials; ++current_trial)
+            for ( current_trial = 0; current_trial < trials;)
                 {
 
+                    if (threads > 0) {
+                        --threads;
+                    } else {
+                        continue;
+                    }
+
                     std::thread curr_thread = std::thread( [&]{
+                        
                         mtx.lock();
-                        if (threads == 0) {
+                        if (current_trial > (trials - 1)) {
                             return;
                         }
-                        --threads;
-                        ++current_trial;
                         mtx.unlock();
+
+                        mtx.lock();
+                        std::cout << threads << ": " << current_trial << "/" << trials << std::endl;
+                        mtx.unlock();
+
                         current = new Encoding();
 
                             // keep track of nucleotide and codon ratios
                         current->original = file_data;
+                        
 
 
                         // calculate result string
+                        mtx.lock();
                         for ( current_aa = 0; current_aa < len; ++current_aa )
                             {
                                 double r = xoroshiro::uniform();
                                 const uint16_t aa = file_data.data[current_aa];
                                 
                                 codon** cod = t[aa];
+                                
                                 double accum = (*cod)->w;
+                                
 
                                 while ( accum < r )
                                     {
+                                        
                                         accum += (*++cod)->w;
+                                        
                                     }
 
                                 for ( i = 0; i < 4; ++i )
                                     {
-                                        mtx.lock();
+                                        
                                         current->nucleotides[ i ] += (*cod)->nucleotides[i];
-                                        mtx.unlock();
+                                        
                                     }
-                                mtx.lock();
-                                ++current->codons[(*cod)->index];
-                                mtx.unlock();
                                 
-                                current->encoding.append( (*cod)->c, CODON_SIZE );
-
+                                ++current->codons[(*cod)->index];
+                                
+                                current->encoding.append( (*cod)->c, CODON_SIZE );   
                             }
+                            mtx.unlock();
+
+                        
 
                         current->calc_gc_ratio();
                         current->total_codons = len;
 
+                        
+
                         current->gc_dist_abs = fabs( current->gc_ratio - gc_target_ratio );
-
-                        mtx.lock();
                         encodings[ current_trial ] = current;
-                        mtx.unlock();
 
-                        threads++;
+
+
+                        ++threads;
+                        ++current_trial;
                     } );
 
-                    curr_thread.join();
+                    curr_thread.detach();
+
                 }
             //block until entire for loop is complete
-            while ( current_trial != (trials - 1)) {
-
+            while ( current_trial < (trials - 1)) {
+                std::cout << "lock issue" << std::endl;
             }
 
             uint64_t num_encodings = trials;
 
             // sort the encodings according to gc_ratio
             qsort( encodings, num_encodings, sizeof( Encoding *), encoding_compar );
+            
 
 
             std::vector<Encoding *> best_encodings;
@@ -517,10 +536,10 @@ int main(int argc, char * const argv[])
                 }
             free( str_arr );
 
-            for( index = 0; index < trials; index++ )
+            /*for( index = 0; index < trials; index++ )
                 {
                     delete encodings[ index ];
-                }
+                }*/
         }
 
     free( encodings );
