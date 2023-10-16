@@ -25,6 +25,7 @@ There is one optional output, a tab-delimited map file, which relates all remove
 ## Installation
 
 - Because Python is an interpreted language, there is no installation required for the Python version of this script. The only requirement is Python 3. 
+- You will, however, need to visit [this link](https://github.com/LadnerLab/ProteinOligoLibrary/blob/master/protein_oligo_library.py) to download the Protein Oligo Library file and move it to the directory where the scripts you intend to run are located, or place the file in your PYTHONPATH. For example, if you have Anaconda installed, you can move the library to your base environment by putting it here: "~/conda_directory_name/lib/python3.x/site-packages/".
 
 - To install the C version of One Hundred Reps:
     - Download the [source files from GitHub](https://github.com/LadnerLab/Library-Design/tree/master/one_hundred_reps/c)
