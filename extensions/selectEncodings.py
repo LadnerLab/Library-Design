@@ -213,21 +213,33 @@ def searchForUniqCombo(newNameL, encLD, outD, outD_trunc, outAdapt):
         indexOptions = list(range(i+1))
         indexCombos = list(it.product(indexOptions, repeat=len(newNameL)))
         for thisOne in indexCombos:
-            truncList = [encLD[newNameL[pos][0]][j][0] for pos, j in enumerate(thisOne)]
-            # If all truncated peptides are unique
-            if len(truncList)==len(set(truncList)):
-                # If none of these trunc peptides are already in the design
-                if len(truncList)==sum([1 for tp in truncList if tp not in outD_trunc]):
-                    foundSolution=thisOne
 
-                    for k, encNum in enumerate(thisOne):
-                        name = newNameL[k][0]
-                        newFull = encLD[name][encNum][1]
-                        newAdapt = encLD[name][encNum][2]
-                        outD[name] = newFull
-                        outAdapt[name] = newAdapt
-                        outD_trunc[newFull[:40]] = name
+#            This version was replaced with the following for loop to handle situations where there is a different number of encodings for different peptides
+#            truncList = [encLD[newNameL[pos][0]][j][0] for pos, j in enumerate(thisOne)]
+            
+            truncList = []
+            for pos, j in enumerate(thisOne):
+                try:
+                    truncList.append(encLD[newNameL[pos][0]][j][0])
+                except:
                     break
+
+            if len(truncList) == len(thisOne):
+                # If all truncated peptides are unique
+                if len(truncList)==len(set(truncList)):
+                    # If none of these trunc peptides are already in the design
+                    if len(truncList)==sum([1 for tp in truncList if tp not in outD_trunc]):
+                        foundSolution=thisOne
+
+                        for k, encNum in enumerate(thisOne):
+                            name = newNameL[k][0]
+                            newFull = encLD[name][encNum][1]
+                            newAdapt = encLD[name][encNum][2]
+                            outD[name] = newFull
+                            outAdapt[name] = newAdapt
+                            outD_trunc[newFull[:40]] = name
+                        break
+
         if foundSolution:
             #print("Good", foundSolution, len(newNameL))
             break
