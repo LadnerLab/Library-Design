@@ -88,7 +88,7 @@ class LibraryDesigner():
 
         if len( seq ) < self.window_size and 'X' not in seq:
             xmers.add( seq )
-        while end < len( seq ):
+        while end <= len( seq ):
             xmer = seq[ start:end ]
 
             new_name = sequence.name + "_%03d_%03d" % ( start, end )
