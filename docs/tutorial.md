@@ -21,6 +21,7 @@ There is one optional output, a tab-delimited map file, which relates all remove
 
 ## Installation
 
+- Visit [this link](https://github.com/LadnerLab/ProteinOligoLibrary/blob/master/protein_oligo_library.py) to download the Protein Oligo Library file and move it to the directory where the scripts you intend to run are located, or place the file in your PYTHONPATH. For example, if you have Anaconda installed, you can move the library to your base environment by putting it here: "~/conda_directory_name/lib/python3.x/site-packages/".
 - The installation for the scripts used in this tutorial can be found in each of their respective tabs
 
 ### Tutorial/Use
