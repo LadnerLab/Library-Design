@@ -29,8 +29,24 @@ def main():
 
     os.mkdir(args.output_dir)
 
+    map_bridge_and_link(
+        file_metadata=args.file_metadata,
+        kmer_size=args.kmer_size,
+        kmer_ovlp_thresh=args.kmer_ovlp_thresh,
+        max_window_gaps=args.max_window_gaps,
+        output_dir=args.output_dir
+        )
+
+
+def map_bridge_and_link(
+    file_metadata,
+    kmer_size,
+    kmer_ovlp_thresh,
+    max_window_gaps,
+    output_dir
+    ):
     # create map for assigning seqs to proteins in batches
-    batch_map = create_filepath_map(args.file_metadata)
+    batch_map = create_filepath_map(file_metadata)
 
     # create protein assignments/alignments for each batch
     for i, row in batch_map.iterrows():
@@ -41,84 +57,108 @@ def main():
         bridge_alignments_file = row["BridgeMapFile"]
         epitope_positions_file = row["EpitopeFile"]
 
-        spec_output_dir = make_dir(args.output_dir, output_name)
+        map_bridge_and_link_single_row(
+            kmer_size=kmer_size,
+            kmer_ovlp_thresh=kmer_ovlp_thresh,
+            max_window_gaps=max_window_gaps,
+            output_dir=output_dir,
+            output_name=output_name,
+            target_alignments_file=target_alignments_file,
+            subtype_dir=subtype_dir,
+            bridge_alignments_file=bridge_alignments_file,
+            epitope_positions_file=epitope_positions_file
+            )
 
-        subtype_out_dir = make_dir(spec_output_dir, f"{os.path.basename(subtype_dir)}_ByProtein")
 
-        # create new species by mapping sequences to proteins from old species
-        generateSubtypeAlignmentsSingleSpecies(
-                target_file=target_alignments_file, 
-                subtype_dir=subtype_dir, 
-                ks=args.kmer_size, 
-                kmer_ovlp_thresh=args.kmer_ovlp_thresh, 
-                output_dir=subtype_out_dir
-                )
+def map_bridge_and_link_single_row(
+    kmer_size,
+    kmer_ovlp_thresh,
+    max_window_gaps,
+    output_dir,
+    output_name,
+    target_alignments_file,
+    subtype_dir,
+    bridge_alignments_file,
+    epitope_positions_file
+    ):
 
-        # TODO: let user defile target files output
-        # assume target files for new species
-        new_species_target_file = os.path.join(subtype_out_dir, "target_files.tsv")
+    spec_output_dir = make_dir(output_dir, output_name)
 
-        mapping_name = f"{bridge_alignments_file.split(os.sep)[-2]}_{new_species_target_file.split(os.sep)[-2]}"
-        bridge_out_dir = make_dir(spec_output_dir, f"Bridge_{mapping_name}")
+    subtype_out_dir = make_dir(spec_output_dir, f"{os.path.basename(subtype_dir)}_ByProtein")
 
-        # create bridge fasta files with a representative from each species
-        create_bridge_alignments_single_species(
-                old_species_file = bridge_alignments_file,
-                new_species_file = new_species_target_file, 
-                output_dir = bridge_out_dir
-                )
+    # create new species by mapping sequences to proteins from old species
+    generateSubtypeAlignmentsSingleSpecies(
+            target_file=target_alignments_file, 
+            subtype_dir=subtype_dir, 
+            ks=kmer_size, 
+            kmer_ovlp_thresh=kmer_ovlp_thresh, 
+            output_dir=subtype_out_dir
+            )
 
-        # assume target files for bridge
-        bridge_target_files = os.path.join(bridge_out_dir, "target_files.tsv")
+    # TODO: let user defile target files output
+    # assume target files for new species
+    new_species_target_file = os.path.join(subtype_out_dir, "target_files.tsv")
 
-        # read epitope positions
-        epitope_positions_df = pd.read_csv(epitope_positions_file, sep='\t')[["ClusterID", "PeptideID", "Start Position", "Stop Position"]]
+    mapping_name = f"{bridge_alignments_file.split(os.sep)[-2]}_{new_species_target_file.split(os.sep)[-2]}"
+    bridge_out_dir = make_dir(spec_output_dir, f"Bridge_{mapping_name}")
 
-        out_df = pd.DataFrame(columns=["ClusterID", "PeptideID", "SequenceName", "Window", "Start Position", "Stop Position"])
-        removed_df = pd.DataFrame(columns=["ClusterID", "PeptideID", "SequenceName", "Window", "Start Position", "Stop Position"])
+    # create bridge fasta files with a representative from each species
+    create_bridge_alignments_single_species(
+            old_species_file = bridge_alignments_file,
+            new_species_file = new_species_target_file, 
+            output_dir = bridge_out_dir
+            )
 
-        # extract align maps
-        # r2a stands for raw to aligned and a2r stands for aligned to raw
-        # IMPORTANT: assume that epitope positions were taken from targets align map
-        targets_align_map_a2r = extract_align_map( bridge_alignments_file, rev=True )
+    # assume target files for bridge
+    bridge_target_files = os.path.join(bridge_out_dir, "target_files.tsv")
 
-        bridge_align_map_r2a = extract_align_map( bridge_target_files )
-        bridge_align_map_a2r = extract_align_map( bridge_target_files, rev=True )
+    # read epitope positions
+    epitope_positions_df = pd.read_csv(epitope_positions_file, sep='\t')[["ClusterID", "PeptideID", "Start Position", "Stop Position"]]
 
-        subtype_align_map_r2a = extract_align_map( new_species_target_file )
-        subtype_fasta_dict = extract_align_map(new_species_target_file, read_fasta=True)
+    out_df = pd.DataFrame(columns=["ClusterID", "PeptideID", "SequenceName", "Window", "Start Position", "Stop Position"])
+    removed_df = pd.DataFrame(columns=["ClusterID", "PeptideID", "SequenceName", "Window", "Start Position", "Stop Position"])
 
-        # make sure proteins are the same
-        assert targets_align_map_a2r.keys() == bridge_align_map_r2a.keys() and bridge_align_map_r2a.keys() == subtype_align_map_r2a.keys(), \
-            "Protein names do not match for all alignments."
+    # extract align maps
+    # r2a stands for raw to aligned and a2r stands for aligned to raw
+    # IMPORTANT: assume that epitope positions were taken from targets align map
+    targets_align_map_a2r = extract_align_map( bridge_alignments_file, rev=True )
 
-        proteins = targets_align_map_a2r.keys()
+    bridge_align_map_r2a = extract_align_map( bridge_target_files )
+    bridge_align_map_a2r = extract_align_map( bridge_target_files, rev=True )
 
-        assert all( protein in set(epitope_positions_df["ClusterID"].to_list()) for protein in proteins), \
-            "Alignments include a protein name that is not defined in the epitope positions file."
+    subtype_align_map_r2a = extract_align_map( new_species_target_file )
+    subtype_fasta_dict = extract_align_map(new_species_target_file, read_fasta=True)
 
-        out_row_idx = 0
-        # loop through each protein
-        for protein in proteins:
-            out_df, removed_df = link_alignments_single_protein(
-                                        targets_align_map_a2r, 
-                                        bridge_align_map_r2a, 
-                                        bridge_align_map_a2r, 
-                                        subtype_align_map_r2a, 
-                                        out_df, 
-                                        protein,
-                                        epitope_positions_df,
-                                        subtype_fasta_dict[protein],
-                                        args.max_window_gaps,
-                                        removed_df
-                                        )
+    '''
+    # make sure proteins are the same for smalllest
+    assert targets_align_map_a2r.keys() == bridge_align_map_r2a.keys() and bridge_align_map_r2a.keys() == subtype_align_map_r2a.keys(), \
+        "Protein names do not match for all alignments."
+    '''
+    # use smallest protein names
+    proteins = bridge_align_map_r2a.keys()
 
-        out_df.to_csv(os.path.join(spec_output_dir, f"new_{os.path.basename(epitope_positions_file)}"), sep='\t', index=False)
-        removed_df.to_csv(os.path.join(spec_output_dir, f"removed_peptides.tsv"), sep='\t', index=False)
+    assert all( protein in set(epitope_positions_df["ClusterID"].to_list()) for protein in proteins), \
+        "Alignments include a protein name that is not defined in the epitope positions file."
 
-# TODO: create subtype_a2r, and make sure that the raw peptide window is exactly 30 AAs long, add positions left and right to fulfill this
-#       also, ignore peptide widows that do not fall into the new sequence
-#       also, each sequence could have different windows so for each peptide there needs to be another column for the sequence
+    out_row_idx = 0
+    # loop through each protein
+    for protein in proteins:
+        out_df, removed_df = link_alignments_single_protein(
+                                    targets_align_map_a2r, 
+                                    bridge_align_map_r2a, 
+                                    bridge_align_map_a2r, 
+                                    subtype_align_map_r2a, 
+                                    out_df, 
+                                    protein,
+                                    epitope_positions_df,
+                                    subtype_fasta_dict[protein],
+                                    max_window_gaps,
+                                    removed_df
+                                    )
+
+    out_df.to_csv(os.path.join(spec_output_dir, f"new_{os.path.basename(epitope_positions_file)}"), sep='\t', index=False)
+    removed_df.to_csv(os.path.join(spec_output_dir, f"removed_peptides.tsv"), sep='\t', index=False)
+
 
 def link_alignments_single_protein(
         targets_align_map_a2r, 
@@ -193,6 +233,21 @@ def link_alignments_single_protein(
                     if( seq_stop_pos-seq_start_pos != 0 and len(window_seq) - window_seq.count('-') != 30 and seq_stop_pos + 1 <= max_pos ):
                         # shift right
                         seq_stop_pos += 1
+
+                        # extract new window sequence
+                        window_seq = seq[seq_start_pos-1:seq_stop_pos-1]
+
+                # shift inwards until number of characters is exactly 30
+                while len(window_seq) - window_seq.count('-') > 30:
+                    # shift right
+                    seq_stop_pos -= 1
+
+                    # extract new window sequence
+                    window_seq = seq[seq_start_pos-1:seq_stop_pos-1]
+
+                    if len(window_seq) - window_seq.count('-') > 30:
+                        # shift left
+                        seq_start_pos += 1
 
                         # extract new window sequence
                         window_seq = seq[seq_start_pos-1:seq_stop_pos-1]

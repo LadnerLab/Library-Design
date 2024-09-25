@@ -60,29 +60,32 @@ def create_bridge_alignments_single_species(old_species_file, new_species_file, 
         aligned_fasta_output_dir = os.path.join(align_dir, f"{prot}_aligned.fasta")
         bridge_seqs = dict()
 
-        old_seqs = old_prot_seqs[prot]
-        new_seqs = new_prot_seqs[prot]
+        # check if new protein is not empty
+        if len(new_prot_seqs[prot]) > 0:
 
-        # get largest seq in each
-        old_largest_seq_name = find_largest_seq(old_seqs)
-        new_largest_seq_name = find_largest_seq(new_seqs)
+            old_seqs = old_prot_seqs[prot]
+            new_seqs = new_prot_seqs[prot]
 
-        # create fasta dicts
-        bridge_seqs[old_largest_seq_name] = old_seqs[old_largest_seq_name].translate({ord('-'): None})
-        bridge_seqs[new_largest_seq_name] = new_seqs[new_largest_seq_name].translate({ord('-'): None})
+            # get largest seq in each
+            old_largest_seq_name = find_largest_seq(old_seqs)
+            new_largest_seq_name = find_largest_seq(new_seqs)
 
-        # write bridge fasta
-        ft.write_fasta_dict(bridge_seqs, fasta_output_dir)
+            # create fasta dicts
+            bridge_seqs[old_largest_seq_name] = old_seqs[old_largest_seq_name].translate({ord('-'): None})
+            bridge_seqs[new_largest_seq_name] = new_seqs[new_largest_seq_name].translate({ord('-'): None})
 
-        # create aligned fasta
-        align_file(
-            in_fasta = fasta_output_dir,
-            out_fasta = aligned_fasta_output_dir,
-            quiet = True
-            )
+            # write bridge fasta
+            ft.write_fasta_dict(bridge_seqs, fasta_output_dir)
 
-        # append protein and fasta
-        target_files_data.append((prot, aligned_fasta_output_dir))
+            # create aligned fasta
+            align_file(
+                in_fasta = fasta_output_dir,
+                out_fasta = aligned_fasta_output_dir,
+                quiet = True
+                )
+
+            # append protein and fasta
+            target_files_data.append((prot, aligned_fasta_output_dir))
         
     # save target files fasta
     target_file = pd.DataFrame(target_files_data, columns=["Protein", "Fasta"])
