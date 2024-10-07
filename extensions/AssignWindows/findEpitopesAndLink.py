@@ -3,6 +3,7 @@ import tempfile
 import pandas as pd
 import argparse
 import os
+from collections import defaultdict
 
 from findEpitopes import read_check_align_file, process_files_probes, iterative_peptide_finder, generate_out_data, create_line_charts
 from LinkAlignments import map_bridge_and_link_single_row
@@ -13,6 +14,7 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
  
     parser.add_argument('-i', '--input-table',  help='Tab delimited file with name, target clusters directory file path, and subtype directory file path', required=True)
+    parser.add_argument('--cluster-protein-map', help='Tab delimited file with species name, each clusterID, and its corresponding protein.', required=False)
     parser.add_argument('--window-size', type=int, default=WINDOW_SIZE,  help='Size of AA window to use for identifying core epitopes.', required=False)
     parser.add_argument('--max-zeros', type=int, default=5, help='Maximum number of zero counts a window can contain.', required=False)
     parser.add_argument('--max-overlap', type=int, default=8, help='Maximum AA overlap a window can have with a previously selected window.', required=False)
@@ -35,6 +37,16 @@ def main():
 
     # extract data from input table
     input_table = create_filepath_map(args.input_table)
+
+    if args.cluster_protein_map:
+        # create cluster protein map dict
+        cluster_protein_map = defaultdict(dict)
+        # read cluster protein map
+        cluster_protein_map_df = pd.read_csv(args.cluster_protein_map, sep='\t')
+        for i, row in cluster_protein_map_df.iterrows():
+            cluster_protein_map[row["Name"]][row["ClusterID"]] = row["Protein"]
+
+        print(cluster_protein_map)
 
     # loop through each row in input table
     for i, row in input_table.iterrows():
@@ -84,7 +96,20 @@ def main():
                 bridge_alignments_file=target_files_tsv,
                 epitope_positions_file=epitope_positions_file
                 )
+
+        # overwrite output tables cluster id
+        if args.cluster_protein_map:
+            rename_clustIDS(epitope_positions_file, cluster_protein_map, row["Name"])
+            rename_clustIDS(os.path.join(spec_output_dir, "new_peptide_seq_data.tsv"), cluster_protein_map, row["Name"])
+
         
+def rename_clustIDS(epitope_positions_file, cluster_protein_map, spec_name):
+    temp_rename_epitope_pos_df = pd.read_csv(epitope_positions_file, sep='\t')
+    for i, pep_row in temp_rename_epitope_pos_df.iterrows():
+        if pep_row["ClusterID"] in cluster_protein_map[spec_name].keys():
+            temp_rename_epitope_pos_df.at[i, "ClusterID"] = cluster_protein_map[spec_name][pep_row["ClusterID"]]
+
+    temp_rename_epitope_pos_df.to_csv(epitope_positions_file, sep='\t', index=False)
 
 
 def create_filepath_map(batch_map_filepath):
