@@ -174,13 +174,34 @@ def link_alignments_single_protein(
         ):
 
     # get bridge candidates (target candidate is first and subtype candidate is second)
-    target_candidate_name = list(bridge_align_map_r2a[protein].keys())[0]
-    subtype_candidate_name = list(bridge_align_map_r2a[protein].keys())[1]
+    bridge_target_candidate_name = list(bridge_align_map_r2a[protein].keys())[0]
+    bridge_subtype_candidate_name = list(bridge_align_map_r2a[protein].keys())[1]
+
+    target_candidate_name = bridge_target_candidate_name
+    subtype_candidate_name = bridge_subtype_candidate_name
+
+    # test if the target name is in the range to be truncated in mafft alignment
+    if len(target_candidate_name) > 225:
+        # test if target candidate name was truncated in alignment
+        if target_candidate_name not in targets_align_map_a2r[protein].keys():
+            # replace it with the verse name in the aligned fasta files
+            for name in targets_align_map_a2r[protein].keys():
+                if target_candidate_name == name[0:len(target_candidate_name)]:
+                    target_candidate_name = name
+
+    # test if the subtype name is in the range to be truncated in mafft alignment
+    if len(subtype_candidate_name) > 225:
+        # test if subtype candidate name was truncated in alignment
+        if subtype_candidate_name not in subtype_align_map_r2a[protein].keys():
+            # replace it with the verse name in the aligned fasta files
+            for name in subtype_align_map_r2a[protein].keys():
+                if subtype_candidate_name == name[0:len(subtype_candidate_name)]:
+                    subtype_candidate_name = name
 
     # extract dict data
     target_a2r = targets_align_map_a2r[protein][target_candidate_name]
-    bridge_r2a = bridge_align_map_r2a[protein][target_candidate_name]
-    bridge_a2r = bridge_align_map_a2r[protein][subtype_candidate_name]
+    bridge_r2a = bridge_align_map_r2a[protein][bridge_target_candidate_name]
+    bridge_a2r = bridge_align_map_a2r[protein][bridge_subtype_candidate_name]
     subtype_r2a = subtype_align_map_r2a[protein][subtype_candidate_name]
 
     # cut to df to only have protein
