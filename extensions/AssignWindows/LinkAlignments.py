@@ -100,7 +100,7 @@ def map_bridge_and_link_single_row(
     new_species_target_file = os.path.join(subtype_out_dir, "target_files.tsv")
 
     mapping_name = f"{bridge_alignments_file.split(os.sep)[-2]}_{new_species_target_file.split(os.sep)[-2]}"
-    bridge_out_dir = make_dir(spec_output_dir, f"Bridge_{mapping_name}")
+    bridge_out_dir = make_dir(spec_output_dir, f"Bridge_{output_name}_{os.path.basename(subtype_dir)}_ByProtein")
 
     # create bridge fasta files with a representative from each species
     create_bridge_alignments_single_species(
