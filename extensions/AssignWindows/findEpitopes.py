@@ -302,9 +302,9 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_w
         # Find max score window(s)
         max_score = max(possible_windowsD.values())
         max_windowList = [w for w, score in possible_windowsD.items() if score >= max_score * 0.9]
-        print(f"max_windowList: {max_windowList}")
-        for ele in max_windowList:
-            print(ele,possible_windowsD[ele])
+        #print(f"max_windowList: {max_windowList}")
+        #for ele in max_windowList:
+            #print(ele,possible_windowsD[ele])
     
         # Find window with highest center score
         mid_window_scoresD = {}
@@ -315,7 +315,7 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_w
             if mid_window_score > max_mid_window_score:
                 max_mid_window_score = mid_window_score
                 max_window = window
-        print(f"mid_window_scoresD: {mid_window_scoresD}")
+        #print(f"mid_window_scoresD: {mid_window_scoresD}")
         # If multiple windows have the same middle window score, pick the window with the largest total score
         max_mid_windows = [w for w, score in mid_window_scoresD.items() if score == max_mid_window_score]
         if len(max_mid_windows) > 1:
@@ -326,15 +326,21 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_w
             # If there are multiple windows with the same full window score, take the middle one
             if len(max_full_mid_window_scores) > 1:
                 max_window = max_full_mid_window_scores[len(max_full_mid_window_scores)//2]  
-                print(max_window)
+                #print(max_window)
     # If remaining possible windows are all individual peptides with little overlap
     # switch to simple sliding window approach choosing all windows that pass thresholds
     if  max(possible_windows_avgD.values()) < 1.3333:
         start_count = alignCountsD[list(possible_windowsD.keys())[0][0]]
         possible_windows_noZeroStart = [w for w, score in possible_windowsD.items() if alignCountsD[w[0]] != 0]
-        print(f"possible_windows_noZeroStart: {possible_windows_noZeroStart}")
-        max_window = possible_windows_noZeroStart[0]
-        print(max_window)
+        possible_windows_zeroStart = [w for w, score in possible_windowsD.items() if alignCountsD[w[0]+4] != 0]
+        #print(f"possible_windows_noZeroStart: {possible_windows_noZeroStart}")
+        if len(possible_windows_zeroStart) > 0:
+        	max_window = possible_windows_zeroStart[-1]
+        if len(possible_windows_noZeroStart) > 0:
+        	max_window = possible_windows_noZeroStart[0]
+        	#print(max_window)
+        else:
+        	return None, 0
     
     return max_window, number_of_windows
 
