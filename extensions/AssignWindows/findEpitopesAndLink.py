@@ -21,6 +21,7 @@ def main():
     parser.add_argument('--peptide-overlap', type=int, default=9, help='Peptide sequence should overlap at least this amount to be included in output data.', required=False)
     parser.add_argument('--peak-overlap-window-size', type=int, default=10, help='Window size around found peaks in which containing peptides will be removed for the next iteration.', required=False)
     parser.add_argument('--include-iter-vis', action="store_true", help='Output each chart given the iteration.', required=False)
+    parser.add_argument('--include-final-vis', action="store_true", help='Output the final window visualizations', required=False)
     parser.add_argument('-o', '--output-dir', default="find_epitopes_and_link_out", help='Name of directory to output line plots, output protein combination files, and bridge alignments.')
     
     parser.add_argument('-k', '--kmer-size', type=int, default=6, help='Used for assigning sequences to proteins. Kmer size for kmer sets that are going to be intersected.', required=False)
@@ -64,7 +65,8 @@ def main():
 
         generate_out_data(spec_output_dir, directory_path, last_iter_counts, alignCountsD, file_2_pep_pos_dict, windows, args.window_size, args.peak_overlap_window_size)
 
-        create_line_charts(alignCountsD, windows, spec_output_dir)
+        if args.include_final_vis:
+            create_line_charts(alignCountsD, windows, spec_output_dir)
 
 
         # create temporary target alignments file and use the same for bridge (use clusters = [f"{file.split('_')[-2]} for file in alignCountsD.keys()])

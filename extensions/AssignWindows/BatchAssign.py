@@ -77,6 +77,10 @@ def generateSubtypeAlignmentsSingleSpecies(target_file, subtype_dir, ks, kmer_ov
     proteinD = {pn:defaultdict(dict) for pn in targetD}
 
     fastaL = glob.glob(os.path.join(subtype_dir, "*fasta"))
+
+    # keep track of overlap scores to only add the sequence with the greatest overlap
+    ovlp_dict = {pn:kmer_ovlp_thresh for pn in targetD}
+
     # assign seqs to proteins
     for each in fastaL:
         fD = ft.read_fasta_dict(each)
@@ -86,7 +90,13 @@ def generateSubtypeAlignmentsSingleSpecies(target_file, subtype_dir, ks, kmer_ov
             kOvlp = {p:len(kmers.intersection(pk))/len(kmers) for p,pk in targetKmersD.items()}
             if max(kOvlp.values())>=kmer_ovlp_thresh:
                 topProt = sorted([(v,k) for k,v in kOvlp.items()])[::-1][0][1]
-                proteinD[topProt][n] = s
+
+                # check if this is highest overlap score for this protein
+                if max(kOvlp.values()) >= ovlp_dict[topProt]:
+                    # clear the key and reassign
+                    proteinD[topProt].clear()
+                    proteinD[topProt][n] = s
+                    ovlp_dict[topProt] = max(kOvlp.values())
             '''
             else:
                 print(kOvlp)
@@ -97,8 +107,8 @@ def generateSubtypeAlignmentsSingleSpecies(target_file, subtype_dir, ks, kmer_ov
         ft.write_fasta_dict(fD, protein_fasta_path)
 
         # warn user if multiple protein sequences were assigned to one cluster
-        if len(fD) > 1:
-            print(f"Warning: multiple protein sequences from {os.path.basename(subtype_dir)} assigned to {pn}")
+        if len(fD) < 1:
+            print(f"Warning: no protein sequences from {os.path.basename(subtype_dir)} were assigned to {pn}")
 
         align_file(
             in_fasta=protein_fasta_path,
