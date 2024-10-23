@@ -11,7 +11,7 @@ import subprocess
 import pandas as pd
 
 
-def  main():
+def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     parser.add_argument('-i', '--batch_map', required=True,
@@ -87,12 +87,18 @@ def generateSubtypeAlignmentsSingleSpecies(target_file, subtype_dir, ks, kmer_ov
             if max(kOvlp.values())>=kmer_ovlp_thresh:
                 topProt = sorted([(v,k) for k,v in kOvlp.items()])[::-1][0][1]
                 proteinD[topProt][n] = s
+            '''
             else:
                 print(kOvlp)
+            '''
 
     for pn, fD in proteinD.items():
         protein_fasta_path = os.path.join(output_dir, f"{pn}_combo.fasta")
         ft.write_fasta_dict(fD, protein_fasta_path)
+
+        # warn user if multiple protein sequences were assigned to one cluster
+        if len(fD) > 1:
+            print(f"Warning: multiple protein sequences from {os.path.basename(subtype_dir)} assigned to {pn}")
 
         align_file(
             in_fasta=protein_fasta_path,

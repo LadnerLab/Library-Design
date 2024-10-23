@@ -276,15 +276,15 @@ def link_alignments_single_protein(
             # add data to df
             # only add if a comparable peptide was chose (check number of gaps)
             if( window_seq.count('-') < max_window_gaps and seq_stop_pos-seq_start_pos > 1):
-                peptide_positions_data.append([protein, row["PeptideID"], seq_name, window_seq, seq_start_pos, seq_stop_pos])
+                peptide_positions_data.append([protein, row["PeptideID"], seq_name, window_seq, seq_start_pos, seq_stop_pos, target_candidate_name, subtype_candidate_name])
             else:
-                removed_peptides.append([protein, row["PeptideID"], seq_name, window_seq, seq_start_pos, seq_stop_pos])
+                removed_peptides.append([protein, row["PeptideID"], seq_name, window_seq, seq_start_pos, seq_stop_pos, target_candidate_name, subtype_candidate_name])
 
 
     # create df for protein and append to out df
-    tmp_df = pd.DataFrame(removed_peptides, columns=["ClusterID", "PeptideID", "SequenceName", "Window", "Start Position", "Stop Position"])
+    tmp_df = pd.DataFrame(removed_peptides, columns=["ClusterID", "PeptideID", "SequenceName", "Window", "Start Position", "Stop Position", "TargetCandidate", "SubtypeCandidate"])
     removed_df = pd.concat([removed_df,tmp_df])
-    tmp_df = pd.DataFrame(peptide_positions_data, columns=["ClusterID", "PeptideID", "SequenceName", "Window", "Start Position", "Stop Position"])
+    tmp_df = pd.DataFrame(peptide_positions_data, columns=["ClusterID", "PeptideID", "SequenceName", "Window", "Start Position", "Stop Position", "TargetCandidate", "SubtypeCandidate"])
     out_df = pd.concat([out_df,tmp_df])
 
     # return updated table and current row idx

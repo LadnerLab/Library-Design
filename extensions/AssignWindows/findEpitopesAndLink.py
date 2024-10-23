@@ -46,8 +46,6 @@ def main():
         for i, row in cluster_protein_map_df.iterrows():
             cluster_protein_map[row["Name"]][row["ClusterID"]] = row["Protein"]
 
-        print(cluster_protein_map)
-
     # loop through each row in input table
     for i, row in input_table.iterrows():
         spec_output_dir = make_dir(args.output_dir, row["Name"])
@@ -99,15 +97,18 @@ def main():
 
         # overwrite output tables cluster id
         if args.cluster_protein_map:
-            rename_clustIDS(epitope_positions_file, cluster_protein_map, row["Name"])
-            rename_clustIDS(os.path.join(spec_output_dir, "new_peptide_seq_data.tsv"), cluster_protein_map, row["Name"])
+            add_protein_name(epitope_positions_file, cluster_protein_map, row["Name"])
+            add_protein_name(os.path.join(spec_output_dir, "new_peptide_seq_data.tsv"), cluster_protein_map, row["Name"])
+            add_protein_name(os.path.join(spec_output_dir, "removed_peptides.tsv"), cluster_protein_map, row["Name"])
 
         
-def rename_clustIDS(epitope_positions_file, cluster_protein_map, spec_name):
+def add_protein_name(epitope_positions_file, cluster_protein_map, spec_name):
     temp_rename_epitope_pos_df = pd.read_csv(epitope_positions_file, sep='\t')
+    # add row
+    temp_rename_epitope_pos_df.insert(loc=0, column="Protein", value=[None]*len(temp_rename_epitope_pos_df.index))
     for i, pep_row in temp_rename_epitope_pos_df.iterrows():
         if pep_row["ClusterID"] in cluster_protein_map[spec_name].keys():
-            temp_rename_epitope_pos_df.at[i, "ClusterID"] = cluster_protein_map[spec_name][pep_row["ClusterID"]]
+            temp_rename_epitope_pos_df.at[i, "Protein"] = cluster_protein_map[spec_name][pep_row["ClusterID"]]
 
     temp_rename_epitope_pos_df.to_csv(epitope_positions_file, sep='\t', index=False)
 
