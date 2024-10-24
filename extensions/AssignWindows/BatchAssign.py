@@ -78,13 +78,15 @@ def generateSubtypeAlignmentsSingleSpecies(target_file, subtype_dir, ks, kmer_ov
 
     fastaL = glob.glob(os.path.join(subtype_dir, "*fasta"))
 
-    # keep track of overlap scores to only add the sequence with the greatest overlap
-    ovlp_dict = {pn:kmer_ovlp_thresh for pn in targetD}
-
     # assign seqs to proteins
     for each in fastaL:
         fD = ft.read_fasta_dict(each)
         fD = rmvRedundant(fD)
+
+        # keep track of overlap scores to only add the sequence with the greatest overlap
+        ovlp_dict = {pn:kmer_ovlp_thresh for pn in targetD}
+        seqs_to_include = {pn:None for pn in targetD}
+
         for n,s in fD.items():
             kmers = kt.kmerSet(s,ks)
             kOvlp = {p:len(kmers.intersection(pk))/len(kmers) for p,pk in targetKmersD.items()}
@@ -93,14 +95,20 @@ def generateSubtypeAlignmentsSingleSpecies(target_file, subtype_dir, ks, kmer_ov
 
                 # check if this is highest overlap score for this protein
                 if max(kOvlp.values()) >= ovlp_dict[topProt]:
-                    # clear the key and reassign
-                    proteinD[topProt].clear()
-                    proteinD[topProt][n] = s
+                    # assign new sequence to use from this fasta
+                    seqs_to_include[topProt] = (n, s)
                     ovlp_dict[topProt] = max(kOvlp.values())
+
             '''
             else:
                 print(kOvlp)
             '''
+
+        # assign sequences to proteins
+        for topProt, seq_data in seqs_to_include.items():
+            # test if a sequence was assigned for this protein
+            if seq_data != None:
+                proteinD[topProt][seq_data[0]] = seq_data[1]
 
     for pn, fD in proteinD.items():
         protein_fasta_path = os.path.join(output_dir, f"{pn}_combo.fasta")
