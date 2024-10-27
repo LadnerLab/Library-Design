@@ -78,36 +78,43 @@ def get_overlap_single_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kmer_si
     print(f"Working on {species}")
 
     overlap_data = list()
-    # get max overlap for each peptide
+
+    # create kmer_sets
+    HV2_kmer_sets = dict()
+    HV3_kmer_sets = dict()
+
     for i, HV2_row in HV2_df.iterrows():
         HV2_codename = HV2_row["CodeName"]
         HV2_peptide = HV2_row["Peptide"]
+        HV2_kmer_sets[HV2_codename] = kt.kmerSet(HV2_peptide,kmer_size)
 
+    for i, HV3_row in HV3_df.iterrows():
+        HV3_codename = HV3_row["CodeName"]
+        HV3_peptide = HV3_row["Peptide"]
+        HV3_kmer_sets[HV3_codename] = kt.kmerSet(HV3_peptide,kmer_size)
+
+    # get max overlap for each peptide
+    for HV2_codename, HV2_kmer_set in HV2_kmer_sets.items():
         max_ovlp_score = 0
         max_HV3_codename = str()
 
-        for j, HV3_row in HV3_df.iterrows():
-            HV3_peptide = HV3_row["Peptide"]
-
+        for HV3_codename, HV3_kmer_set in HV3_kmer_sets.items():
             # get the overlap score between the peptides
-            ovlp_score = get_overlap(HV2_peptide, HV3_peptide, kmer_size)
+            ovlp_score = get_overlap(HV2_kmer_set, HV3_kmer_set)
 
+            # set it to max for this HV2 peptide if it is the greatest
             if ovlp_score >= max_ovlp_score:
                 max_ovlp_score = ovlp_score
-                max_HV3_codename = HV3_row["CodeName"]
+                max_HV3_codename = HV3_codename
 
         overlap_data.append((HV2_codename, max_HV3_codename, max_ovlp_score))
 
     return overlap_data
 
 
-def get_overlap(HV2_peptide:str, HV3_peptide:str, kmer_size:int)->float:
-    # split the sequences into kmers
-    HV2_kmers = kt.kmerSet(HV2_peptide,kmer_size)
-    HV3_kmers = kt.kmerSet(HV3_peptide,kmer_size)
-
+def get_overlap(HV2_kmer_set:set, HV3_kmer_set:set)->float:
     # get the overlap (percentage of kmers that overlap)
-    ovlp_score = len(HV2_kmers.intersection(HV3_kmers))/len(HV2_kmers)
+    ovlp_score = len(HV2_kmer_set.intersection(HV3_kmer_set))/len(HV2_kmer_set)
 
     return ovlp_score
 
