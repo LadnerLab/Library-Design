@@ -10,7 +10,7 @@ def main():
  
     parser.add_argument('-i1','--HV2-metadata', help='Filepath to tab-delimited HV2 metadata', required=True)
     parser.add_argument('-i2','--HV3-metadata', help='Filepath to tab-delimited HV3 metadata', required=True)
-    parser.add_argument('-ks', '--kmer-size', default=6, help='Filepath to tab-delimited HV3 metadata', required=False)
+    parser.add_argument('-ks', '--kmer-size', type=int, default=6, help='Filepath to tab-delimited HV3 metadata', required=False)
     parser.add_argument('-m', '--multiprocessed', action="store_true", help='Run analysis with multiple processes', required=False)
     parser.add_argument('-o', '--output-dir', help='Output directory to output peptides and overlap values', required=True)
     
@@ -75,7 +75,7 @@ def get_overlap_species_by_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kme
     else:
         for HV2_species, HV3_species in HV2_species_to_HV3_species.items():
             overlap_data += get_overlap_single_species(HV2_species_groups.get_group(HV2_species), HV3_species_groups.get_group(HV3_species), kmer_size, HV2_species)
-             
+
     return overlap_data
 
 
