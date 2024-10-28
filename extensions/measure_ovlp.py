@@ -11,6 +11,7 @@ def main():
     parser.add_argument('-i1','--HV2-metadata', help='Filepath to tab-delimited HV2 metadata', required=True)
     parser.add_argument('-i2','--HV3-metadata', help='Filepath to tab-delimited HV3 metadata', required=True)
     parser.add_argument('-ks', '--kmer-size', default=6, help='Filepath to tab-delimited HV3 metadata', required=False)
+    parser.add_argument('-m', '--multiprocessed', action="store_true", help='Run analysis with multiple processes', required=False)
     parser.add_argument('-o', '--output-dir', help='Output directory to output peptides and overlap values', required=True)
     
     args = parser.parse_args()
@@ -26,14 +27,14 @@ def main():
     HV3_df["Species"] = HV3_df["Species"].str.split(';').str[0]
 
     # get max overlap for each peptide
-    overlap_data = get_overlap_species_by_species(HV2_df, HV3_df, args.kmer_size)
+    overlap_data = get_overlap_species_by_species(HV2_df, HV3_df, args.kmer_size, args.multiprocessed)
 
     # save the dataframe
     out_df = pd.DataFrame(overlap_data, columns=["HV2_CodeName", "HV3_CodeName", "MaxOvlpScore"])
     out_df.to_csv(os.path.join(args.output_dir, "peptide_ovlp_scores.tsv"), sep='\t', index=False)
 
 
-def get_overlap_species_by_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kmer_size:int)->list:
+def get_overlap_species_by_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kmer_size:int, multiprocessed:bool)->list:
     # [(HV2_CodeName, HV3_CodeName, MaxOvlpScore), (HV2_CodeName, HV3_CodeName, MaxOvlpScore), ...]
     overlap_data = list()
     HV2_species_to_HV3_species = dict()
@@ -56,21 +57,25 @@ def get_overlap_species_by_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kme
     HV2_species_groups = HV2_df.groupby("Species")
     HV3_species_groups = HV3_df.groupby("Species")
 
-    # run each species in a different process
-    with concurrent.futures.ProcessPoolExecutor() as process_executor:
-        futures = [process_executor.submit( get_overlap_single_species,
-                                        HV2_species_groups.get_group(HV2_species), 
-                                        HV3_species_groups.get_group(HV3_species),
-                                        kmer_size,
-                                        HV2_species
-                                        ) for HV2_species, HV3_species in HV2_species_to_HV3_species.items()]
+    if multiprocessed:
+        # run each species in a different process
+        with concurrent.futures.ProcessPoolExecutor() as process_executor:
+            futures = [process_executor.submit( get_overlap_single_species,
+                                            HV2_species_groups.get_group(HV2_species), 
+                                            HV3_species_groups.get_group(HV3_species),
+                                            kmer_size,
+                                            HV2_species
+                                            ) for HV2_species, HV3_species in HV2_species_to_HV3_species.items()]
 
-        for future in concurrent.futures.as_completed(futures):
-            single_species_overlap_list = future.result()
+            for future in concurrent.futures.as_completed(futures):
+                single_species_overlap_list = future.result()
 
-            # concat list
-            overlap_data += single_species_overlap_list
-
+                # concat list
+                overlap_data += single_species_overlap_list
+    else:
+        for HV2_species, HV3_species in HV2_species_to_HV3_species.items():
+            overlap_data += get_overlap_single_species(HV2_species_groups.get_group(HV2_species), HV3_species_groups.get_group(HV3_species), kmer_size, HV2_species)
+             
     return overlap_data
 
 
