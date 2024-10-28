@@ -20,7 +20,7 @@ def main():
         os.mkdir(args.output_dir)
 
     # extract data
-    HV2_df = pd.read_csv(args.HV2_metadata, usecols=["CodeName", "Species", "Peptide"], sep="\t")
+    HV2_df = pd.read_csv(args.HV2_metadata, usecols=["CodeName", "SpeciesID", "Peptide"], sep="\t", dtype=object)
     HV3_df = pd.read_csv(args.HV3_metadata, usecols=["CodeName", "Species", "Peptide"], sep="\t")
 
     # if HV3 Species column is split with ';', then only use first one
@@ -30,7 +30,7 @@ def main():
     overlap_data = get_overlap_species_by_species(HV2_df, HV3_df, args.kmer_size, args.multiprocessed)
 
     # save the dataframe
-    out_df = pd.DataFrame(overlap_data, columns=["HV2_CodeName", "HV3_CodeName", "MaxOvlpScore"])
+    out_df = pd.DataFrame(overlap_data, columns=["SpeciesID","HV2_CodeName", "HV3_CodeName", "MaxOvlpScore", "HV2_Peptide", "HV3_Peptide"])
     out_df.to_csv(os.path.join(args.output_dir, "peptide_ovlp_scores.tsv"), sep='\t', index=False)
 
 
@@ -40,11 +40,11 @@ def get_overlap_species_by_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kme
     HV2_species_to_HV3_species = dict()
 
     # map the species names between the two
-    HV2_species_set = set(HV2_df["Species"].tolist())
+    HV2_species_set = set(HV2_df["SpeciesID"].tolist())
     HV3_species_set = set(HV3_df["Species"].tolist())
     for HV2_species in HV2_species_set:
         # get the corresponding HV3 species
-        mapped_species_list = [HV3_species for HV3_species in HV3_species_set if HV2_species.replace(' ', '_') in HV3_species]
+        mapped_species_list = [HV3_species for HV3_species in HV3_species_set if str(HV2_species) in HV3_species]
 
         # map the species if one was found
         if len(mapped_species_list) > 0:
@@ -54,7 +54,7 @@ def get_overlap_species_by_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kme
             print(f"No HV3 species found for {HV2_species}")
 
     # get overlap for each species
-    HV2_species_groups = HV2_df.groupby("Species")
+    HV2_species_groups = HV2_df.groupby("SpeciesID")
     HV3_species_groups = HV3_df.groupby("Species")
 
     if multiprocessed:
@@ -87,16 +87,22 @@ def get_overlap_single_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kmer_si
     # create kmer_sets
     HV2_kmer_sets = dict()
     HV3_kmer_sets = dict()
+    
+    # create peptide dicts
+    HV2_pepD = dict()
+    HV3_pepD = dict()
 
     for i, HV2_row in HV2_df.iterrows():
         HV2_codename = HV2_row["CodeName"]
         HV2_peptide = HV2_row["Peptide"]
         HV2_kmer_sets[HV2_codename] = kt.kmerSet(HV2_peptide,kmer_size)
+        HV2_pepD[HV2_codename] = HV2_row["Peptide"]
 
     for i, HV3_row in HV3_df.iterrows():
         HV3_codename = HV3_row["CodeName"]
         HV3_peptide = HV3_row["Peptide"]
         HV3_kmer_sets[HV3_codename] = kt.kmerSet(HV3_peptide,kmer_size)
+        HV3_pepD[HV3_codename] = HV3_row["Peptide"]
 
     # get max overlap for each peptide
     for HV2_codename, HV2_kmer_set in HV2_kmer_sets.items():
@@ -112,7 +118,7 @@ def get_overlap_single_species(HV2_df:pd.DataFrame, HV3_df:pd.DataFrame, kmer_si
                 max_ovlp_score = ovlp_score
                 max_HV3_codename = HV3_codename
 
-        overlap_data.append((HV2_codename, max_HV3_codename, max_ovlp_score))
+        overlap_data.append((species, HV2_codename, max_HV3_codename, max_ovlp_score, HV2_pepD[HV2_codename], HV3_pepD[max_HV3_codename]))
 
     return overlap_data
 
