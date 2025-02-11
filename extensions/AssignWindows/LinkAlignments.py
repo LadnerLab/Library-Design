@@ -17,7 +17,8 @@ def main():
     parser.add_argument('-i','--file-metadata', help='', required=True)
     parser.add_argument('-k', '--kmer-size', type=int, default=6, help='Used for assigning sequences to proteins. Kmer size for kmer sets that are going to be intersected.', required=False)
     parser.add_argument('--kmer-ovlp-thresh', type=float, default=0.3, help='Used for assigning sequences to proteins. Minimum kmer overlap that the largest overlapping sequence must have to be assigned to a protein.', required=False)
-    parser.add_argument('--max-window-gaps', type=int, default=WINDOW_SIZE/2, required=False)
+    parser.add_argument('--filter-using-total-gaps', action="store_true", required=False, help="Filter by counting total number of gaps in a peptide. By defailt, peptides are filtered by consecutive number of gaps.")
+    parser.add_argument('--max-window-gaps', type=int, default=WINDOW_SIZE/2, required=False, help="Maximum of gaps in peptide (consecutive or total, depending on the filter option selected) for it to be included.")
 
     parser.add_argument('-o', '--output-dir', 
         help='Output directory for where to output protein combination files and bridge alignments.', required=True)
@@ -33,6 +34,7 @@ def main():
         file_metadata=args.file_metadata,
         kmer_size=args.kmer_size,
         kmer_ovlp_thresh=args.kmer_ovlp_thresh,
+        filter_using_total_gaps=args.filter_using_total_gaps,
         max_window_gaps=args.max_window_gaps,
         output_dir=args.output_dir
         )
@@ -42,6 +44,7 @@ def map_bridge_and_link(
     file_metadata,
     kmer_size,
     kmer_ovlp_thresh,
+    filter_using_total_gaps,
     max_window_gaps,
     output_dir
     ):
@@ -60,6 +63,7 @@ def map_bridge_and_link(
         map_bridge_and_link_single_row(
             kmer_size=kmer_size,
             kmer_ovlp_thresh=kmer_ovlp_thresh,
+            filter_using_total_gaps=filter_using_total_gaps,
             max_window_gaps=max_window_gaps,
             output_dir=output_dir,
             output_name=output_name,
@@ -73,6 +77,7 @@ def map_bridge_and_link(
 def map_bridge_and_link_single_row(
     kmer_size,
     kmer_ovlp_thresh,
+    filter_using_total_gaps,
     max_window_gaps,
     output_dir,
     output_name,
@@ -152,6 +157,7 @@ def map_bridge_and_link_single_row(
                                     protein,
                                     epitope_positions_df,
                                     subtype_fasta_dict[protein],
+                                    filter_using_total_gaps,
                                     max_window_gaps,
                                     removed_df
                                     )
@@ -169,6 +175,7 @@ def link_alignments_single_protein(
         protein, 
         epitope_positions_df, 
         fasta_dict,
+        filter_using_total_gaps,
         max_window_gaps,
         removed_df
         ):
@@ -241,7 +248,9 @@ def link_alignments_single_protein(
             # check if the window is not entirely out of the sequence, and still a valid peptide
             if seq_stop_pos-seq_start_pos > 1:
                 # shift until the number of characters that are not - is length 30
-                while( window_seq.count('-') < max_window_gaps and len(window_seq) - window_seq.count('-') < 30 and ( seq_start_pos > 1 or seq_stop_pos < max_pos ) ):
+                while( check_if_valid_gaps(window_seq, filter_using_total_gaps, max_window_gaps)
+                      and len(window_seq) - window_seq.count('-') < 30 
+                      and ( seq_start_pos > 1 or seq_stop_pos < max_pos ) ):
                     # test if shift left is possible
                     if( seq_start_pos - 1 > 0 ):
                         # shift left
@@ -251,7 +260,9 @@ def link_alignments_single_protein(
                     window_seq = seq[seq_start_pos-1:seq_stop_pos-1]
 
                     # test until the number of characters that are not - is length 30 and shift right is possible
-                    if( seq_stop_pos-seq_start_pos != 0 and len(window_seq) - window_seq.count('-') != 30 and seq_stop_pos + 1 <= max_pos ):
+                    if( seq_stop_pos-seq_start_pos != 0 
+                       and len(window_seq) - window_seq.count('-') != 30 
+                       and seq_stop_pos + 1 <= max_pos ):
                         # shift right
                         seq_stop_pos += 1
 
@@ -275,7 +286,8 @@ def link_alignments_single_protein(
 
             # add data to df
             # only add if a comparable peptide was chose (check number of gaps)
-            if( window_seq.count('-') < max_window_gaps and seq_stop_pos-seq_start_pos > 1):
+            if( check_if_valid_gaps(window_seq, filter_using_total_gaps, max_window_gaps) 
+               and seq_stop_pos-seq_start_pos > 1):
                 peptide_positions_data.append([protein, row["PeptideID"], seq_name, window_seq, seq_start_pos, seq_stop_pos, target_candidate_name, subtype_candidate_name])
             else:
                 removed_peptides.append([protein, row["PeptideID"], seq_name, window_seq, seq_start_pos, seq_stop_pos, target_candidate_name, subtype_candidate_name])
@@ -350,6 +362,28 @@ def make_dir(path, new):
     if not os.path.exists(dir_name):
         os.mkdir(dir_name)
     return dir_name
+
+
+def count_largest_consecutive_gap(seq):
+    max_count = 0
+    count = 0
+    for i in range(len(seq)):
+        if seq[i] == '-':
+            count += 1
+        else:
+            count = 0
+        
+        if count > max_count:
+            max_count = count
+    
+    return max_count
+
+
+def check_if_valid_gaps(window_seq, filter_using_total_gaps, max_window_gaps):
+    if filter_using_total_gaps:
+        return window_seq.count('-') < max_window_gaps
+    else:
+        return count_largest_consecutive_gap(window_seq) < max_window_gaps
 
 
 if __name__ == "__main__":

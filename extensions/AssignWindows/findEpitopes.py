@@ -335,13 +335,13 @@ def find_core_epitopes(alignCountsD, window_size, max_zeros, max_overlap, peak_w
         possible_windows_zeroStart = [w for w, score in possible_windowsD.items() if alignCountsD[w[0]+4] != 0]
         #print(f"possible_windows_noZeroStart: {possible_windows_noZeroStart}")
         if len(possible_windows_zeroStart) > 0:
-        	max_window = possible_windows_zeroStart[-1]
+            max_window = possible_windows_zeroStart[-1]
         if len(possible_windows_noZeroStart) > 0:
-        	max_window = possible_windows_noZeroStart[0]
+            max_window = possible_windows_noZeroStart[0]
         	#print(max_window)
         else:
-        	return None, 0
-    
+            return None, 0
+
     return max_window, number_of_windows
 
 if __name__ == "__main__":
