@@ -19,9 +19,8 @@ def main():
     parser.add_argument('--kmer-ovlp-thresh', type=float, default=0.3, help='Used for assigning sequences to proteins. Minimum kmer overlap that the largest overlapping sequence must have to be assigned to a protein.', required=False)
     parser.add_argument('--filter-using-total-gaps', action="store_true", required=False, help="Filter by counting total number of gaps in a peptide. By defailt, peptides are filtered by consecutive number of gaps.")
     parser.add_argument('--max-window-gaps', type=int, default=WINDOW_SIZE/2, required=False, help="Maximum of gaps in peptide (consecutive or total, depending on the filter option selected) for it to be included.")
-
-    parser.add_argument('-o', '--output-dir', 
-        help='Output directory for where to output protein combination files and bridge alignments.', required=True)
+    parser.add_argument('--use-old-alignments', action="store_true", required=False, help="Use old subtype and bridge alignments for a species if they already exist.")
+    parser.add_argument('-o', '--output-dir', help='Output directory for where to output protein combination files and bridge alignments.', required=True)
     
     args = parser.parse_args()
 
@@ -36,6 +35,7 @@ def main():
         kmer_ovlp_thresh=args.kmer_ovlp_thresh,
         filter_using_total_gaps=args.filter_using_total_gaps,
         max_window_gaps=args.max_window_gaps,
+        use_old_alignments=args.use_old_alignments,
         output_dir=args.output_dir
         )
 
@@ -46,6 +46,7 @@ def map_bridge_and_link(
     kmer_ovlp_thresh,
     filter_using_total_gaps,
     max_window_gaps,
+    use_old_alignments,
     output_dir
     ):
     # create map for assigning seqs to proteins in batches
@@ -65,6 +66,7 @@ def map_bridge_and_link(
             kmer_ovlp_thresh=kmer_ovlp_thresh,
             filter_using_total_gaps=filter_using_total_gaps,
             max_window_gaps=max_window_gaps,
+            use_old_alignments=use_old_alignments,
             output_dir=output_dir,
             output_name=output_name,
             target_alignments_file=target_alignments_file,
@@ -79,6 +81,7 @@ def map_bridge_and_link_single_row(
     kmer_ovlp_thresh,
     filter_using_total_gaps,
     max_window_gaps,
+    use_old_alignments,
     output_dir,
     output_name,
     target_alignments_file,
@@ -88,31 +91,31 @@ def map_bridge_and_link_single_row(
     ):
 
     spec_output_dir = make_dir(output_dir, output_name)
-
+    
     subtype_out_dir = make_dir(spec_output_dir, f"{os.path.basename(subtype_dir)}_ByProtein")
+    if not use_old_alignments or not os.path.exists(os.path.join(subtype_out_dir, "target_files.tsv")):
 
-    # create new species by mapping sequences to proteins from old species
-    generateSubtypeAlignmentsSingleSpecies(
-            target_file=target_alignments_file, 
-            subtype_dir=subtype_dir, 
-            ks=kmer_size, 
-            kmer_ovlp_thresh=kmer_ovlp_thresh, 
-            output_dir=subtype_out_dir
-            )
+        # create new species by mapping sequences to proteins from old species
+        generateSubtypeAlignmentsSingleSpecies(
+                target_file=target_alignments_file, 
+                subtype_dir=subtype_dir, 
+                ks=kmer_size, 
+                kmer_ovlp_thresh=kmer_ovlp_thresh, 
+                output_dir=subtype_out_dir
+                )
 
-    # TODO: let user defile target files output
     # assume target files for new species
     new_species_target_file = os.path.join(subtype_out_dir, "target_files.tsv")
-
-    mapping_name = f"{bridge_alignments_file.split(os.sep)[-2]}_{new_species_target_file.split(os.sep)[-2]}"
+    
     bridge_out_dir = make_dir(spec_output_dir, f"Bridge_{output_name}_{os.path.basename(subtype_dir)}_ByProtein")
+    if not use_old_alignments or not os.path.exists(os.path.join(bridge_out_dir, "target_files.tsv")):
 
-    # create bridge fasta files with a representative from each species
-    create_bridge_alignments_single_species(
-            old_species_file = bridge_alignments_file,
-            new_species_file = new_species_target_file, 
-            output_dir = bridge_out_dir
-            )
+        # create bridge fasta files with a representative from each species
+        create_bridge_alignments_single_species(
+                old_species_file = bridge_alignments_file,
+                new_species_file = new_species_target_file, 
+                output_dir = bridge_out_dir
+                )
 
     # assume target files for bridge
     bridge_target_files = os.path.join(bridge_out_dir, "target_files.tsv")

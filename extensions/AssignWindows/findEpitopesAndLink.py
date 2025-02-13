@@ -28,6 +28,7 @@ def main():
     parser.add_argument('--kmer-ovlp-thresh', type=float, default=0.3, help='Used for assigning sequences to proteins. Minimum kmer overlap that the largest overlapping sequence must have to be assigned to a protein.', required=False)
     parser.add_argument('--filter-using-total-gaps', action="store_true", required=False, help="Filter by counting total number of gaps in a peptide. By defailt, peptides are filtered by consecutive number of gaps.")
     parser.add_argument('--max-window-gaps', type=int, default=WINDOW_SIZE/2, required=False, help="Maximum of gaps in peptide (consecutive or total, depending on the filter option selected) for it to be included.")
+    parser.add_argument('--use-old-alignments', action="store_true", required=False, help="Use old subtype and bridge alignments for a species if they already exist.")
 
     args = parser.parse_args()
 
@@ -91,6 +92,7 @@ def main():
                 kmer_ovlp_thresh=args.kmer_ovlp_thresh,
                 filter_using_total_gaps=args.filter_using_total_gaps,
                 max_window_gaps=args.max_window_gaps,
+                use_old_alignments=args.use_old_alignments,
                 output_dir=args.output_dir,
                 output_name=row["Name"],
                 target_alignments_file=target_files_tsv,
