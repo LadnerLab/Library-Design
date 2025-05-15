@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import inout as io         # Available here: https://github.com/jtladner/Modules
 import fastatools as ft    # Available here: https://github.com/jtladner/Modules
